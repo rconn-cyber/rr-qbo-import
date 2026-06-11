@@ -326,14 +326,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
         ⚡ Pull from Supabase
       </button>
-      <div class="upload-status" id="status-mbr" style="margin-top:8px;"></div>
-    </div>
-      <div class="upload-title" style="margin-bottom:10px;">Load member list</div>
-      <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
-        ⚡ Pull from Supabase
-      </button>
-      <div class="upload-hint" style="margin-top:8px;">Pulls live from Supabase rr_members — 637+ members.</div>
-      <div class="upload-status" id="status-mbr"></div>
+      <div class="upload-status" id="status-mbr" style="margin-top:8px;min-height:16px;font-size:12px;"></div>
     </div>
   </div>
 
@@ -495,7 +488,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 // Paste your anon public key below. It is safe to include here — the anon key
 // is subject to Row Level Security and cannot access data beyond what RLS allows.
 const SUPABASE_URL = 'https://qyoqyeaqacdjstvkonwx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5b3F5ZWFxYWNkanN0dmtvbnd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NjUzMzMsImV4cCI6MjA4ODM0MTMzM30.Ln-i6P0qZlmGYoD-bC9xAlggyjt36bXXQfrqmHi-LLo'; // ← PASTE YOUR ANON KEY HERE before deploying (Settings → API → anon public)
+const SUPABASE_ANON_KEY = ''; // ← PASTE YOUR ANON KEY HERE before deploying (Settings → API → anon public)
 
 async function loadMembersFromSupabase() {
   const btn = document.getElementById('btn-supabase');
@@ -517,6 +510,19 @@ async function loadMembersFromSupabase() {
   btn.disabled = true;
   statusEl.textContent = 'Connecting to Supabase…';
   statusEl.className = 'upload-status';
+  statusEl.style.color = 'var(--text-mid)';
+  statusEl.style.display = 'block';
+  console.log('Supabase fetch starting, URL:', SUPABASE_URL);
+  console.log('Key present:', !!key, 'Key length:', key.length);
+  console.log('Key preview:', key.substring(0, 20) + '...');
+  // Test with a simple HEAD request first
+  try {
+    const testRes = await fetch(`${SUPABASE_URL}/rest/v1/rr_members?limit=1&select=member_number`, {
+      method: 'HEAD',
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
+    console.log('HEAD test status:', testRes.status, testRes.statusText);
+  } catch(e) { console.log('HEAD test failed:', e.message); }
 
   try {
     // Fetch all members from rr_members table
@@ -575,7 +581,7 @@ async function loadMembersFromSupabase() {
 
     document.getElementById('card-mbr').style.background = '#e8f5ec';
     document.getElementById('card-mbr').style.borderColor = '#1a5c2e';
-    statusEl.textContent = `✓ ${loaded} members from Supabase`;
+    statusEl.textContent = `✓ ${loaded} members loaded`;
     statusEl.className = 'upload-status ok';
     btn.textContent = '✓ Loaded from Supabase';
 
@@ -583,12 +589,16 @@ async function loadMembersFromSupabase() {
     updateStats();
 
   } catch (err) {
-    statusEl.textContent = `✗ ${err.message}`;
+    const errMsg = err.message || String(err);
+    statusEl.innerHTML = `✗ ${errMsg}<br><span style="font-size:10px;opacity:0.8;">Check console (F12) for details</span>`;
     statusEl.className = 'upload-status';
     statusEl.style.color = 'var(--red)';
-    btn.textContent = '⚡ Pull from Supabase';
+    statusEl.style.display = 'block';
+    btn.textContent = '⚡ Retry';
     btn.disabled = false;
     console.error('Supabase member load error:', err);
+    console.error('Full error:', JSON.stringify(err, null, 2));
+    console.log('Request was to:', `${SUPABASE_URL}/rest/v1/rr_members`);
   }
 }
 

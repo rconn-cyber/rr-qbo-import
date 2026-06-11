@@ -1025,48 +1025,55 @@ function ingestRows(platform,parseResult,filename){
     let resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
 
     // ── MEMBER AUTO-MATCH ──
-    // If customer/member not yet determined (blank or Allocate/General Public from default),
-    // try to find a member name in the buyer field or description.
-    // Only override if we find a confident member match — don't override Allocate/888888 bulk defaults.
-    const needsMemberLookup = !resolvedCustomer || resolvedCustomer === '';
-    if (needsMemberLookup && memberList.length > 0) {
-      // Pass 0: Email match (most reliable — Stripe always has customer email)
-      if (!resolvedCustomer && email && memberEmailMap[email]) {
+    // Priority: buyer name (Card Name) > email match > description scan > bulk default
+    // If we have an individual buyer name, always prefer it over Allocate bulk default
+    const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
+    if (hasBuyer || (email && memberList.length > 0)) {
+      // Pass 0: Email match — most reliable for member identification
+      if (email && memberEmailMap[email]) {
         const m = memberEmailMap[email];
         resolvedCustomer = m.fullName;
         resolvedMemberNum = m.id;
       }
-      // Try buyer field first (most reliable)
-      const buyerVal = buyer;
-      if (buyerVal && buyerVal.length > 2) {
-        const m = lookupMember(buyerVal);
-        if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; }
-      }
-      // If no buyer field, scan description for member name patterns (Stripe/8am dues/registrations)
-      if (!resolvedCustomer && resolvedDesc.length > 3) {
-        const SKIP = new Set(['payment','rough','riders','rider','import','square','stripe','membership',
-          'renewal','registration','dues','annual','fee','ticket','deposit','entry','regular','light',
-          'the','and','for','from','via','ref','pay','sale','sales','inc','llc','ltd','payment']);
-        const words = resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/)
-          .map(w=>w.replace(/[^a-zA-Z]/g,''))
-          .filter(w=>w.length>2 && !SKIP.has(w.toLowerCase()) && !/^\d+$/.test(w));
-        // Try adjacent word pairs as "First Last"
-        for (let i=0; i<words.length-1; i++) {
-          const candidate = words[i]+' '+words[i+1];
-          if (candidate.length < 5) continue;
-          const m = lookupMember(candidate);
-          if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; break; }
+      // Pass 1: If email didn't match but we have Card Name, use it
+      // Non-member individual payment — per Michael's rules:
+      //   >$500 = actual payer name + 999999
+      //   <$500 non-member = General Public + 999999
+      else if (hasBuyer) {
+        const gross = parseAmount(grossRaw);
+        if (gross >= 500) {
+          resolvedCustomer = buyer;
+          resolvedMemberNum = '999999';
+        } else {
+          resolvedCustomer = 'General Public';
+          resolvedMemberNum = '999999';
         }
-        // Last-name-only: only match if word length >= 4 and unique match
-        if (!resolvedCustomer) {
-          for (const w of words) {
-            if (w.length < 4) continue;
-            const lnMatches = memberMap['_ln_'+w.toLowerCase()];
-            if (lnMatches && lnMatches.length === 1) {
-              resolvedCustomer = lnMatches[0].fullName;
-              resolvedMemberNum = lnMatches[0].id;
-              break;
-            }
+      }
+    }
+
+    const needsMemberLookup = !resolvedCustomer || resolvedCustomer === '' || resolvedCustomer === 'Allocate';
+    if (needsMemberLookup && memberList.length > 0 && !hasBuyer) {
+      // Description scan — last resort for cases with no buyer and no email match
+      const SKIP = new Set(['payment','rough','riders','rider','import','square','stripe','membership',
+        'renewal','registration','dues','annual','fee','ticket','deposit','entry','regular','light',
+        'the','and','for','from','via','ref','pay','sale','sales','inc','llc','ltd']);
+      const words = resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/)
+        .map(w=>w.replace(/[^a-zA-Z]/g,''))
+        .filter(w=>w.length>2 && !SKIP.has(w.toLowerCase()) && !/^\d+$/.test(w));
+      for (let i=0; i<words.length-1; i++) {
+        const candidate = words[i]+' '+words[i+1];
+        if (candidate.length < 5) continue;
+        const m = lookupMember(candidate);
+        if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; break; }
+      }
+      if (!resolvedCustomer) {
+        for (const w of words) {
+          if (w.length < 4) continue;
+          const lnMatches = memberMap['_ln_'+w.toLowerCase()];
+          if (lnMatches && lnMatches.length === 1) {
+            resolvedCustomer = lnMatches[0].fullName;
+            resolvedMemberNum = lnMatches[0].id;
+            break;
           }
         }
       }

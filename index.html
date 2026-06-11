@@ -883,7 +883,6 @@ function makeFinder(row,slugHeaders){
 // Square: combine category + item + description + notes for rich matching
 function extractSquare(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
-  // Strip URLs from any field value before combining
   const clean=s=>(s||'').replace(/https?:\/\/\S+/g,'').trim();
   const category  = clean(find('category'));
   const item      = clean(find('item'));
@@ -893,33 +892,39 @@ function extractSquare(row,slugHeaders){
   const location  = clean(find('location','device_name','device'));
   const combined=[item,category,desc,notes,eventType,location]
     .map(s=>s.trim()).filter(s=>s&&s.length>1).join(' | ')||'Square transaction';
-  // Square Itemized Sales: Gross Sales, Service Charges (fee), Net Sales
-  // Square Transactions: Amount (gross), Fee, Net Total
   const gross = find('gross_sales')||find('gross','amount','total_collected','total','price_point');
   const fee   = find('service_charges')||find('fee_amount','fees_square','fees','fee','square_fees','processing_fee','card_processing_fees');
   const net   = find('net_sales')||find('net_total','net','net_amount','net_total_collected');
-  return{ date:find('date'), desc:combined, gross, fee, net };
+  // Square exports buyer name in "Customer Name" or "Customer ID" columns
+  const buyer = find('customer_name','customer','buyer_name','cardholder_name') || '';
+  return{ date:find('date'), desc:combined, gross, fee, net, buyer };
 }
 
 function extractStripe(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
+  // Stripe exports customer name in customer_description, customer_name, or customer_email
+  const buyer = find('customer_description','customer_name','customer_email','billing_name','cardholder_name') || '';
   return{
     date:find('created_utc','created','date','available_on_utc','charge_created_utc'),
-    desc:find('description','customer_description','charge_description','statement_descriptor','reporting_category','type','source'),
+    desc:find('description','charge_description','statement_descriptor','reporting_category','type','source'),
     gross:find('gross','amount','charge_amount','total'),
     fee:find('fee','stripe_fee','fees','fee_details'),
     net:find('net','net_amount','payout_amount'),
+    buyer,
   };
 }
 
 function extract8am(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
+  // 8am exports buyer name in Buyer Name or Attendee Name columns
+  const buyer = find('buyer_name','buyer','attendee_name','attendee','customer_name','customer','first_name') || '';
   return{
     date:find('order_date','date','created','event_date'),
     desc:find('event_name','event','ticket_type','description','item','name','order_type'),
     gross:find('gross_amount','gross','amount','unit_price','price','total'),
     fee:find('platform_fee','fee','fees','service_fee','booking_fee'),
     net:find('net_amount','net','payout'),
+    buyer,
   };
 }
 
@@ -938,7 +943,7 @@ function showDebugPanel(platform,rawHeaders,rows,extracted){
     <div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()} (dismiss once working)</div>
     <div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div>
     <div style="margin-top:4px;"><span style="color:#888;">Rows parsed:</span> <strong style="color:#fff">${rows.length}</strong> &nbsp;|&nbsp; <span style="color:#888;">Rows with amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>
-    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,80)}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span> fee:<span style="color:#9fb">"${es.fee||'--'}"</span></div>`:''}
+    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,60)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span> fee:<span style="color:#9fb">"${es.fee||'--'}"</span></div>`:''}
     ${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts. Reply with your column headers and I'll fix the parser.</div>`:''}
     <button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
 }
@@ -977,7 +982,8 @@ function ingestRows(platform,parseResult,filename){
 
   let count=0;
   extracted.forEach(e=>{
-    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw}=e;
+    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw,buyer:buyerRaw}=e;
+    const buyer=(buyerRaw||'').trim();
     const gross=parseAmount(grossRaw);
     const fee=Math.abs(parseAmount(feeRaw));
     const net=parseAmount(netRaw)||(gross-fee);
@@ -997,8 +1003,45 @@ function ingestRows(platform,parseResult,filename){
     const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
     const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
     const def=getCustomerDefaults(resolvedAcct);
-    const resolvedCustomer=sqMatch?(sqMatch.customer||def.c||''):(def.c||'');
-    const resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
+    let resolvedCustomer=sqMatch?(sqMatch.customer||def.c||''):(def.c||'');
+    let resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
+
+    // ── MEMBER AUTO-MATCH ──
+    // If customer/member not yet determined (blank or Allocate/General Public from default),
+    // try to find a member name in the buyer field or description.
+    // Only override if we find a confident member match — don't override Allocate/888888 bulk defaults.
+    const needsMemberLookup = !resolvedCustomer || resolvedCustomer === '';
+    if (needsMemberLookup && memberList.length > 0) {
+      // Try buyer field first (most reliable)
+      const buyerVal = buyer;
+      if (buyerVal && buyerVal.length > 2) {
+        const m = lookupMember(buyerVal);
+        if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; }
+      }
+      // If no buyer field, scan description for member name patterns
+      // Look for "First Last" patterns in desc against member list
+      if (!resolvedCustomer && resolvedDesc.length > 3) {
+        // Try full desc, then each word-pair in the description
+        const words = resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/).filter(w=>w.length>2);
+        for (let i=0; i<words.length-1; i++) {
+          const candidate = words[i]+' '+words[i+1];
+          const m = lookupMember(candidate);
+          if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; break; }
+        }
+        // Also try last-name-only match on longer single words
+        if (!resolvedCustomer) {
+          for (const w of words) {
+            if (w.length < 3) continue;
+            const lnMatches = memberMap['_ln_'+w.toLowerCase()];
+            if (lnMatches && lnMatches.length === 1) {
+              resolvedCustomer = lnMatches[0].fullName;
+              resolvedMemberNum = lnMatches[0].id;
+              break;
+            }
+          }
+        }
+      }
+    }
 
     transactions.push({
       id:nextId++, platform,

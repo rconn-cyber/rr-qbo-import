@@ -485,22 +485,21 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 <script>
 // ── SUPABASE CONFIG ──
 // Project: qyoqyeaqacdjstvkonwx (Tampa Rough Riders)
-// Paste your anon public key below. It is safe to include here — the anon key
+// Paste your anon public key below. It is safe to include here - the anon key
 // is subject to Row Level Security and cannot access data beyond what RLS allows.
 const SUPABASE_URL = 'https://qyoqyeaqacdjstvkonwx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5b3F5ZWFxYWNkanN0dmtvbnd4IiwiciBsZSI6ImFub24iLCJpYXQiOjE3NzI3NjUzMzMsImV4cCI6MjA4ODM0MTMzM30.XXXXXXXXX';
+const SUPABASE_ANON_KEY = ''; // paste anon key here
 
 async function loadMembersFromSupabase() {
   const btn = document.getElementById('btn-supabase');
   const statusEl = document.getElementById('status-mbr');
 
-  // Get key — use hardcoded value if set, otherwise prompt once and cache in sessionStorage
+  // Get key - use hardcoded value if set, otherwise prompt once and cache in sessionStorage
   let key = SUPABASE_ANON_KEY;
   if (!key) {
     key = sessionStorage.getItem('rr_sb_key') || '';
     if (!key) {
-      key = prompt('Enter your Supabase anon key for qyoqyeaqacdjstvkonwx:
-(This is stored only in this browser tab — never sent anywhere except Supabase)');
+      key = prompt('Enter your Supabase anon key for qyoqyeaqacdjstvkonwx (stored only in this tab):');
       if (!key) return;
       sessionStorage.setItem('rr_sb_key', key);
     }
@@ -795,7 +794,7 @@ function splitTransaction(id, memberPct){
 let transactions=[]; let nextId=1;
 let memberMap={}; let memberList=[];
 
-// Member data loads from Supabase only — see loadMembersFromSupabase()
+// Member data loads from Supabase only - see loadMembersFromSupabase()
 
 function rebuildDatalist(){
   let dl=document.getElementById('member-datalist');
@@ -932,7 +931,7 @@ function showDebugPanel(platform,rawHeaders,rows,extracted){
     <div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()} (dismiss once working)</div>
     <div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div>
     <div style="margin-top:4px;"><span style="color:#888;">Rows parsed:</span> <strong style="color:#fff">${rows.length}</strong> &nbsp;|&nbsp; <span style="color:#888;">Rows with amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>
-    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'—'}"</span> desc:<span style="color:#9fb">"${(es.desc||'—').substring(0,60)}"</span> gross:<span style="color:#9fb">"${es.gross||'—'}"</span> fee:<span style="color:#9fb">"${es.fee||'—'}"</span></div>`:''}
+    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,60)}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span> fee:<span style="color:#9fb">"${es.fee||'--'}"</span></div>`:''}
     ${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts. Reply with your column headers and I'll fix the parser.</div>`:''}
     <button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
 }
@@ -1044,7 +1043,7 @@ function updateStats(){
   document.getElementById('s-unknown').textContent=unk;
   document.getElementById('s-gross').textContent='$'+grossIncome.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('s-fees').textContent='$'+totalFees.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('s-mbr').textContent=memberList.length>0?memberList.length:'—';
+  document.getElementById('s-mbr').textContent=memberList.length>0?memberList.length:'--';
   document.getElementById('unknown-notice').style.display=transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
 }
 
@@ -1074,7 +1073,7 @@ function renderTable(){
     const sb=hasErr?'badge-unknown':t.status==='ok'?'badge-ok':t.status==='defer'?'badge-defer':'badge-unknown';
     const sl=hasErr?errs.join(', '):t.status==='ok'?'Auto-matched':t.status==='defer'?'Deferred check':'Unknown';
     const rc=hasErr?'flag-unknown':t.status==='defer'?'flag-deferred':'flag-ok';
-    const fa=(v)=>v===0?'—':(v<0?'-':'')+' $'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fa=(v)=>v===0?'--':(v<0?'-':'')+' $'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     const cb=(!t.customerName)?'border-color:#c85a5a;':'';
     const mb=(!t.memberNum)?'border-color:#c85a5a;':'';
     const isMixed=t.acct&&(t.acct.includes('Bar')||t.acct.includes('Beverage'));
@@ -1089,13 +1088,13 @@ function renderTable(){
       </td>
       <td class="editable-cell">
         <select style="font-size:11px;" onchange="updateAcct(${t.id},this.value)">
-          <option value="">— account —</option>
+          <option value=">-- account --</option>
           ${ACCOUNTS.map(a=>`<option value="${a}" ${t.acct===a?'selected':''}>${a}</option>`).join('')}
         </select>
       </td>
       <td class="editable-cell">
         <select style="font-size:11px;" onchange="updateField(${t.id},'cls',this.value)">
-          <option value="">— class —</option>
+          <option value=">-- class --</option>
           ${CLASSES.map(c=>`<option value="${c}" ${t.cls===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </td>
@@ -1113,7 +1112,7 @@ function renderTable(){
           onchange="updateField(${t.id},'memberNum',this.value)" title="Member #, 888888=Allocate, 999999=General Public">
       </td>
       <td class="amount ${t.gross>=0?'positive':''}" style="font-size:12px;">${fa(t.gross)}</td>
-      <td class="amount negative" style="font-size:12px;">${t.fee>0?'($'+t.fee.toFixed(2)+')':'—'}</td>
+      <td class="amount negative" style="font-size:12px;">${t.fee>0?'($'+t.fee.toFixed(2)+')':'--'}</td>
       <td class="amount" style="font-size:12px;">${fa(t.net)}</td>
       <td><span class="badge ${sb}" style="font-size:10px;">${t.status==='ok'&&!hasErr?'✓ matched':sl}</span></td>
       <td><button class="btn btn-xs btn-danger" onclick="deleteRow(${t.id})">✕</button></td>
@@ -1129,7 +1128,7 @@ function toggleMemberPanel(){
   p.style.display=isOpen?'none':'block';
   if(!isOpen){
     const hint=document.getElementById('mbr-search-hint');
-    hint.textContent=memberList.length>0?`${memberList.length} members loaded — type to search`:'Load member CSV above to enable';
+    hint.textContent=memberList.length>0?`${memberList.length} members loaded - type to search`:'Load member CSV above to enable';
     if(memberList.length) document.getElementById('mbr-search').focus();
   }
 }
@@ -1307,7 +1306,7 @@ function loadDemo(){
 (function autoLoadMembers() {
   const key = SUPABASE_ANON_KEY || sessionStorage.getItem('rr_sb_key') || '';
   if (key) {
-    // Key is available — load silently on startup
+    // Key is available - load silently on startup
     loadMembersFromSupabase();
   }
   // If no key, user clicks the button which will prompt for it

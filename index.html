@@ -498,7 +498,7 @@ async function loadMembersFromSupabase() {
   if (!key) {
     // Last resort: try fetching config again
     try {
-      const cfgRes = await fetch('/api/config');
+      const cfgRes = await fetch('/.netlify/functions/config');
       if (cfgRes.ok) { const cfg = await cfgRes.json(); key = cfg.supabaseAnonKey || ''; SUPABASE_ANON_KEY = key; }
     } catch(e) {}
   }
@@ -1312,7 +1312,7 @@ function loadDemo(){
 // Fetches key from /api/config (Netlify Function), then loads members.
 (async function autoLoadMembers() {
   try {
-    const res = await fetch('/api/config');
+    const res = await fetch('/.netlify/functions/config');
     if (res.ok) {
       const cfg = await res.json();
       if (cfg.supabaseAnonKey) {

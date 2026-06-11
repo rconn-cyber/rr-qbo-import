@@ -105,7 +105,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
 }
 .upload-card:hover, .upload-card.drag { border-color: var(--gold); background: var(--gold-light); }
 .upload-card.loaded { border-style: solid; border-color: var(--green); background: var(--green-bg); }
-.upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .upload-label {
   font-size: 12px; font-family: var(--mono); font-weight: 500;
   letter-spacing: 0.05em; text-transform: uppercase;
@@ -298,32 +298,40 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 
   <!-- UPLOAD -->
   <div class="upload-section">
-    <div class="upload-card" id="card-sq" onclick="triggerFile('file-sq')">
-      <input type="file" id="file-sq" accept=".csv" onchange="handleFile('square', this)">
+    <div class="upload-card" id="card-sq">
+      <input type="file" id="file-sq" accept=".csv" onchange="handleFile('square', this)" onclick="event.stopPropagation()">
       <div class="upload-label sq">Square</div>
       <div class="upload-title">Sales Summary CSV</div>
       <div class="upload-hint">Export from Square → Reports → Sales Summary</div>
       <div class="upload-status" id="status-sq"></div>
     </div>
-    <div class="upload-card" id="card-st" onclick="triggerFile('file-st')">
-      <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)">
+    <div class="upload-card" id="card-st">
+      <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()">
       <div class="upload-label st">Stripe</div>
       <div class="upload-title">Payout Reconciliation CSV</div>
       <div class="upload-hint">Export from Stripe → Reports → Balance → Payout recon</div>
       <div class="upload-status" id="status-st"></div>
     </div>
-    <div class="upload-card" id="card-am" onclick="triggerFile('file-am')">
-      <input type="file" id="file-am" accept=".csv" onchange="handleFile('8am', this)">
+    <div class="upload-card" id="card-am">
+      <input type="file" id="file-am" accept=".csv" onchange="handleFile('8am', this)" onclick="event.stopPropagation()">
       <div class="upload-label am">8am</div>
       <div class="upload-title">Orders / Settlement CSV</div>
       <div class="upload-hint">Export from 8am → Reports → Orders</div>
       <div class="upload-status" id="status-am"></div>
     </div>
-    <div class="upload-card" id="card-mbr" onclick="triggerFile('file-mbr')" style="border-color:var(--gold-dim);background:var(--gold-light);">
-      <input type="file" id="file-mbr" accept=".csv" onchange="handleMemberFile(this)">
-      <div class="upload-label" style="color:var(--navy);">Wild Apricot</div>
-      <div class="upload-title">Member List CSV</div>
-      <div class="upload-hint">Export from WA → Members → Export All. Use the 2026-05-31 export format. Enables name + member # auto-fill.</div>
+    <div class="upload-card" id="card-mbr" style="border-color:var(--gold-dim);background:var(--gold-light);cursor:default;">
+      <input type="file" id="file-mbr" accept=".csv" onchange="handleMemberFile(this)" onclick="event.stopPropagation()" style="display:none;">
+      <div class="upload-label" style="color:var(--navy);">Members</div>
+      <div class="upload-title" style="margin-bottom:10px;">Load member list</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
+          ⚡ Pull from Supabase
+        </button>
+        <button class="btn btn-sm" onclick="document.getElementById('file-mbr').click()" style="width:100%;justify-content:center;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);">
+          📄 Upload CSV instead
+        </button>
+      </div>
+      <div class="upload-hint" style="margin-top:8px;">Supabase pulls live from rr_members. CSV uses a WA export file.</div>
       <div class="upload-status" id="status-mbr"></div>
     </div>
   </div>
@@ -395,16 +403,18 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       <thead>
         <tr>
           <th style="width:36px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"></th>
-          <th style="width:90px">Date</th>
-          <th style="width:80px">Platform</th>
-          <th>Description</th>
-          <th style="width:240px">QBO Account</th>
-          <th style="width:180px">QBO Class</th>
-          <th style="width:90px" class="amount">Gross</th>
-          <th style="width:80px" class="amount">Fee</th>
-          <th style="width:80px" class="amount">Net</th>
+          <th style="width:88px">Date</th>
+          <th style="width:72px">Platform</th>
+          <th>Description / Memo</th>
+          <th style="width:200px">QBO Account</th>
+          <th style="width:160px">QBO Class</th>
+          <th style="width:160px">Customer Name <span style="color:#f5a;font-weight:400;font-size:10px;">*req</span></th>
+          <th style="width:82px">Mbr # <span style="color:#f5a;font-weight:400;font-size:10px;">*req</span></th>
+          <th style="width:80px" class="amount">Gross</th>
+          <th style="width:68px" class="amount">Fee</th>
+          <th style="width:68px" class="amount">Net</th>
           <th style="width:90px">Status</th>
-          <th style="width:50px">Del</th>
+          <th style="width:40px">Del</th>
         </tr>
       </thead>
       <tbody id="txn-body"></tbody>
@@ -479,6 +489,108 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 </div>
 
 <script>
+// ── SUPABASE CONFIG ──
+// Project: qyoqyeaqacdjstvkonwx (Tampa Rough Riders)
+// Paste your anon public key below. It is safe to include here — the anon key
+// is subject to Row Level Security and cannot access data beyond what RLS allows.
+const SUPABASE_URL = 'https://qyoqyeaqacdjstvkonwx.supabase.co';
+const SUPABASE_ANON_KEY = ''; // ← paste your anon key here, or set via the prompt below
+
+async function loadMembersFromSupabase() {
+  const btn = document.getElementById('btn-supabase');
+  const statusEl = document.getElementById('status-mbr');
+
+  // Get key — use hardcoded value if set, otherwise prompt once and cache in sessionStorage
+  let key = SUPABASE_ANON_KEY;
+  if (!key) {
+    key = sessionStorage.getItem('rr_sb_key') || '';
+    if (!key) {
+      key = prompt('Enter your Supabase anon key for qyoqyeaqacdjstvkonwx:
+(This is stored only in this browser tab — never sent anywhere except Supabase)');
+      if (!key) return;
+      sessionStorage.setItem('rr_sb_key', key);
+    }
+  }
+
+  btn.textContent = '⟳ Loading…';
+  btn.disabled = true;
+  statusEl.textContent = 'Connecting to Supabase…';
+  statusEl.className = 'upload-status';
+
+  try {
+    // Fetch all members from rr_members table
+    // WA sync stores: id, member_id (WA User ID), first_name, last_name, email,
+    //   member_number (the 4-digit #), membership_level, status, phone
+    // We page through in batches of 1000 to get all 637+
+    let allRows = [];
+    let from = 0;
+    const pageSize = 1000;
+
+    while (true) {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/rr_members?select=member_number,first_name,last_name,email,membership_level,status&order=last_name.asc&limit=${pageSize}&offset=${from}`,
+        { headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+        }}
+      );
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Supabase error ${res.status}: ${err.substring(0, 200)}`);
+      }
+      const batch = await res.json();
+      allRows = allRows.concat(batch);
+      if (batch.length < pageSize) break;
+      from += pageSize;
+    }
+
+    // Ingest into memberMap / memberList using same structure as CSV handler
+    memberMap = {}; memberList = [];
+    let loaded = 0;
+    allRows.forEach(row => {
+      const id    = (row.member_number || '').toString().trim();
+      const fn    = (row.first_name || '').trim();
+      const ln    = (row.last_name  || '').trim();
+      const email = (row.email || '').trim();
+      const level = (row.membership_level || '').trim();
+      const status= (row.status || '').trim();
+      if (!fn && !ln) return;
+      const fullName = `${fn} ${ln}`.trim();
+      if (!fullName) return;
+      const entry = { id, firstName: fn, lastName: ln, fullName, email, level, status };
+      memberMap[fullName.toLowerCase()] = entry;
+      if (ln) {
+        const lk = '_ln_' + ln.toLowerCase();
+        if (!memberMap[lk]) memberMap[lk] = [];
+        memberMap[lk].push(entry);
+      }
+      memberList.push(entry);
+      loaded++;
+    });
+
+    memberList.sort((a, b) => a.lastName.localeCompare(b.lastName));
+    rebuildDatalist();
+
+    document.getElementById('card-mbr').style.background = '#e8f5ec';
+    document.getElementById('card-mbr').style.borderColor = '#1a5c2e';
+    statusEl.textContent = `✓ ${loaded} members from Supabase`;
+    statusEl.className = 'upload-status ok';
+    btn.textContent = '✓ Loaded from Supabase';
+
+    if (transactions.length) renderTable();
+    updateStats();
+
+  } catch (err) {
+    statusEl.textContent = `✗ ${err.message}`;
+    statusEl.className = 'upload-status';
+    statusEl.style.color = 'var(--red)';
+    btn.textContent = '⚡ Pull from Supabase';
+    btn.disabled = false;
+    console.error('Supabase member load error:', err);
+  }
+}
+
 // ── GENERAL RULES (Stripe / 8am / Square fallback) ──
 const RULES = [
   {kw:['fishing','boat entry','boat registr','angler','division fee'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Fishing Tournament',status:'defer'},

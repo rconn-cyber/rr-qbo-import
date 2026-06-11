@@ -479,13 +479,13 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 </div>
 
 <script>
-// ── ACCOUNT MAP ── (keyword → {account, class, status})
+// ── GENERAL RULES (Stripe / 8am / Square fallback) ──
 const RULES = [
   {kw:['fishing','boat entry','boat registr','angler','division fee'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Fishing Tournament',status:'defer'},
   {kw:['fishing raffle','fishing auction','silent auction fish'],acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
   {kw:['fishing beverage','fishing bar','tournament bar'],acct:'4306 Fundraising Beverage Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
   {kw:['fishing sponsor'],acct:'4302 Fundraising Sponsorship Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
-  {kw:['golf registr','golf tournam','golfer','hunters green','hunter\'s green'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Golf Tournament',status:'defer'},
+  {kw:['golf registr','golf tournam','golfer','hunters green',"hunter's green"],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Golf Tournament',status:'defer'},
   {kw:['golf sponsor'],acct:'4302 Fundraising Sponsorship Revenue',cls:'Fundraising:Golf Tournament',status:'ok'},
   {kw:['golf raffle','mulligan'],acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:'Fundraising:Golf Tournament',status:'ok'},
   {kw:['night at the museum','natm','museum ticket'],acct:'4401 Member Event - Registration',cls:'Program Services:Historical Related Committees:Night At The Museum',status:'ok'},
@@ -496,7 +496,7 @@ const RULES = [
   {kw:['pre-invasion','pre invasion','gasparilla pre','gsp pre'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events:Gasparilla Pre-Invasion Party',status:'defer'},
   {kw:['gasparilla hotel','gsp hotel','hotel block'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events',status:'defer'},
   {kw:['st pat','st. pat','patrick wrist','pub crawl','patrick brunch','patrick post','patrick pre','patrick parade'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:St. Patricks Week',status:'defer'},
-  {kw:['valentine','vday','val party'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Valentine\'s Day Party',status:'defer'},
+  {kw:['valentine','vday','val party'],acct:'4301 Fundraising Registration Revenue',cls:"Fundraising:Valentine's Day Party",status:'defer'},
   {kw:['halloween','costume party'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Halloween Party',status:'defer'},
   {kw:['sporting clay','clay shoot','clay tournament'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Sporting Clay Tournament',status:'defer'},
   {kw:['military ball','mil ball'],acct:'4401 Member Event - Registration',cls:'Program Services:Program Other:Military Ball',status:'defer'},
@@ -519,432 +519,484 @@ const RULES = [
 ];
 
 const ACCOUNTS = [
-  '4101 Dues, Full Members (Renewal and Reinstatements)',
-  '4102 Dues, New Members',
-  '4103 Dues (Absentee Members)',
-  '4104 Membership Late Fees',
-  '4201 Program Registration Revenue',
-  '4202 Program Sponsorship Revenue',
-  '4301 Fundraising Registration Revenue',
-  '4302 Fundraising Sponsorship Revenue',
-  '4304 Fundraising Raffle & 50/50 Revenue',
-  '4305 Fundraising Auction Revenue',
-  '4306 Fundraising Beverage Revenue',
-  '4401 Member Event - Registration',
-  '4404 Member Event Raffle & 50/50',
-  '4405 Member Event Auction Revenue',
-  '4406 Member Event Product Revenue',
-  '5001 Sales of Product Revenue: Bar',
+  '4101 Dues, Full Members (Renewal and Reinstatements)','4102 Dues, New Members',
+  '4103 Dues (Absentee Members)','4104 Membership Late Fees',
+  '4201 Program Registration Revenue','4202 Program Sponsorship Revenue',
+  '4301 Fundraising Registration Revenue','4302 Fundraising Sponsorship Revenue',
+  '4304 Fundraising Raffle & 50/50 Revenue','4305 Fundraising Auction Revenue',
+  '4306 Fundraising Beverage Revenue','4401 Member Event - Registration',
+  '4404 Member Event Raffle & 50/50','4405 Member Event Auction Revenue',
+  '4406 Member Event Product Revenue','5001 Sales of Product Revenue: Bar',
   '5002 Sales of Product Revenue: Quartermaster',
-  '5511 Misc Income: Cigar Locker Rentals',
-  '5512 Misc Income: Float Locker Rental Income',
-  '5513 Misc Income: Rental Income',
-  '5991 Uncategorized Revenue',
-  '8101 Bank Charges & CC Fees',
-  '2150.1 Deferred Income - Fishing',
-  '2150.2 Deferred Income - Military Ball',
-  '2150.3 Deferred Income - Gasparilla After Party',
-  '2150.4 Deferred Income - Christmas Party',
-  '2150.7 Deferred Income - Golf Tournament',
-  '2150.8 Deferred Income - Halloween Party',
-  '2150.13 Deferred Income - St Patricks Events',
+  '5511 Misc Income: Cigar Locker Rentals','5512 Misc Income: Float Locker Rental Income',
+  '5513 Misc Income: Rental Income','5991 Uncategorized Revenue',
+  '8101 Bank Charges & CC Fees','2150.1 Deferred Income - Fishing',
+  '2150.2 Deferred Income - Military Ball','2150.3 Deferred Income - Gasparilla After Party',
+  '2150.4 Deferred Income - Christmas Party','2150.7 Deferred Income - Golf Tournament',
+  '2150.8 Deferred Income - Halloween Party','2150.13 Deferred Income - St Patricks Events',
   '4001 Contribution Revenue: Individual Donations',
 ];
 
 const CLASSES = [
-  'Fundraising:Fishing Tournament',
-  'Fundraising:Golf Tournament',
-  'Fundraising:Bar',
-  'Fundraising:Summer Theme Party',
-  'Fundraising:Halloween Party',
-  'Fundraising:Valentine\'s Day Party',
-  'Fundraising:Sporting Clay Tournament',
-  'Fundraising:Lip Synch Battle',
-  'Fundraising:Mini Clay Shoots',
+  'Fundraising:Fishing Tournament','Fundraising:Golf Tournament','Fundraising:Bar',
+  'Fundraising:Summer Theme Party','Fundraising:Halloween Party',
+  "Fundraising:Valentine's Day Party",'Fundraising:Sporting Clay Tournament',
+  'Fundraising:Lip Synch Battle','Fundraising:Mini Clay Shoots',
   'Fundraising:Gasparilla Events:Gasparilla After Party',
   'Fundraising:Gasparilla Events:Gasparilla Breakfast',
   'Fundraising:Gasparilla Events:Gasparilla Pre-Invasion Party',
-  'Fundraising:St. Patricks Week',
-  'Fundraising:St. Patricks Week:St. Pats Brunch',
+  'Fundraising:St. Patricks Week','Fundraising:St. Patricks Week:St. Pats Brunch',
   'Fundraising:St. Patricks Week:St. Pats Wristbands',
-  'Management & General:Administration',
-  'Management & General:Member Services',
+  'Fundraising:Minor Fundraisers','Fundraising:Rib Fest',
+  'Management & General:Administration','Management & General:Member Services',
   'Management & General:Small Membership Events:Christmas Party',
   'Management & General:Small Membership Events:Cigar Club',
   'Program Services:Charitable Events/Activities',
   'Program Services:Historical Related Committees:Night At The Museum',
-  'Program Services:Parades',
-  'Program Services:Program Other:Military Ball',
+  'Program Services:Parades','Program Services:Program Other:Military Ball',
   'Program Services:Program Other:Quartermaster',
   'Program Services:Program Other:Presidential Trip',
   'Unrelated Business Taxable Income:Cigar Locker Rentals',
   'Unrelated Business Taxable Income:Parade Float Locker Rentals',
 ];
 
-// ── CUSTOMER NAME / MEMBER # DEFAULTS ──
+// ── SQUARE ITEM → CLASS RESOLVER ──
+// Pass 1: what was sold (item/category) → account + base class
+// Pass 2: what event was it at → refine class for raffle/reg/auction/ticket rows
+const SQ_ITEM_RULES = [
+  {kw:['bar','beer','liquor','spirits','wine','cocktail','beverage','drink','bud ','miller','coors','shot ','rum','vodka','whiskey','seltzer','hard seltzer','draft','tap','keg','mixed drink'],
+   acct:'5001 Sales of Product Revenue: Bar',cls:'Fundraising:Bar',customer:'Allocate',memberNum:'888888'},
+  {kw:['quartermaster','qm ','merch','merchandise','shirt','t-shirt','tshirt','hat ','cap ','patch','apparel','jacket','polo','hoodie','vest','coin','pin ','button','souvenir','flag','sticker','store'],
+   acct:'5002 Sales of Product Revenue: Quartermaster',cls:'Program Services:Program Other:Quartermaster',customer:'Allocate',memberNum:'888888'},
+  {kw:['raffle','50/50','50-50','golden ticket','raffle ticket','pull tab'],
+   acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
+  {kw:['auction','silent auction','bid ','auction item','auction lot'],
+   acct:'4305 Fundraising Auction Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
+  {kw:['bead','beads','throw ','throws','doubloon'],
+   acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events',customer:'Allocate',memberNum:'888888'},
+  {kw:['on-site reg','onsite reg','walk-in','walk in','entry fee','day-of entry','day of entry','on site registration'],
+   acct:'4301 Fundraising Registration Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
+  {kw:['ticket','tickets','admission','cover charge','entry ticket'],
+   acct:'4401 Member Event - Registration',cls:null,customer:'Allocate',memberNum:'888888'},
+  {kw:['cigar locker','locker rental','cigar rental'],
+   acct:'5511 Misc Income: Cigar Locker Rentals',cls:'Unrelated Business Taxable Income:Cigar Locker Rentals',customer:'',memberNum:''},
+  {kw:['float locker','float rental','parade locker'],
+   acct:'5512 Misc Income: Float Locker Rental Income',cls:'Unrelated Business Taxable Income:Parade Float Locker Rentals',customer:'',memberNum:''},
+  {kw:['donation','donate','charitable'],
+   acct:'4001 Contribution Revenue: Individual Donations',cls:'Program Services:Charitable Events/Activities',customer:'',memberNum:''},
+];
+
+// Event context: used when SQ_ITEM_RULES sets cls:null
+const SQ_EVENT_CONTEXT = [
+  {kw:['fishing','fish tournam'],cls:'Fundraising:Fishing Tournament'},
+  {kw:['golf','hunters green'],cls:'Fundraising:Golf Tournament'},
+  {kw:['gasparilla','gsp ','krewe'],cls:'Fundraising:Gasparilla Events'},
+  {kw:['st pat','st. pat','patrick','pub crawl'],cls:'Fundraising:St. Patricks Week'},
+  {kw:['christmas','holiday party','xmas'],cls:'Management & General:Small Membership Events:Christmas Party'},
+  {kw:['halloween','costume'],cls:'Fundraising:Halloween Party'},
+  {kw:['valentine','vday'],cls:"Fundraising:Valentine's Day Party"},
+  {kw:['sporting clay','clay shoot'],cls:'Fundraising:Sporting Clay Tournament'},
+  {kw:['summer party','summer theme','summer social'],cls:'Fundraising:Summer Theme Party'},
+  {kw:['military ball','mil ball'],cls:'Program Services:Program Other:Military Ball'},
+  {kw:['rib fest','ribfest'],cls:'Fundraising:Rib Fest'},
+  {kw:['lip synch','lip sync'],cls:'Fundraising:Lip Synch Battle'},
+  {kw:['mini clay'],cls:'Fundraising:Mini Clay Shoots'},
+  {kw:['museum','natm','night at the museum'],cls:'Program Services:Historical Related Committees:Night At The Museum'},
+  {kw:['parade','desoto','springtime'],cls:'Program Services:Parades'},
+];
+
+function resolveSquareClass(desc) {
+  const d = desc.toLowerCase();
+  let match = null;
+  for (const r of SQ_ITEM_RULES) {
+    if (r.kw.some(k => d.includes(k))) { match = {...r}; break; }
+  }
+  if (!match) return null;
+  if (match.cls === null) {
+    for (const ev of SQ_EVENT_CONTEXT) {
+      if (ev.kw.some(k => d.includes(k))) { match.cls = ev.cls; break; }
+    }
+    if (match.cls === null) match.cls = '';
+  }
+  return match;
+}
+
+// ── CUSTOMER / MEMBER # DEFAULTS by account ──
 const CUSTOMER_DEFAULTS = {
-  '4101 Dues, Full Members (Renewal and Reinstatements)': { c: '', m: '' },
-  '4102 Dues, New Members':  { c: '', m: '' },
-  '4103 Dues (Absentee Members)': { c: '', m: '' },
-  '4104 Membership Late Fees': { c: '', m: '' },
-  '4201 Program Registration Revenue': { c: 'Allocate', m: '888888' },
-  '4202 Program Sponsorship Revenue': { c: '', m: '' },
-  '4301 Fundraising Registration Revenue': { c: 'Allocate', m: '888888' },
-  '4302 Fundraising Sponsorship Revenue': { c: '', m: '' },
-  '4304 Fundraising Raffle & 50/50 Revenue': { c: 'Allocate', m: '888888' },
-  '4305 Fundraising Auction Revenue': { c: 'Allocate', m: '888888' },
-  '4306 Fundraising Beverage Revenue': { c: 'Allocate', m: '888888' },
-  '4401 Member Event - Registration': { c: 'Allocate', m: '888888' },
-  '4404 Member Event Raffle & 50/50': { c: 'Allocate', m: '888888' },
-  '4405 Member Event Auction Revenue': { c: 'Allocate', m: '888888' },
-  '4406 Member Event Product Revenue': { c: 'Allocate', m: '888888' },
-  '5001 Sales of Product Revenue: Bar': { c: 'Allocate', m: '888888' },
-  '5002 Sales of Product Revenue: Quartermaster': { c: 'Allocate', m: '888888' },
-  '5511 Misc Income: Cigar Locker Rentals': { c: '', m: '' },
-  '5512 Misc Income: Float Locker Rental Income': { c: '', m: '' },
-  '5513 Misc Income: Rental Income': { c: '', m: '' },
-  '4001 Contribution Revenue: Individual Donations': { c: '', m: '' },
-  '8101 Bank Charges & CC Fees': { c: 'General Public', m: '999999' },
-  '5991 Uncategorized Revenue': { c: '', m: '' },
+  '4101 Dues, Full Members (Renewal and Reinstatements)':{c:'',m:''},
+  '4102 Dues, New Members':{c:'',m:''},
+  '4103 Dues (Absentee Members)':{c:'',m:''},
+  '4104 Membership Late Fees':{c:'',m:''},
+  '4201 Program Registration Revenue':{c:'Allocate',m:'888888'},
+  '4202 Program Sponsorship Revenue':{c:'',m:''},
+  '4301 Fundraising Registration Revenue':{c:'Allocate',m:'888888'},
+  '4302 Fundraising Sponsorship Revenue':{c:'',m:''},
+  '4304 Fundraising Raffle & 50/50 Revenue':{c:'Allocate',m:'888888'},
+  '4305 Fundraising Auction Revenue':{c:'Allocate',m:'888888'},
+  '4306 Fundraising Beverage Revenue':{c:'Allocate',m:'888888'},
+  '4401 Member Event - Registration':{c:'Allocate',m:'888888'},
+  '4404 Member Event Raffle & 50/50':{c:'Allocate',m:'888888'},
+  '4405 Member Event Auction Revenue':{c:'Allocate',m:'888888'},
+  '4406 Member Event Product Revenue':{c:'Allocate',m:'888888'},
+  '5001 Sales of Product Revenue: Bar':{c:'Allocate',m:'888888'},
+  '5002 Sales of Product Revenue: Quartermaster':{c:'Allocate',m:'888888'},
+  '5511 Misc Income: Cigar Locker Rentals':{c:'',m:''},
+  '5512 Misc Income: Float Locker Rental Income':{c:'',m:''},
+  '5513 Misc Income: Rental Income':{c:'',m:''},
+  '4001 Contribution Revenue: Individual Donations':{c:'',m:''},
+  '8101 Bank Charges & CC Fees':{c:'General Public',m:'999999'},
+  '5991 Uncategorized Revenue':{c:'',m:''},
 };
+function getCustomerDefaults(acct){ return CUSTOMER_DEFAULTS[acct]||{c:'',m:''}; }
 
-function getCustomerDefaults(acct) {
-  return CUSTOMER_DEFAULTS[acct] || { c: '', m: '' };
+function validateTxn(t){
+  const e=[];
+  if(!t.acct||t.acct.includes('Uncategorized')) e.push('No account');
+  if(!t.customerName||!t.customerName.trim()) e.push('Customer Name required');
+  if(!t.memberNum||!t.memberNum.trim()) e.push('Member # required');
+  return e;
 }
 
-function validateTxn(t) {
-  const errs = [];
-  if (!t.acct || t.acct.includes('Uncategorized')) errs.push('No account');
-  if (!t.customerName || !t.customerName.trim()) errs.push('Customer Name required');
-  if (!t.memberNum || !t.memberNum.trim()) errs.push('Member # required');
-  return errs;
-}
-
-function splitTransaction(id, memberPct) {
-  const idx = transactions.findIndex(t => t.id === id);
-  if (idx === -1) return;
-  const orig = transactions[idx];
-  const pubPct = 100 - memberPct;
-  const sc = (v, pct) => Math.round(v * pct) / 100;
-  const memberTxn = { ...orig, id: nextId++,
-    gross: sc(orig.gross, memberPct), fee: sc(orig.fee, memberPct), net: sc(orig.net, memberPct),
-    customerName: 'Allocate', memberNum: '888888',
-    memo: orig.memo + ` (${memberPct}% member-sourced)`, _splitFrom: id };
-  const pubTxn = { ...orig, id: nextId++,
-    gross: sc(orig.gross, pubPct), fee: sc(orig.fee, pubPct), net: sc(orig.net, pubPct),
-    customerName: 'General Public', memberNum: '999999',
-    memo: orig.memo + ` (${pubPct}% general public)`, _splitFrom: id };
-  transactions.splice(idx, 1, memberTxn, pubTxn);
+function splitTransaction(id, memberPct){
+  const idx=transactions.findIndex(t=>t.id===id); if(idx===-1)return;
+  const o=transactions[idx]; const pub=100-memberPct;
+  const sc=(v,p)=>Math.round(v*p)/100;
+  transactions.splice(idx,1,
+    {...o,id:nextId++,gross:sc(o.gross,memberPct),fee:sc(o.fee,memberPct),net:sc(o.net,memberPct),customerName:'Allocate',memberNum:'888888',memo:o.memo+` (${memberPct}% member)`,_splitFrom:id},
+    {...o,id:nextId++,gross:sc(o.gross,pub),fee:sc(o.fee,pub),net:sc(o.net,pub),customerName:'General Public',memberNum:'999999',memo:o.memo+` (${pub}% public)`,_splitFrom:id}
+  );
   renderAll();
 }
 
 // ── STATE ──
-let transactions = [];
-let nextId = 1;
-let memberMap = {};   // key: normalized full name → {id, firstName, lastName, memberNum, email, level, status}
-let memberList = [];  // sorted array for autocomplete
+let transactions=[]; let nextId=1;
+let memberMap={}; let memberList=[];
 
-// ── MEMBER CSV HANDLER ──
-function handleMemberFile(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const { rows, rawHeaders, slugHeaders } = parseCSV(e.target.result);
-    let loaded = 0;
-    memberMap = {};
-    memberList = [];
-
-    rows.forEach(row => {
-      const find = makeFinder(row, slugHeaders);
-      // Wild Apricot standard export columns:
-      // Member ID, First name, Last name, Email, Member level, Status, Renewal due
-      // Also handles: MemberID, MemberId, member_id, id, etc.
-      // Wild Apricot exact columns: "User ID","First name","Last name","Email","Member #","Membership level"
-      // "Member #" slugifies to "member_" (# stripped); "User ID" slugifies to "user_id" (WA internal, not member#)
-      const id    = find('member_') || find('member_number','membernumber','member_no','membernum') || '';
-      const fn    = find('first_name') || find('firstname','fname') || '';
-      const ln    = find('last_name')  || find('lastname','lname','surname') || '';
-      const email = find('email') || '';
-      const level = find('membership_level') || find('memberlevel','member_level','level') || '';
-      const status = find('status','membership_status') || level || '';
-
-      if (!id && !fn && !ln) return;
-      const fullName = `${fn} ${ln}`.trim();
-      if (!fullName) return;
-
-      const entry = { id, firstName: fn, lastName: ln, fullName, email, level, status };
-      const key = fullName.toLowerCase();
-      memberMap[key] = entry;
-      // Also index by last name alone for partial match
-      if (ln) {
-        const lnKey = ln.toLowerCase();
-        if (!memberMap['_ln_' + lnKey]) memberMap['_ln_' + lnKey] = [];
-        memberMap['_ln_' + lnKey].push(entry);
-      }
+// ── MEMBER CSV ──
+function handleMemberFile(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const {rows,rawHeaders,slugHeaders}=parseCSV(e.target.result);
+    memberMap={}; memberList=[];
+    rows.forEach(row=>{
+      const find=makeFinder(row,slugHeaders);
+      // WA exact columns: "Member #" → slug "member_", "First name" → "first_name", "Last name" → "last_name"
+      const id   = find('member_')||find('member_number','membernumber')||'';
+      const fn   = find('first_name')||find('firstname','fname')||'';
+      const ln   = find('last_name')||find('lastname','lname')||'';
+      const email= find('email')||'';
+      const level= find('membership_level')||find('memberlevel','level')||'';
+      const status=find('status')||level||'';
+      if(!fn&&!ln) return;
+      const fullName=`${fn} ${ln}`.trim(); if(!fullName) return;
+      const entry={id,firstName:fn,lastName:ln,fullName,email,level,status};
+      memberMap[fullName.toLowerCase()]=entry;
+      if(ln){const lk='_ln_'+ln.toLowerCase(); if(!memberMap[lk])memberMap[lk]=[]; memberMap[lk].push(entry);}
       memberList.push(entry);
-      loaded++;
     });
-
-    memberList.sort((a,b) => a.lastName.localeCompare(b.lastName));
-
-    const card = document.getElementById('card-mbr');
-    const status = document.getElementById('status-mbr');
-    card.classList.add('loaded');
-    card.style.background = '#e8f5ec';
-    card.style.borderColor = '#1a5c2e';
-    status.textContent = `✓ ${loaded} members loaded`;
-    status.className = 'upload-status ok';
-
-    // Rebuild autocomplete datalist
+    memberList.sort((a,b)=>a.lastName.localeCompare(b.lastName));
     rebuildDatalist();
-    // Re-render table with member lookup hints
-    if (transactions.length) renderTable();
+    document.getElementById('card-mbr').classList.add('loaded');
+    document.getElementById('card-mbr').style.cssText+='background:#e8f5ec;border-color:#1a5c2e;';
+    const st=document.getElementById('status-mbr');
+    st.textContent=`✓ ${memberList.length} members loaded`;
+    st.className='upload-status ok';
+    if(transactions.length) renderTable();
+    updateStats();
   };
   reader.readAsText(file);
 }
 
-function rebuildDatalist() {
-  let dl = document.getElementById('member-datalist');
-  if (!dl) {
-    dl = document.createElement('datalist');
-    dl.id = 'member-datalist';
-    document.body.appendChild(dl);
-  }
-  dl.innerHTML = memberList.slice(0, 500).map(m =>
-    `<option value="${m.fullName}" data-id="${m.id}">${m.fullName} — #${m.id} (${m.level})</option>`
-  ).join('');
+function rebuildDatalist(){
+  let dl=document.getElementById('member-datalist');
+  if(!dl){dl=document.createElement('datalist');dl.id='member-datalist';document.body.appendChild(dl);}
+  dl.innerHTML=memberList.slice(0,600).map(m=>`<option value="${m.fullName}">${m.fullName} — #${m.id} (${m.level.substring(0,30)})</option>`).join('');
 }
 
-function lookupMember(nameInput) {
-  if (!nameInput || !memberList.length) return null;
-  const key = nameInput.trim().toLowerCase();
-  // Exact full name match
-  if (memberMap[key]) return memberMap[key];
-  // Last name only match → return first result
-  const lnResults = memberMap['_ln_' + key];
-  if (lnResults && lnResults.length === 1) return lnResults[0];
-  // Partial: find first member whose full name starts with the input
-  const partial = memberList.find(m => m.fullName.toLowerCase().startsWith(key));
-  return partial || null;
+function lookupMember(nameInput){
+  if(!nameInput||!memberList.length) return null;
+  const key=nameInput.trim().toLowerCase();
+  if(memberMap[key]) return memberMap[key];
+  const lnRes=memberMap['_ln_'+key];
+  if(lnRes&&lnRes.length===1) return lnRes[0];
+  return memberList.find(m=>m.fullName.toLowerCase().startsWith(key))||null;
 }
 
-// When user types in Customer Name field, auto-fill Member # if it matches a member
-function onCustomerNameInput(id, val) {
-  const t = transactions.find(x=>x.id===id);
-  if (!t) return;
-  t.customerName = val;
-  // Only auto-lookup if not a reserved name
-  if (!['Allocate','General Public'].includes(val)) {
-    const m = lookupMember(val);
-    if (m && m.id) {
-      t.memberNum = m.id;
-      // Update the member # input field visually
-      const numInput = document.getElementById('mnum-' + id);
-      if (numInput) {
-        numInput.value = m.id;
-        numInput.style.borderColor = '#1a5c2e';
-        numInput.style.background = '#f0fff4';
-      }
+function onCustomerNameInput(id,val){
+  const t=transactions.find(x=>x.id===id); if(!t) return;
+  t.customerName=val;
+  if(!['Allocate','General Public'].includes(val)){
+    const m=lookupMember(val);
+    if(m&&m.id){ t.memberNum=m.id;
+      const ni=document.getElementById('mnum-'+id);
+      if(ni){ni.value=m.id;ni.style.borderColor='#1a5c2e';ni.style.background='#f0fff4';}
     }
   }
   updateExportBtn();
 }
 
-function matchRule(desc) {
-  const d = desc.toLowerCase();
-  for (const r of RULES) {
-    if (r.kw.some(k => d.includes(k))) return r;
+// ── CSV PARSER ──
+function splitCSVLine(line){
+  const res=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur);cur='';}
+    else{cur+=c;}
   }
-  return null;
+  res.push(cur); return res;
 }
 
-function parseDate(raw) {
-  if (!raw) return '';
-  const d = new Date(raw);
-  if (isNaN(d)) return raw.substring(0,10);
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  const y = d.getFullYear();
-  return `${m}/${dd}/${y}`;
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
+  if(!lines.length) return{rows:[],rawHeaders:[],slugHeaders:[]};
+  let headerIdx=0,bestScore=-1;
+  for(let i=0;i<Math.min(lines.length,8);i++){
+    const cells=splitCSVLine(lines[i]).map(c=>c.trim().replace(/^"|"$/g,''));
+    const score=cells.filter(c=>c&&isNaN(c)&&c.length>1).length;
+    if(score>bestScore){bestScore=score;headerIdx=i;}
+  }
+  const rawHeaders=splitCSVLine(lines[headerIdx]).map(h=>h.trim().replace(/^"|"$/g,''));
+  const slugHeaders=rawHeaders.map(h=>h.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
+  const rows=[];
+  for(let i=headerIdx+1;i<lines.length;i++){
+    const vals=splitCSVLine(lines[i]);
+    if(vals.length<2) continue;
+    const row={_raw:{}};
+    slugHeaders.forEach((h,j)=>{
+      const v=(vals[j]||'').trim().replace(/^"|"$/g,'');
+      row[h]=v; row._raw[rawHeaders[j]]=v;
+    });
+    rows.push(row);
+  }
+  return{rows,rawHeaders,slugHeaders};
 }
 
-function parseAmount(raw) {
-  if (!raw) return 0;
-  return parseFloat(String(raw).replace(/[$,\s]/g,'')) || 0;
+function makeFinder(row,slugHeaders){
+  return function find(...candidates){
+    for(const candidate of candidates){
+      const c=candidate.toLowerCase();
+      if(row[c]!==undefined&&row[c]!=='') return row[c];
+      const sm=slugHeaders.find(s=>s===c||s.includes(c)||c.includes(s));
+      if(sm&&row[sm]!==undefined&&row[sm]!=='') return row[sm];
+      const rm=Object.keys(row._raw||{}).find(k=>k.toLowerCase().includes(c));
+      if(rm&&row._raw[rm]!=='') return row._raw[rm];
+    }
+    return '';
+  };
 }
 
-function triggerFile(id) { document.getElementById(id).click(); }
+// Square: combine category + item + description + notes for rich matching
+function extractSquare(row,slugHeaders){
+  const find=makeFinder(row,slugHeaders);
+  const category=find('category')||'';
+  const item=find('item')||'';
+  const desc=find('description','name','payment_type')||'';
+  const notes=find('notes','detail','details')||'';
+  const eventType=find('event_type','event')||'';
+  const location=find('location','device_name','device')||'';
+  const combined=[item,category,desc,notes,eventType,location].map(s=>s.trim()).filter(Boolean).join(' | ')||'Square transaction';
+  return{
+    date:find('date'),
+    desc:combined,
+    gross:find('gross_sales','gross','amount','total_collected','total','price_point','net_sales'),
+    fee:find('fees_square','fees','fee','square_fee','square_fees','processing_fee','card_processing_fees'),
+    net:find('net_total','net_sales','net','net_amount','net_total_collected'),
+  };
+}
 
-function handleFile(platform, input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const parseResult = parseCSV(e.target.result);
-    ingestRows(platform, parseResult, file.name);
+function extractStripe(row,slugHeaders){
+  const find=makeFinder(row,slugHeaders);
+  return{
+    date:find('created_utc','created','date','available_on_utc','charge_created_utc'),
+    desc:find('description','customer_description','charge_description','statement_descriptor','reporting_category','type','source'),
+    gross:find('gross','amount','charge_amount','total'),
+    fee:find('fee','stripe_fee','fees','fee_details'),
+    net:find('net','net_amount','payout_amount'),
+  };
+}
+
+function extract8am(row,slugHeaders){
+  const find=makeFinder(row,slugHeaders);
+  return{
+    date:find('order_date','date','created','event_date'),
+    desc:find('event_name','event','ticket_type','description','item','name','order_type'),
+    gross:find('gross_amount','gross','amount','unit_price','price','total'),
+    fee:find('platform_fee','fee','fees','service_fee','booking_fee'),
+    net:find('net_amount','net','payout'),
+  };
+}
+
+function showDebugPanel(platform,rawHeaders,rows,extracted){
+  let panel=document.getElementById('debug-panel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='debug-panel';
+    panel.style.cssText='background:#1a1814;color:#c8c2b6;font-family:var(--mono);font-size:12px;padding:16px 20px;border-radius:8px;margin:0 0 16px;line-height:1.7;';
+    const main=document.querySelector('main');
+    main.insertBefore(panel,main.children[2]);
+  }
+  const es=extracted[0]||{};
+  const withData=extracted.filter(e=>e.gross||e.net).length;
+  panel.innerHTML=`
+    <div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()} (dismiss once working)</div>
+    <div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div>
+    <div style="margin-top:4px;"><span style="color:#888;">Rows parsed:</span> <strong style="color:#fff">${rows.length}</strong> &nbsp;|&nbsp; <span style="color:#888;">Rows with amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>
+    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'—'}"</span> desc:<span style="color:#9fb">"${(es.desc||'—').substring(0,60)}"</span> gross:<span style="color:#9fb">"${es.gross||'—'}"</span> fee:<span style="color:#9fb">"${es.fee||'—'}"</span></div>`:''}
+    ${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts. Reply with your column headers and I'll fix the parser.</div>`:''}
+    <button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
+}
+
+function parseAmount(raw){
+  if(!raw) return 0;
+  return parseFloat(String(raw).replace(/[$,\s]/g,'').replace(/^\((.+)\)$/,'$1').replace(/^-/,''))||0;
+}
+
+function parseDate(raw){
+  if(!raw) return '';
+  const d=new Date(raw);
+  if(isNaN(d)) return raw.substring(0,10);
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return `${m}/${dd}/${d.getFullYear()}`;
+}
+
+function triggerFile(id){document.getElementById(id).click();}
+
+function handleFile(platform,input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const parseResult=parseCSV(e.target.result);
+    ingestRows(platform,parseResult,file.name);
   };
   reader.readAsText(file);
 }
 
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (!lines.length) return [];
-  // Find header row (first row with multiple commas)
-  let headerIdx = 0;
-  for (let i = 0; i < Math.min(lines.length, 5); i++) {
-    if ((lines[i].match(/,/g)||[]).length > 2) { headerIdx = i; break; }
-  }
-  const headers = splitCSVLine(lines[headerIdx]).map(h => h.trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
-  const result = [];
-  for (let i = headerIdx+1; i < lines.length; i++) {
-    const vals = splitCSVLine(lines[i]);
-    if (vals.length < 2) continue;
-    const row = {};
-    headers.forEach((h,j) => row[h] = (vals[j]||'').trim().replace(/^"|"$/g,''));
-    result.push(row);
-  }
-  return result;
-}
+function ingestRows(platform,parseResult,filename){
+  const{rows,rawHeaders,slugHeaders}=parseResult;
+  const extractor=platform==='square'?extractSquare:platform==='stripe'?extractStripe:extract8am;
+  const extracted=rows.map(r=>extractor(r,slugHeaders));
+  showDebugPanel(platform,rawHeaders,rows,extracted);
 
-function splitCSVLine(line) {
-  const result = []; let cur = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += c; }
-  }
-  result.push(cur);
-  return result;
-}
+  let count=0;
+  extracted.forEach(e=>{
+    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw}=e;
+    const gross=parseAmount(grossRaw);
+    const fee=Math.abs(parseAmount(feeRaw));
+    const net=parseAmount(netRaw)||(gross-fee);
+    if(gross===0&&fee===0&&net===0) return;
+    const dl=(desc||'').toLowerCase();
+    if(!grossRaw&&!netRaw&&(dl.includes('total')||dl.includes('summary'))) return;
+    const resolvedDesc=desc||`${platform} transaction`;
 
-function ingestRows(platform, rows, filename) {
-  let count = 0;
-  rows.forEach(row => {
-    // Extract fields flexibly based on common column names
-    const keys = Object.keys(row);
-    const find = (...names) => {
-      for (const n of names) { const k = keys.find(k=>k.includes(n)); if(k) return row[k]; }
-      return '';
-    };
-    const dateRaw = find('date','time','created','transaction_date');
-    const descRaw = find('description','name','item','event','type','memo','note','detail');
-    const grossRaw = find('gross','total','amount','sale','charge','price');
-    const feeRaw = find('fee','processing','platform_fee','charge_fee');
-    const netRaw = find('net','payout','deposit','net_amount','transfer');
+    // Square: try item-level resolver first; fallback to general matchRule
+    let sqMatch=null, rule=null;
+    if(platform==='square'){
+      sqMatch=resolveSquareClass(resolvedDesc);
+    }
+    if(!sqMatch) rule=matchRule(resolvedDesc);
 
-    const desc = descRaw || 'Transaction';
-    const gross = parseAmount(grossRaw) || parseAmount(netRaw);
-    const fee = Math.abs(parseAmount(feeRaw));
-    const net = parseAmount(netRaw) || (gross - fee);
+    const resolvedAcct=sqMatch?sqMatch.acct:(rule?rule.acct:'5991 Uncategorized Revenue');
+    const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
+    const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
+    const def=getCustomerDefaults(resolvedAcct);
+    const resolvedCustomer=sqMatch?(sqMatch.customer||def.c||''):(def.c||'');
+    const resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
 
-    if (gross === 0 && fee === 0) return;
-
-    const rule = matchRule(desc);
-    const txn = {
-      id: nextId++,
-      platform,
-      date: parseDate(dateRaw) || new Date().toLocaleDateString('en-US'),
-      desc,
-      acct: rule ? rule.acct : '5991 Uncategorized Revenue',
-      cls: rule ? rule.cls : '',
-      gross,
-      fee,
-      net,
-      status: rule ? rule.status : 'unknown',
-      selected: rule ? rule.status !== 'unknown' : false,
-      memo: `${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}`,
-      customerName: (() => { const def = getCustomerDefaults(rule ? rule.acct : ''); return def.c || ''; })(),
-      memberNum: (() => { const def = getCustomerDefaults(rule ? rule.acct : ''); return def.m || ''; })(),
-    };
-    transactions.push(txn);
+    transactions.push({
+      id:nextId++, platform,
+      date:parseDate(date)||new Date().toLocaleDateString('en-US'),
+      desc:resolvedDesc,
+      acct:resolvedAcct, cls:resolvedCls,
+      gross, fee, net,
+      status:resolvedStatus,
+      selected:resolvedStatus!=='unknown',
+      memo:`${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}`,
+      customerName:resolvedCustomer,
+      memberNum:resolvedMemberNum,
+    });
     count++;
   });
 
-  // Mark upload card
-  const cardId = platform === 'square' ? 'card-sq' : platform === 'stripe' ? 'card-st' : 'card-am';
-  const statusId = platform === 'square' ? 'status-sq' : platform === 'stripe' ? 'status-st' : 'status-am';
+  const cardId=platform==='square'?'card-sq':platform==='stripe'?'card-st':'card-am';
+  const statusId=platform==='square'?'status-sq':platform==='stripe'?'status-st':'status-am';
   document.getElementById(cardId).classList.add('loaded');
-  document.getElementById(statusId).textContent = `✓ ${count} rows loaded from ${filename}`;
-  document.getElementById(statusId).className = 'upload-status ok';
-
+  const st=document.getElementById(statusId);
+  st.textContent=`✓ ${count} rows loaded from ${filename}`;
+  st.className='upload-status ok';
   renderAll();
 }
 
-function renderAll() {
-  updateStats();
-  renderTable();
-  document.getElementById('stats-bar').style.display = transactions.length ? 'flex' : 'none';
-  document.getElementById('toolbar').style.display = transactions.length ? 'flex' : 'none';
-  document.getElementById('export-btn').disabled = transactions.filter(t=>t.selected && t.status !== 'unknown').length === 0;
+function matchRule(desc){
+  const d=desc.toLowerCase();
+  for(const r of RULES){ if(r.kw.some(k=>d.includes(k))) return r; }
+  return null;
 }
 
-function updateStats() {
-  const ok = transactions.filter(t=>t.status==='ok').length;
-  const defer = transactions.filter(t=>t.status==='defer').length;
-  const unk = transactions.filter(t=>t.status==='unknown').length;
-  const grossIncome = transactions.filter(t=>t.status!=='ok'||!t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
-  const totalFees = transactions.filter(t=>t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
-  document.getElementById('s-total').textContent = transactions.length;
-  document.getElementById('s-ok').textContent = ok;
-  document.getElementById('s-defer').textContent = defer;
-  document.getElementById('s-unknown').textContent = unk;
-  document.getElementById('s-gross').textContent = '$' + grossIncome.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('s-fees').textContent = '$' + totalFees.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('s-mbr').textContent = memberList.length > 0 ? memberList.length : '—';
-  document.getElementById('unknown-notice').style.display = unk > 0 ? 'flex' : 'none';
+// ── RENDER ──
+function renderAll(){
+  updateStats(); renderTable();
+  document.getElementById('stats-bar').style.display=transactions.length?'flex':'none';
+  document.getElementById('toolbar').style.display=transactions.length?'flex':'none';
+  updateExportBtn();
 }
 
-function getFiltered() {
-  const q = (document.getElementById('search-box')||{}).value?.toLowerCase()||'';
-  const pf = (document.getElementById('filter-platform')||{}).value||'';
-  const st = (document.getElementById('filter-status')||{}).value||'';
-  return transactions.filter(t => {
-    if (q && !t.desc.toLowerCase().includes(q) && !t.acct.toLowerCase().includes(q)) return false;
-    if (pf && t.platform !== pf) return false;
-    if (st && t.status !== st) return false;
+function updateStats(){
+  const ok=transactions.filter(t=>t.status==='ok').length;
+  const defer=transactions.filter(t=>t.status==='defer').length;
+  const unk=transactions.filter(t=>t.status==='unknown').length;
+  const grossIncome=transactions.filter(t=>!t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
+  const totalFees=transactions.filter(t=>t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
+  document.getElementById('s-total').textContent=transactions.length;
+  document.getElementById('s-ok').textContent=ok;
+  document.getElementById('s-defer').textContent=defer;
+  document.getElementById('s-unknown').textContent=unk;
+  document.getElementById('s-gross').textContent='$'+grossIncome.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('s-fees').textContent='$'+totalFees.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('s-mbr').textContent=memberList.length>0?memberList.length:'—';
+  document.getElementById('unknown-notice').style.display=transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
+}
+
+function getFiltered(){
+  const q=(document.getElementById('search-box')||{}).value?.toLowerCase()||'';
+  const pf=(document.getElementById('filter-platform')||{}).value||'';
+  const st=(document.getElementById('filter-status')||{}).value||'';
+  return transactions.filter(t=>{
+    if(q&&!t.desc.toLowerCase().includes(q)&&!t.acct.toLowerCase().includes(q)) return false;
+    if(pf&&t.platform!==pf) return false;
+    if(st&&t.status!==st) return false;
     return true;
   });
 }
 
-function renderTable() {
-  const filtered = getFiltered();
-  const tbody = document.getElementById('txn-body');
-  const empty = document.getElementById('empty-state');
-  const tbl = document.getElementById('txn-table');
-
-  if (!transactions.length) {
-    empty.style.display='block'; tbl.style.display='none';
-    document.getElementById('row-count').textContent = '';
-    return;
-  }
+function renderTable(){
+  const filtered=getFiltered();
+  const tbody=document.getElementById('txn-body');
+  const empty=document.getElementById('empty-state');
+  const tbl=document.getElementById('txn-table');
+  if(!transactions.length){empty.style.display='block';tbl.style.display='none';document.getElementById('row-count').textContent='';return;}
   empty.style.display='none'; tbl.style.display='table';
-  document.getElementById('row-count').textContent = `${filtered.length} of ${transactions.length} rows`;
-
-  const acctOpts = ACCOUNTS.map(a=>`<option value="${a}">${a}</option>`).join('');
-  const clsOpts = CLASSES.map(c=>`<option value="${c}">${c}</option>`).join('');
-
-  tbody.innerHTML = filtered.map(t => {
-    const platBadge = t.platform==='square' ? 'badge-sq' : t.platform==='stripe' ? 'badge-st' : 'badge-am';
-    const errs = validateTxn(t);
-    const hasErr = errs.length > 0;
-    const statusBadge = hasErr ? 'badge-unknown' : t.status==='ok' ? 'badge-ok' : t.status==='defer' ? 'badge-defer' : 'badge-unknown';
-    const statusLabel = hasErr ? 'Needs review' : t.status==='ok' ? 'Auto-matched' : t.status==='defer' ? 'Deferred check' : 'Unknown';
-    const rowCls = hasErr ? 'flag-unknown' : t.status==='defer' ? 'flag-deferred' : 'flag-ok';
-    const fmtAmt = (v) => v === 0 ? '—' : (v<0?'-':'')+' $'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const custBorder = (!t.customerName) ? 'border-color:#c85a5a;' : '';
-    const memBorder  = (!t.memberNum)    ? 'border-color:#c85a5a;' : '';
-    // Determine if this is a bar/mixed event that may need splitting
-    const isMixed = t.acct && (t.acct.includes('Bar') || t.acct.includes('Beverage'));
-    const splitBtn = isMixed && !t._splitFrom ? `<button class="btn btn-xs" style="margin-top:3px;font-size:10px;background:#fff3cd;color:#7a4f00;border:1px solid #e8c96c;" onclick="promptSplit(${t.id})" title="Split into member % + public %">⚖ Split</button>` : '';
-    return `<tr class="${rowCls}${t.selected?' selected':''}" id="row-${t.id}">
+  document.getElementById('row-count').textContent=`${filtered.length} of ${transactions.length} rows`;
+  tbody.innerHTML=filtered.map(t=>{
+    const pb=t.platform==='square'?'badge-sq':t.platform==='stripe'?'badge-st':'badge-am';
+    const errs=validateTxn(t); const hasErr=errs.length>0;
+    const sb=hasErr?'badge-unknown':t.status==='ok'?'badge-ok':t.status==='defer'?'badge-defer':'badge-unknown';
+    const sl=hasErr?errs.join(', '):t.status==='ok'?'Auto-matched':t.status==='defer'?'Deferred check':'Unknown';
+    const rc=hasErr?'flag-unknown':t.status==='defer'?'flag-deferred':'flag-ok';
+    const fa=(v)=>v===0?'—':(v<0?'-':'')+' $'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const cb=(!t.customerName)?'border-color:#c85a5a;':'';
+    const mb=(!t.memberNum)?'border-color:#c85a5a;':'';
+    const isMixed=t.acct&&(t.acct.includes('Bar')||t.acct.includes('Beverage'));
+    const splitBtn=isMixed&&!t._splitFrom?`<button class="btn btn-xs" style="margin-top:3px;font-size:10px;background:#fff3cd;color:#7a4f00;border:1px solid #e8c96c;" onclick="promptSplit(${t.id})" title="Split member% + public%">⚖ Split</button>`:'';
+    return `<tr class="${rc}${t.selected?' selected':''}" id="row-${t.id}">
       <td><input type="checkbox" ${t.selected?'checked':''} onchange="toggleRow(${t.id},this.checked)"></td>
       <td class="mono" style="font-size:11px;">${t.date}</td>
-      <td><span class="badge ${platBadge}">${t.platform}</span></td>
+      <td><span class="badge ${pb}">${t.platform}</span></td>
       <td>
         <div style="font-weight:500;font-size:12px;">${t.desc}</div>
-        <input type="text" value="${t.memo||''}" style="font-size:10px;font-family:var(--mono);margin-top:2px;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:#faf9f7;color:var(--text-muted);width:100%;max-width:280px;" onchange="updateField(${t.id},'memo',this.value)" placeholder="QBO memo…">
+        <input type="text" value="${(t.memo||'').replace(/"/g,'&quot;')}" style="font-size:10px;font-family:var(--mono);margin-top:2px;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:#faf9f7;color:var(--text-muted);width:100%;max-width:280px;" onchange="updateField(${t.id},'memo',this.value)" placeholder="QBO memo…">
       </td>
       <td class="editable-cell">
         <select style="font-size:11px;" onchange="updateAcct(${t.id},this.value)">
@@ -959,278 +1011,206 @@ function renderTable() {
         </select>
       </td>
       <td class="editable-cell">
-        <input type="text" value="${t.customerName||''}" placeholder="Name *" list="member-datalist"
-          style="font-size:11px;padding:3px 6px;border:1px solid var(--border-strong);${custBorder}border-radius:4px;width:100%;"
-          oninput="onCustomerNameInput(${t.id},this.value)"
-          onchange="onCustomerNameInput(${t.id},this.value)"
-          title="Type member name to auto-fill Member #. Or type: Allocate / General Public">
-        ${memberList.length ? '<span style=\'font-size:10px;color:#1a5c2e;\'>⟳ member lookup active</span>' : ''}
+        <input type="text" value="${(t.customerName||'').replace(/"/g,'&quot;')}" placeholder="Name *" list="member-datalist"
+          style="font-size:11px;padding:3px 6px;border:1px solid var(--border-strong);${cb}border-radius:4px;width:100%;"
+          oninput="onCustomerNameInput(${t.id},this.value)" onchange="onCustomerNameInput(${t.id},this.value)"
+          title="Type member name to auto-fill #. Or: Allocate / General Public">
+        ${memberList.length?'<span style="font-size:10px;color:#1a5c2e;">⟳ lookup</span>':''}
         ${splitBtn}
       </td>
       <td class="editable-cell">
-        <input type="text" id="mnum-${t.id}" value="${t.memberNum||''}" placeholder="# *"
-          style="font-size:11px;font-family:var(--mono);padding:3px 6px;border:1px solid var(--border-strong);${memBorder}border-radius:4px;width:100%;max-width:90px;"
-          onchange="updateField(${t.id},'memberNum',this.value)"
-          title="Member #, 888888=Allocate, 999999=General Public">
+        <input type="text" id="mnum-${t.id}" value="${(t.memberNum||'').replace(/"/g,'&quot;')}" placeholder="# *"
+          style="font-size:11px;font-family:var(--mono);padding:3px 6px;border:1px solid var(--border-strong);${mb}border-radius:4px;width:100%;max-width:90px;"
+          onchange="updateField(${t.id},'memberNum',this.value)" title="Member #, 888888=Allocate, 999999=General Public">
       </td>
-      <td class="amount ${t.gross>=0?'positive':''}" style="font-size:12px;">${fmtAmt(t.gross)}</td>
+      <td class="amount ${t.gross>=0?'positive':''}" style="font-size:12px;">${fa(t.gross)}</td>
       <td class="amount negative" style="font-size:12px;">${t.fee>0?'($'+t.fee.toFixed(2)+')':'—'}</td>
-      <td class="amount" style="font-size:12px;">${fmtAmt(t.net)}</td>
-      <td>
-        <span class="badge ${statusBadge}" style="font-size:10px;">${statusLabel}</span>
-        ${hasErr ? `<div style="font-size:10px;color:#c85a5a;margin-top:2px;">${errs.join(', ')}</div>` : ''}
-      </td>
+      <td class="amount" style="font-size:12px;">${fa(t.net)}</td>
+      <td><span class="badge ${sb}" style="font-size:10px;">${t.status==='ok'&&!hasErr?'✓ matched':sl}</span></td>
       <td><button class="btn btn-xs btn-danger" onclick="deleteRow(${t.id})">✕</button></td>
     </tr>`;
-}).join('');
+  }).join('');
 }
 
-function filterTable() { renderTable(); }
+function filterTable(){renderTable();}
 
-function toggleMemberPanel() {
-  const panel = document.getElementById('member-panel');
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen && memberList.length === 0) {
-    document.getElementById('mbr-search-hint').textContent = 'Load member CSV above to enable lookup';
-  } else if (!isOpen) {
-    document.getElementById('mbr-search-hint').textContent = `${memberList.length} members loaded — type to search`;
-    document.getElementById('mbr-search').focus();
+function toggleMemberPanel(){
+  const p=document.getElementById('member-panel');
+  const isOpen=p.style.display!=='none';
+  p.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    const hint=document.getElementById('mbr-search-hint');
+    hint.textContent=memberList.length>0?`${memberList.length} members loaded — type to search`:'Load member CSV above to enable';
+    if(memberList.length) document.getElementById('mbr-search').focus();
   }
 }
 
-function searchMembers(q) {
-  const results = document.getElementById('mbr-results');
-  if (!q || q.length < 2) { results.innerHTML = ''; return; }
-  const ql = q.toLowerCase();
-  const matches = memberList.filter(m =>
-    m.fullName.toLowerCase().includes(ql) ||
-    m.id.toString().includes(ql) ||
-    m.email.toLowerCase().includes(ql) ||
-    m.level.toLowerCase().includes(ql)
-  ).slice(0, 15);
-  if (!matches.length) { results.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">No members found</div>'; return; }
-  results.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+function searchMembers(q){
+  const res=document.getElementById('mbr-results');
+  if(!q||q.length<2){res.innerHTML='';return;}
+  const ql=q.toLowerCase();
+  const matches=memberList.filter(m=>m.fullName.toLowerCase().includes(ql)||m.id.toString().includes(ql)||m.email.toLowerCase().includes(ql)).slice(0,15);
+  if(!matches.length){res.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No members found</div>';return;}
+  res.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px;">
     <thead><tr style="background:#f0ede8;">
       <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Name</th>
       <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Member #</th>
       <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Level</th>
-      <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Status</th>
       <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Email</th>
     </tr></thead>
-    <tbody>${matches.map((m,i) => `
-      <tr style="background:${i%2?'#faf9f7':'#fff'};cursor:pointer;" onclick="copyMemberToClipboard('${m.fullName}','${m.id}')" title="Click to copy name + # to clipboard">
+    <tbody>${matches.map((m,i)=>`
+      <tr style="background:${i%2?'#faf9f7':'#fff'};cursor:pointer;" onclick="copyMemberToClipboard('${m.fullName.replace(/'/g,"\\'")}','${m.id}')" title="Click to copy">
         <td style="padding:5px 10px;border-bottom:1px solid var(--border);font-weight:500;">${m.fullName}</td>
         <td style="padding:5px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">${m.id}</td>
-        <td style="padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">${m.level}</td>
-        <td style="padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">${m.status}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">${m.level.substring(0,35)}</td>
         <td style="padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">${m.email}</td>
       </tr>`).join('')}
-    </tbody>
-  </table>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Click any row to copy name and member # to clipboard</div>`;
+    </tbody></table>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Click row to copy name + # to clipboard</div>`;
 }
 
-function copyMemberToClipboard(name, id) {
-  navigator.clipboard.writeText(`${name}	${id}`).then(() => {
-    const hint = document.getElementById('mbr-search-hint');
-    const orig = hint.textContent;
-    hint.textContent = `✓ Copied: ${name} / #${id}`;
-    hint.style.color = 'var(--green)';
-    setTimeout(() => { hint.textContent = orig; hint.style.color = ''; }, 2000);
-  }).catch(() => {
-    prompt('Copy this (name TAB member#):', `${name}	${id}`);
-  });
+function copyMemberToClipboard(name,id){
+  navigator.clipboard.writeText(`${name}\t${id}`).then(()=>{
+    const h=document.getElementById('mbr-search-hint'); const orig=h.textContent;
+    h.textContent=`✓ Copied: ${name} / #${id}`; h.style.color='var(--green)';
+    setTimeout(()=>{h.textContent=orig;h.style.color='';},2000);
+  }).catch(()=>prompt('Copy (name TAB member#):',`${name}\t${id}`));
 }
-function toggleRow(id, checked) {
-  const t = transactions.find(x=>x.id===id);
-  if (t) { t.selected = checked; }
-  updateExportBtn();
-}
-function toggleAll(cb) {
-  getFiltered().forEach(t => t.selected = cb.checked);
-  renderTable(); updateExportBtn();
-}
-function selectAll(v) {
-  getFiltered().forEach(t => t.selected = v);
-  renderTable(); updateExportBtn();
-}
-function updateAcct(id, val) {
-  const t = transactions.find(x=>x.id===id);
-  if (!t) return;
-  t.acct = val;
-  if (val && t.status === 'unknown') t.status = 'ok';
+
+function toggleRow(id,checked){const t=transactions.find(x=>x.id===id);if(t){t.selected=checked;}updateExportBtn();}
+function toggleAll(cb){getFiltered().forEach(t=>t.selected=cb.checked);renderTable();updateExportBtn();}
+function selectAll(v){getFiltered().forEach(t=>t.selected=v);renderTable();updateExportBtn();}
+
+function updateAcct(id,val){
+  const t=transactions.find(x=>x.id===id); if(!t) return;
+  t.acct=val;
+  if(val&&t.status==='unknown') t.status='ok';
+  const def=getCustomerDefaults(val);
+  if(!t.customerName&&def.c) t.customerName=def.c;
+  if(!t.memberNum&&def.m) t.memberNum=def.m;
   renderTable(); updateStats(); updateExportBtn();
 }
-function updateField(id, field, val) {
-  const t = transactions.find(x=>x.id===id);
-  if (t) { t[field] = val; updateExportBtn(); }
+
+function updateField(id,field,val){const t=transactions.find(x=>x.id===id);if(t){t[field]=val;updateExportBtn();}}
+
+function promptSplit(id){
+  const t=transactions.find(x=>x.id===id); if(!t) return;
+  const pct=prompt(`Split "${t.desc.substring(0,50)}" ($${t.gross.toFixed(2)})\nEnter MEMBER % (e.g. 70 for 70% member / 30% public):`,'70');
+  if(pct===null) return;
+  const n=parseInt(pct);
+  if(isNaN(n)||n<1||n>99){alert('Enter 1–99.');return;}
+  splitTransaction(id,n);
 }
 
-// promptSplit: ask for member % and split row into two
-function promptSplit(id) {
-  const t = transactions.find(x=>x.id===id);
-  if (!t) return;
-  const pct = prompt(`Split "${t.desc}" ($${t.gross.toFixed(2)}) into member-sourced vs General Public.\nEnter the MEMBER % (e.g. 70 for 70% member / 30% public):`, '70');
-  if (pct === null) return;
-  const n = parseInt(pct);
-  if (isNaN(n) || n < 1 || n > 99) { alert('Enter a number between 1 and 99.'); return; }
-  splitTransaction(id, n);
+function deleteRow(id){transactions=transactions.filter(x=>x.id!==id);renderAll();}
+
+function updateExportBtn(){
+  const ready=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
+  document.getElementById('export-btn').disabled=ready.length===0;
+  document.getElementById('unknown-notice').style.display=
+    transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
 }
-function deleteRow(id) {
-  transactions = transactions.filter(x=>x.id!==id);
-  renderAll();
-}
-function updateExportBtn() {
-  const ready = transactions.filter(t => t.selected && validateTxn(t).length === 0);
-  document.getElementById('export-btn').disabled = ready.length === 0;
-  // Update unknown notice to also flag missing name/member
-  const missingFields = transactions.filter(t => t.selected && (validateTxn(t).length > 0));
-  document.getElementById('unknown-notice').style.display = missingFields.length > 0 ? 'flex' : 'none';
-}
-function clearAll() {
-  transactions = []; nextId = 1; memberMap = {}; memberList = [];
-  // Reset member card
-  document.getElementById('card-mbr').classList.remove('loaded');
-  document.getElementById('card-mbr').style.background = '';
-  document.getElementById('card-mbr').style.borderColor = '';
-  document.getElementById('status-mbr').textContent = '';
-  document.getElementById('file-mbr').value = '';
-  const dl = document.getElementById('member-datalist');
-  if (dl) dl.innerHTML = '';
-  ['sq','st','am'].forEach(p => {
+
+function clearAll(){
+  transactions=[];nextId=1;memberMap={};memberList=[];
+  const mbrc=document.getElementById('card-mbr');
+  mbrc.classList.remove('loaded');mbrc.style.background='';mbrc.style.borderColor='';
+  document.getElementById('status-mbr').textContent='';
+  document.getElementById('file-mbr').value='';
+  const dl=document.getElementById('member-datalist'); if(dl) dl.innerHTML='';
+  ['sq','st','am'].forEach(p=>{
     document.getElementById('card-'+p).classList.remove('loaded');
-    document.getElementById('status-'+p).textContent = '';
-    document.getElementById('file-'+p).value = '';
+    document.getElementById('status-'+p).textContent='';
+    document.getElementById('file-'+p).value='';
   });
   renderAll();
   document.getElementById('stats-bar').style.display='none';
   document.getElementById('toolbar').style.display='none';
   document.getElementById('unknown-notice').style.display='none';
-  document.getElementById('export-btn').disabled = true;
+  document.getElementById('export-btn').disabled=true;
 }
 
 // ── IIF EXPORT ──
-function buildIIF() {
-  const rows = transactions.filter(t => t.selected && validateTxn(t).length === 0);
-  const lines = [];
-
-  // IIF header
-  lines.push('!TRNS\tTRNSTYPE\tDATE\tACCNT\tNAME\tCLASS\tAMOUNT\tMEMO');
-  lines.push('!SPL\tTRNSTYPE\tDATE\tACCNT\tNAME\tCLASS\tAMOUNT\tMEMO');
-  lines.push('!ENDTRNS');
-
-  // Determine deposit account per platform
-  const depositAcct = (platform) => {
-    if (platform === 'square') return 'Square Clearing';
-    if (platform === 'stripe') return 'Regions Operating';
-    return 'Undeposited Funds';
-  };
-
-  rows.forEach(t => {
-    const acctName = t.acct.replace(/^\d+[\d.]*\s+/, ''); // strip account number for IIF
-    const amt = t.net.toFixed(2);
-    const gross = t.gross.toFixed(2);
-    const fee = (-t.fee).toFixed(2);
-    const memo = t.memo || t.desc;
-    const cls = t.cls || '';
-    const deposit = depositAcct(t.platform);
-
-    const customerName = t.customerName || 'General Public';
-    const memberNum = t.memberNum || '999999';
-    const fullMemo = `${memo} | Member#:${memberNum}`;
-    // TRNS: deposit account debit for net amount
-    lines.push(`TRNS\tDEPOSIT\t${t.date}\t${deposit}\t${customerName}\t${cls}\t${amt}\t${fullMemo}`);
-    // SPL 1: income account credit for gross
-    lines.push(`SPL\tDEPOSIT\t${t.date}\t${acctName}\t${customerName}\t${cls}\t${(-parseFloat(gross)).toFixed(2)}\t${fullMemo}`);
-    // SPL 2: fee expense debit
-    if (t.fee > 0) {
-      lines.push(`SPL\tDEPOSIT\t${t.date}\tBank Charges & CC Fees\t${customerName}\tManagement & General:Administration\t${(-parseFloat(fee)).toFixed(2)}\t${memo} - merchant fee`);
-    }
+function buildIIF(){
+  const rows=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
+  const lines=['!TRNS\tTRNSTYPE\tDATE\tACCNT\tNAME\tCLASS\tAMOUNT\tMEMO',
+               '!SPL\tTRNSTYPE\tDATE\tACCNT\tNAME\tCLASS\tAMOUNT\tMEMO','!ENDTRNS'];
+  const depositAcct=p=>p==='square'?'Square Clearing':p==='stripe'?'Regions Operating':'Undeposited Funds';
+  rows.forEach(t=>{
+    const acctName=t.acct.replace(/^\d+[\d.]*\s+/,'');
+    const amt=t.net.toFixed(2); const gross=t.gross.toFixed(2); const fee=(-t.fee).toFixed(2);
+    const memo=t.memo||t.desc; const cls=t.cls||'';
+    const deposit=depositAcct(t.platform);
+    const custName=t.customerName||'General Public';
+    const fullMemo=`${memo} | Member#:${t.memberNum||'999999'}`;
+    lines.push(`TRNS\tDEPOSIT\t${t.date}\t${deposit}\t${custName}\t${cls}\t${amt}\t${fullMemo}`);
+    lines.push(`SPL\tDEPOSIT\t${t.date}\t${acctName}\t${custName}\t${cls}\t${(-parseFloat(gross)).toFixed(2)}\t${fullMemo}`);
+    if(t.fee>0) lines.push(`SPL\tDEPOSIT\t${t.date}\tBank Charges & CC Fees\t${custName}\tManagement & General:Administration\t${(-parseFloat(fee)).toFixed(2)}\t${memo} - merchant fee`);
     lines.push('ENDTRNS');
   });
-
   return lines.join('\n');
 }
 
-function openExportModal() {
-  const iif = buildIIF();
-  const previewLines = iif.split('\n').slice(0,20).join('\n') + (iif.split('\n').length > 20 ? '\n…' : '');
-  document.getElementById('iif-preview').textContent = previewLines;
-  const count = transactions.filter(t => t.selected && validateTxn(t).length === 0).length;
-  document.getElementById('export-count').textContent = `${count} transaction${count===1?'':'s'} will be exported`;
+function openExportModal(){
+  const iif=buildIIF();
+  const previewLines=iif.split('\n').slice(0,20).join('\n')+(iif.split('\n').length>20?'\n…':'');
+  document.getElementById('iif-preview').textContent=previewLines;
+  const count=transactions.filter(t=>t.selected&&validateTxn(t).length===0).length;
+  document.getElementById('export-count').textContent=`${count} transaction${count===1?'':'s'} will be exported`;
   document.getElementById('export-modal').classList.add('open');
 }
-function closeExportModal() {
-  document.getElementById('export-modal').classList.remove('open');
-}
-function downloadIIF() {
-  const iif = buildIIF();
-  const today = new Date().toISOString().slice(0,10);
-  const blob = new Blob([iif], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `RR_QBO_Import_${today}.iif`;
-  a.click();
+function closeExportModal(){document.getElementById('export-modal').classList.remove('open');}
+function downloadIIF(){
+  const iif=buildIIF(); const today=new Date().toISOString().slice(0,10);
+  const blob=new Blob([iif],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`RR_QBO_Import_${today}.iif`; a.click();
 }
 
-// ── SAMPLE DATA ──
-function loadDemo() {
-  const today = new Date().toLocaleDateString('en-US');
-  const last = new Date(Date.now()-7*86400000).toLocaleDateString('en-US');
-  const demoRows = [
-    {platform:'square',date:today,desc:'Fishing Tournament - Boat Entry',gross:300,fee:7.90,net:292.10},
-    {platform:'square',date:today,desc:'Bar Sales - Post Tournament',gross:847.50,fee:22.13,net:825.37},
-    {platform:'square',date:today,desc:'Raffle Tickets - Fishing Tournament',gross:250,fee:6.60,net:243.40},
-    {platform:'square',date:last,desc:'Quartermaster - Shirt Sales',gross:95,fee:2.57,net:92.43},
-    {platform:'stripe',date:today,desc:'Golf Tournament Registration - Golfer Package',gross:225,fee:6.83,net:218.18},
+// ── DEMO DATA ──
+function loadDemo(){
+  const today=new Date().toLocaleDateString('en-US');
+  const last=new Date(Date.now()-7*86400000).toLocaleDateString('en-US');
+  [
+    {platform:'square',date:today,desc:'Bud Light | Bar | Fishing Tournament',gross:847.50,fee:22.13,net:825.37},
+    {platform:'square',date:today,desc:'RR T-Shirt | Quartermaster | Store',gross:95,fee:2.57,net:92.43},
+    {platform:'square',date:today,desc:'Raffle Ticket | Raffle | Fishing Tournament',gross:250,fee:6.60,net:243.40},
+    {platform:'square',date:today,desc:'Entry Fee | Registration | Golf Tournament',gross:225,fee:6.83,net:218.18},
+    {platform:'square',date:last,desc:'Silent Auction | Auction | Fishing Tournament',gross:400,fee:10.50,net:389.50},
+    {platform:'square',date:last,desc:'Bead Sales | Gasparilla | Throws',gross:180,fee:4.78,net:175.22},
     {platform:'stripe',date:today,desc:'Golf Tournament Sponsorship - Hole Sponsor',gross:500,fee:14.80,net:485.20},
     {platform:'stripe',date:today,desc:'Membership Renewal - Annual Dues',gross:150,fee:4.65,net:145.35},
     {platform:'stripe',date:last,desc:'Christmas Party Deposit - Ticket Presale',gross:65,fee:2.19,net:62.81},
     {platform:'stripe',date:last,desc:'New Member Application',gross:250,fee:7.55,net:242.45},
     {platform:'8am',date:today,desc:'Night at the Museum - Adult Ticket',gross:40,fee:2.50,net:37.50},
-    {platform:'8am',date:today,desc:'Night at the Museum - Child Ticket',gross:20,fee:1.75,net:18.25},
     {platform:'8am',date:last,desc:'Summer Theme Party Ticket',gross:55,fee:3.00,net:52.00},
-    {platform:'stripe',date:today,desc:'Unknown - Square payment ref #8821',gross:125,fee:3.93,net:121.07},
-  ];
-
-  demoRows.forEach(r => {
-    const rule = matchRule(r.desc);
+    {platform:'stripe',date:today,desc:'Unknown payment ref #8821',gross:125,fee:3.93,net:121.07},
+  ].forEach(r=>{
+    let sqMatch=null, rule=null;
+    if(r.platform==='square') sqMatch=resolveSquareClass(r.desc);
+    if(!sqMatch) rule=matchRule(r.desc);
+    const resolvedAcct=sqMatch?sqMatch.acct:(rule?rule.acct:'5991 Uncategorized Revenue');
+    const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
+    const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
+    const def=getCustomerDefaults(resolvedAcct);
     transactions.push({
-      id: nextId++,
-      platform: r.platform,
-      date: r.date,
-      desc: r.desc,
-      acct: rule ? rule.acct : '5991 Uncategorized Revenue',
-      cls: rule ? rule.cls : '',
-      gross: r.gross,
-      fee: r.fee,
-      net: r.net,
-      status: rule ? rule.status : 'unknown',
-      selected: rule ? rule.status !== 'unknown' : false,
-      memo: `${r.platform.toUpperCase()} import ${r.date}`,
-      customerName: (() => { const def = getCustomerDefaults(rule ? rule.acct : ''); return def.c || ''; })(),
-      memberNum: (() => { const def = getCustomerDefaults(rule ? rule.acct : ''); return def.m || ''; })(),
+      id:nextId++, platform:r.platform, date:r.date, desc:r.desc,
+      acct:resolvedAcct, cls:resolvedCls,
+      gross:r.gross, fee:r.fee, net:r.net,
+      status:resolvedStatus, selected:resolvedStatus!=='unknown',
+      memo:`${r.platform.toUpperCase()} import ${r.date}`,
+      customerName:sqMatch?(sqMatch.customer||def.c||''):(def.c||''),
+      memberNum:sqMatch?(sqMatch.memberNum||def.m||''):(def.m||''),
     });
   });
-  // Reset member card
-  document.getElementById('card-mbr').classList.remove('loaded');
-  document.getElementById('card-mbr').style.background = '';
-  document.getElementById('card-mbr').style.borderColor = '';
-  document.getElementById('status-mbr').textContent = '';
-  document.getElementById('file-mbr').value = '';
-  const dl = document.getElementById('member-datalist');
-  if (dl) dl.innerHTML = '';
-  ['sq','st','am'].forEach(p => {
-    const card = document.getElementById('card-'+p);
-    const status = document.getElementById('status-'+p);
-    card.classList.add('loaded');
-    const count = demoRows.filter(r=>r.platform===(p==='sq'?'square':p==='st'?'stripe':'8am')).length;
-    status.textContent = `✓ ${count} sample rows loaded`;
-    status.className = 'upload-status ok';
+  ['sq','st','am'].forEach(p=>{
+    const c=document.getElementById('card-'+p); c.classList.add('loaded');
+    const n=transactions.filter(t=>t.platform===(p==='sq'?'square':p==='st'?'stripe':'8am')).length;
+    const s=document.getElementById('status-'+p); s.textContent=`✓ ${n} sample rows`; s.className='upload-status ok';
   });
   renderAll();
 }
+
 </script>
 </body>
 </html>

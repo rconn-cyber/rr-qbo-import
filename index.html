@@ -320,18 +320,19 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       <div class="upload-status" id="status-am"></div>
     </div>
     <div class="upload-card" id="card-mbr" style="border-color:var(--gold-dim);background:var(--gold-light);cursor:default;">
-      <input type="file" id="file-mbr" accept=".csv" onchange="handleMemberFile(this)" onclick="event.stopPropagation()" style="display:none;">
       <div class="upload-label" style="color:var(--navy);">Members</div>
+      <div class="upload-title" style="margin-bottom:6px;">Member lookup</div>
+      <div class="upload-hint" style="margin-bottom:10px;">Pulls live from Supabase rr_members table — 637+ members.</div>
+      <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
+        ⚡ Pull from Supabase
+      </button>
+      <div class="upload-status" id="status-mbr" style="margin-top:8px;"></div>
+    </div>
       <div class="upload-title" style="margin-bottom:10px;">Load member list</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
-          ⚡ Pull from Supabase
-        </button>
-        <button class="btn btn-sm" onclick="document.getElementById('file-mbr').click()" style="width:100%;justify-content:center;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);">
-          📄 Upload CSV instead
-        </button>
-      </div>
-      <div class="upload-hint" style="margin-top:8px;">Supabase pulls live from rr_members. CSV uses a WA export file.</div>
+      <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
+        ⚡ Pull from Supabase
+      </button>
+      <div class="upload-hint" style="margin-top:8px;">Pulls live from Supabase rr_members — 637+ members.</div>
       <div class="upload-status" id="status-mbr"></div>
     </div>
   </div>
@@ -494,7 +495,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 // Paste your anon public key below. It is safe to include here — the anon key
 // is subject to Row Level Security and cannot access data beyond what RLS allows.
 const SUPABASE_URL = 'https://qyoqyeaqacdjstvkonwx.supabase.co';
-const SUPABASE_ANON_KEY = ''; // ← paste your anon key here, or set via the prompt below
+const SUPABASE_ANON_KEY = ''; // ← PASTE YOUR ANON KEY HERE before deploying (Settings → API → anon public)
 
 async function loadMembersFromSupabase() {
   const btn = document.getElementById('btn-supabase');
@@ -784,41 +785,7 @@ function splitTransaction(id, memberPct){
 let transactions=[]; let nextId=1;
 let memberMap={}; let memberList=[];
 
-// ── MEMBER CSV ──
-function handleMemberFile(input){
-  const file=input.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const {rows,rawHeaders,slugHeaders}=parseCSV(e.target.result);
-    memberMap={}; memberList=[];
-    rows.forEach(row=>{
-      const find=makeFinder(row,slugHeaders);
-      // WA exact columns: "Member #" → slug "member_", "First name" → "first_name", "Last name" → "last_name"
-      const id   = find('member_')||find('member_number','membernumber')||'';
-      const fn   = find('first_name')||find('firstname','fname')||'';
-      const ln   = find('last_name')||find('lastname','lname')||'';
-      const email= find('email')||'';
-      const level= find('membership_level')||find('memberlevel','level')||'';
-      const status=find('status')||level||'';
-      if(!fn&&!ln) return;
-      const fullName=`${fn} ${ln}`.trim(); if(!fullName) return;
-      const entry={id,firstName:fn,lastName:ln,fullName,email,level,status};
-      memberMap[fullName.toLowerCase()]=entry;
-      if(ln){const lk='_ln_'+ln.toLowerCase(); if(!memberMap[lk])memberMap[lk]=[]; memberMap[lk].push(entry);}
-      memberList.push(entry);
-    });
-    memberList.sort((a,b)=>a.lastName.localeCompare(b.lastName));
-    rebuildDatalist();
-    document.getElementById('card-mbr').classList.add('loaded');
-    document.getElementById('card-mbr').style.cssText+='background:#e8f5ec;border-color:#1a5c2e;';
-    const st=document.getElementById('status-mbr');
-    st.textContent=`✓ ${memberList.length} members loaded`;
-    st.className='upload-status ok';
-    if(transactions.length) renderTable();
-    updateStats();
-  };
-  reader.readAsText(file);
-}
+// Member data loads from Supabase only — see loadMembersFromSupabase()
 
 function rebuildDatalist(){
   let dl=document.getElementById('member-datalist');
@@ -1225,10 +1192,12 @@ function updateExportBtn(){
 
 function clearAll(){
   transactions=[];nextId=1;memberMap={};memberList=[];
-  const mbrc=document.getElementById('card-mbr');
-  mbrc.classList.remove('loaded');mbrc.style.background='';mbrc.style.borderColor='';
+  // Reset member card
+  document.getElementById('card-mbr').style.background='var(--gold-light)';
+  document.getElementById('card-mbr').style.borderColor='var(--gold-dim)';
   document.getElementById('status-mbr').textContent='';
-  document.getElementById('file-mbr').value='';
+  const btn=document.getElementById('btn-supabase');
+  if(btn){btn.textContent='⚡ Pull from Supabase';btn.disabled=false;}
   const dl=document.getElementById('member-datalist'); if(dl) dl.innerHTML='';
   ['sq','st','am'].forEach(p=>{
     document.getElementById('card-'+p).classList.remove('loaded');
@@ -1322,6 +1291,17 @@ function loadDemo(){
   });
   renderAll();
 }
+
+// ── AUTO-LOAD MEMBERS ON PAGE READY ──
+// Runs immediately if anon key is hardcoded; otherwise waits for button click.
+(function autoLoadMembers() {
+  const key = SUPABASE_ANON_KEY || sessionStorage.getItem('rr_sb_key') || '';
+  if (key) {
+    // Key is available — load silently on startup
+    loadMembersFromSupabase();
+  }
+  // If no key, user clicks the button which will prompt for it
+})();
 
 </script>
 </body>

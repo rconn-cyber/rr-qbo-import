@@ -309,7 +309,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()">
       <div class="upload-label st">Stripe</div>
       <div class="upload-title">Payout Reconciliation CSV</div>
-      <div class="upload-hint">Export from Stripe → Reports → Balance → Payout recon</div>
+      <div class="upload-hint">Export from Stripe → Transactions → Export (includes Card Name for auto member match)</div>
       <div class="upload-status" id="status-st"></div>
     </div>
     <div class="upload-card" id="card-am">
@@ -909,13 +909,16 @@ function extractSquare(row,slugHeaders){
 
 function extractStripe(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
-  // Stripe exports: Customer Email (always present for Cognito payments),
-  // Statement Descriptor (ROUGHRIDERS-F177E216T1 pattern),
-  // Description (form name + entry number)
+  // Stripe Payments export: Card Name = cardholder name (most reliable)
+  // Stripe Transactions export: Customer Email always present
   const email  = find('customer_email','email') || '';
   const stmt   = find('statement_descriptor','statement_desc') || '';
-  const _buyer = find('customer_description','customer_name','billing_name','cardholder_name') || '';
-  const buyer  = _buyer && !/^[$\d]/.test(_buyer.trim()) && _buyer.includes(' ') ? _buyer.trim() : '';
+  // Card Name is the cardholder name — present in Payments export
+  // Customer Description is the name in the payout reconciliation export
+  const _cardName = find('card_name') || '';
+  const _custDesc = find('customer_description','customer_name','billing_name') || '';
+  const _buyer = _cardName || _custDesc;
+  const buyer  = _buyer && !/^[$\d]/.test(_buyer.trim()) && _buyer.length > 2 ? _buyer.trim() : '';
   return{
     date:  find('created_utc','created','date','available_on_utc','charge_created_utc'),
     desc:  find('description','charge_description','reporting_category','type','source') || stmt,

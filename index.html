@@ -581,6 +581,9 @@ async function loadMembersFromSupabase() {
     });
 
     memberList.sort((a, b) => a.lastName.localeCompare(b.lastName));
+    // Build email index for Stripe matching
+    memberEmailMap = {};
+    memberList.forEach(m => { if(m.email) memberEmailMap[m.email.toLowerCase()] = m; });
     rebuildDatalist();
 
     document.getElementById('card-mbr').style.background = '#e8f5ec';
@@ -797,7 +800,7 @@ function splitTransaction(id, memberPct){
 
 // ── STATE ──
 let transactions=[]; let nextId=1;
-let memberMap={}; let memberList=[];
+let memberMap={}; let memberList=[]; let memberEmailMap={};
 
 // Member data loads from Supabase only - see loadMembersFromSupabase()
 
@@ -896,28 +899,38 @@ function extractSquare(row,slugHeaders){
   const fee   = find('service_charges')||find('fee_amount','fees_square','fees','fee','square_fees','processing_fee','card_processing_fees');
   const net   = find('net_sales')||find('net_total','net','net_amount','net_total_collected');
   // Square exports buyer name in "Customer Name" or "Customer ID" columns
-  const buyer = find('customer_name','customer','buyer_name','cardholder_name') || '';
-  return{ date:find('date'), desc:combined, gross, fee, net, buyer };
+  // Square Sales Summary has no buyer name column — leave blank
+  // Square Transactions report uses 'Customer Name' but Sales Summary doesn't have it
+  const buyer = find('customer_name','cardholder_name') || '';
+  // Validate: if buyer looks like a dollar amount or number, discard it
+  const buyerClean = buyer && !/^[$\d]/.test(buyer.trim()) ? buyer.trim() : '';
+  return{ date:find('date'), desc:combined, gross, fee, net, buyer:buyerClean };
 }
 
 function extractStripe(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
-  // Stripe exports customer name in customer_description, customer_name, or customer_email
-  const buyer = find('customer_description','customer_name','customer_email','billing_name','cardholder_name') || '';
+  // Stripe exports: Customer Email (always present for Cognito payments),
+  // Statement Descriptor (ROUGHRIDERS-F177E216T1 pattern),
+  // Description (form name + entry number)
+  const email  = find('customer_email','email') || '';
+  const stmt   = find('statement_descriptor','statement_desc') || '';
+  const _buyer = find('customer_description','customer_name','billing_name','cardholder_name') || '';
+  const buyer  = _buyer && !/^[$\d]/.test(_buyer.trim()) && _buyer.includes(' ') ? _buyer.trim() : '';
   return{
-    date:find('created_utc','created','date','available_on_utc','charge_created_utc'),
-    desc:find('description','charge_description','statement_descriptor','reporting_category','type','source'),
-    gross:find('gross','amount','charge_amount','total'),
-    fee:find('fee','stripe_fee','fees','fee_details'),
-    net:find('net','net_amount','payout_amount'),
-    buyer,
+    date:  find('created_utc','created','date','available_on_utc','charge_created_utc'),
+    desc:  find('description','charge_description','reporting_category','type','source') || stmt,
+    gross: find('gross','amount','charge_amount','total'),
+    fee:   find('fee','stripe_fee','fees','fee_details'),
+    net:   find('net','net_amount','payout_amount'),
+    buyer, email, stmt,
   };
 }
 
 function extract8am(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
   // 8am exports buyer name in Buyer Name or Attendee Name columns
-  const buyer = find('buyer_name','buyer','attendee_name','attendee','customer_name','customer','first_name') || '';
+  const _buyer8 = find('buyer_name','buyer','attendee_name','attendee','customer_name','first_name') || '';
+  const buyer = _buyer8 && !/^[$\d]/.test(_buyer8.trim()) ? _buyer8.trim() : '';
   return{
     date:find('order_date','date','created','event_date'),
     desc:find('event_name','event','ticket_type','description','item','name','order_type'),
@@ -943,7 +956,7 @@ function showDebugPanel(platform,rawHeaders,rows,extracted){
     <div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()} (dismiss once working)</div>
     <div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div>
     <div style="margin-top:4px;"><span style="color:#888;">Rows parsed:</span> <strong style="color:#fff">${rows.length}</strong> &nbsp;|&nbsp; <span style="color:#888;">Rows with amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>
-    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,60)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span> fee:<span style="color:#9fb">"${es.fee||'--'}"</span></div>`:''}
+    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,50)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span> email:<span style="color:#ff9">"${es.email||'--'}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span></div>`:''}
     ${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts. Reply with your column headers and I'll fix the parser.</div>`:''}
     <button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
 }
@@ -982,8 +995,10 @@ function ingestRows(platform,parseResult,filename){
 
   let count=0;
   extracted.forEach(e=>{
-    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw,buyer:buyerRaw}=e;
+    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw,buyer:buyerRaw,email:emailRaw,stmt:stmtRaw}=e;
     const buyer=(buyerRaw||'').trim();
+    const email=(emailRaw||'').trim().toLowerCase();
+    const stmt=(stmtRaw||'').trim();
     const gross=parseAmount(grossRaw);
     const fee=Math.abs(parseAmount(feeRaw));
     const net=parseAmount(netRaw)||(gross-fee);
@@ -1012,26 +1027,37 @@ function ingestRows(platform,parseResult,filename){
     // Only override if we find a confident member match — don't override Allocate/888888 bulk defaults.
     const needsMemberLookup = !resolvedCustomer || resolvedCustomer === '';
     if (needsMemberLookup && memberList.length > 0) {
+      // Pass 0: Email match (most reliable — Stripe always has customer email)
+      if (!resolvedCustomer && email && memberEmailMap[email]) {
+        const m = memberEmailMap[email];
+        resolvedCustomer = m.fullName;
+        resolvedMemberNum = m.id;
+      }
       // Try buyer field first (most reliable)
       const buyerVal = buyer;
       if (buyerVal && buyerVal.length > 2) {
         const m = lookupMember(buyerVal);
         if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; }
       }
-      // If no buyer field, scan description for member name patterns
-      // Look for "First Last" patterns in desc against member list
+      // If no buyer field, scan description for member name patterns (Stripe/8am dues/registrations)
       if (!resolvedCustomer && resolvedDesc.length > 3) {
-        // Try full desc, then each word-pair in the description
-        const words = resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/).filter(w=>w.length>2);
+        const SKIP = new Set(['payment','rough','riders','rider','import','square','stripe','membership',
+          'renewal','registration','dues','annual','fee','ticket','deposit','entry','regular','light',
+          'the','and','for','from','via','ref','pay','sale','sales','inc','llc','ltd','payment']);
+        const words = resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/)
+          .map(w=>w.replace(/[^a-zA-Z]/g,''))
+          .filter(w=>w.length>2 && !SKIP.has(w.toLowerCase()) && !/^\d+$/.test(w));
+        // Try adjacent word pairs as "First Last"
         for (let i=0; i<words.length-1; i++) {
           const candidate = words[i]+' '+words[i+1];
+          if (candidate.length < 5) continue;
           const m = lookupMember(candidate);
           if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; break; }
         }
-        // Also try last-name-only match on longer single words
+        // Last-name-only: only match if word length >= 4 and unique match
         if (!resolvedCustomer) {
           for (const w of words) {
-            if (w.length < 3) continue;
+            if (w.length < 4) continue;
             const lnMatches = memberMap['_ln_'+w.toLowerCase()];
             if (lnMatches && lnMatches.length === 1) {
               resolvedCustomer = lnMatches[0].fullName;
@@ -1051,7 +1077,7 @@ function ingestRows(platform,parseResult,filename){
       gross, fee, net,
       status:resolvedStatus,
       selected:resolvedStatus!=='unknown',
-      memo:`${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}`,
+      memo:`${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}${email?' | '+email:''}`,
       customerName:resolvedCustomer,
       memberNum:resolvedMemberNum,
     });

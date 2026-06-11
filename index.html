@@ -921,7 +921,7 @@ function extractStripe(row,slugHeaders){
   const buyer  = _buyer && !/^[$\d]/.test(_buyer.trim()) && _buyer.length > 2 ? _buyer.trim() : '';
   return{
     date:  find('created_utc','created','date','available_on_utc','charge_created_utc'),
-    desc:  find('description','charge_description','reporting_category','type','source') || stmt,
+    desc:  find('description','charge_description','reporting_category') || stmt || find('type') || 'Stripe payment',
     gross: find('gross','amount','charge_amount','total'),
     fee:   find('fee','stripe_fee','fees','fee_details'),
     net:   find('net','net_amount','payout_amount'),
@@ -1115,7 +1115,7 @@ function updateStats(){
   const defer=transactions.filter(t=>t.status==='defer').length;
   const unk=transactions.filter(t=>t.status==='unknown').length;
   const grossIncome=transactions.filter(t=>!t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
-  const totalFees=transactions.filter(t=>t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
+  const totalFees=transactions.reduce((s,t)=>s+Math.abs(t.fee||0),0);
   document.getElementById('s-total').textContent=transactions.length;
   document.getElementById('s-ok').textContent=ok;
   document.getElementById('s-defer').textContent=defer;

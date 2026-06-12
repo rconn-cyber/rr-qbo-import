@@ -1125,6 +1125,8 @@ function ingestRows(platform,parseResult,filename){
   st.textContent=`✓ ${count} rows loaded from ${filename}`;
   st.className='upload-status ok';
   renderAll();
+  // Enrich any Cognito Forms entries in background
+  enrichCognitoEntries();
 }
 
 function matchRule(desc){
@@ -1577,6 +1579,8 @@ async function loadSquareTransactions() {
     statusEl.style.color = 'var(--green)';
     btn.textContent = '✓ Loaded from Square';
     renderAll();
+    // Enrich Cognito Forms entries with member names (runs async in background)
+    enrichCognitoEntries();
 
   } catch (err) {
     statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Check console (F12) for details. Verify SQUARE_ACCESS_TOKEN in Netlify env vars.</span>`;
@@ -1642,19 +1646,7 @@ async function enrichCognitoEntries() {
   }
 }
 
-// Patch renderAll to also trigger Cognito enrichment when new transactions appear
-const _origRenderAll = renderAll;
-function renderAll() {
-  _origRenderAll();
-  // Trigger Cognito enrichment if there are any unenriched Cognito rows
-  const needsEnrich = transactions.some(t =>
-    t.desc && t.desc.toLowerCase().includes('cognito') &&
-    (!t.customerName || t.customerName === '' || t.customerName === 'Allocate')
-  );
-  if (needsEnrich) {
-    enrichCognitoEntries();
-  }
-}
+// Cognito enrichment is called directly after ingest — see enrichCognitoEntries()
 
 </script>
 </body>

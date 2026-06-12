@@ -296,6 +296,36 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 
 <main>
 
+  <!-- GLOBAL DATE + PULL ALL -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div style="font-size:13px;font-weight:500;color:var(--navy);white-space:nowrap;">Week of:</div>
+    <input type="date" id="global-start" style="font-size:13px;padding:6px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);">
+    <span style="color:var(--text-muted);font-size:13px;">to</span>
+    <input type="date" id="global-end" style="font-size:13px;padding:6px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);">
+    <button class="btn btn-gold" onclick="pullAllPlatforms()" id="btn-pull-all" style="padding:8px 20px;font-size:14px;font-weight:600;">
+      &#9889; Pull All Platforms
+    </button>
+    <div style="font-size:12px;color:var(--text-muted);">Square · Stripe · 8am simultaneously</div>
+    <div id="pull-all-status" style="font-size:12px;font-weight:500;color:var(--green);margin-left:auto;"></div>
+  </div>
+  <script>
+  // Sync global date pickers → individual platform pickers
+  function syncDates() {
+    const s = document.getElementById('global-start')?.value;
+    const e = document.getElementById('global-end')?.value;
+    ['sq','st','am'].forEach(p => {
+      const ps = document.getElementById(`${p}-start`);
+      const pe = document.getElementById(`${p}-end`);
+      if (ps && s) ps.value = s;
+      if (pe && e) pe.value = e;
+    });
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('global-start')?.addEventListener('change', syncDates);
+    document.getElementById('global-end')?.addEventListener('change', syncDates);
+  });
+  </script>
+
   <!-- UPLOAD -->
   <div class="upload-section">
     <div class="upload-card" id="card-sq" style="cursor:default;">
@@ -1470,6 +1500,11 @@ function loadDemo(){
     if (s) s.value = fmt(priorMon);
     if (e) e.value = fmt(priorSun);
   });
+  // Set global pickers too
+  const gs = document.getElementById('global-start');
+  const ge = document.getElementById('global-end');
+  if (gs) gs.value = fmt(priorMon);
+  if (ge) ge.value = fmt(priorSun);
 })();
 
 // ── SQUARE API PULL ──
@@ -1717,6 +1752,62 @@ async function loadStripeTransactions() {
     btn.disabled = false;
     console.error('Stripe load error:', err);
   }
+}
+
+// ── PULL ALL PLATFORMS ──
+async function pullAllPlatforms() {
+  const btn      = document.getElementById('btn-pull-all');
+  const statusEl = document.getElementById('pull-all-status');
+  const start    = document.getElementById('global-start')?.value;
+  const end      = document.getElementById('global-end')?.value;
+
+  if (!start || !end) {
+    statusEl.textContent = 'Set a date range first.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  if (start > end) {
+    statusEl.textContent = 'Start must be before end.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  // Sync dates to all platform pickers
+  ['sq','st','am'].forEach(p => {
+    const ps = document.getElementById(`${p}-start`);
+    const pe = document.getElementById(`${p}-end`);
+    if (ps) ps.value = start;
+    if (pe) pe.value = end;
+  });
+
+  btn.textContent = '⟳ Pulling...';
+  btn.disabled = true;
+  statusEl.textContent = 'Pulling Square, Stripe, and 8am...';
+  statusEl.style.color = 'var(--text-mid)';
+
+  // Fire all three simultaneously
+  const results = await Promise.allSettled([
+    loadSquareTransactions(),
+    loadStripeTransactions(),
+    load8amTransactions(),
+  ]);
+
+  const succeeded = results.filter(r => r.status === 'fulfilled').length;
+  const failed    = results.filter(r => r.status === 'rejected').length;
+
+  btn.textContent = '⚡ Pull All Platforms';
+  btn.disabled = false;
+
+  if (failed === 0) {
+    statusEl.textContent = `✓ All 3 platforms loaded`;
+    statusEl.style.color = 'var(--green)';
+  } else {
+    statusEl.textContent = `${succeeded} of 3 succeeded — check cards for errors`;
+    statusEl.style.color = 'var(--amber)';
+  }
+
+  // Run Cognito enrichment after all three complete
+  await enrichCognitoEntries();
 }
 
 // ── 8AM / AFFINIPAY (Wild Apricot) ──

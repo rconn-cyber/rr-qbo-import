@@ -291,6 +291,9 @@ td.mono { font-family: var(--mono); font-size: 12px; }
     <button class="btn btn-gold" id="export-btn" onclick="openExportModal()" disabled>
       ⬇ Export QBO IIF
     </button>
+    <button class="btn btn-ghost" id="csv-btn" onclick="downloadCSV()" disabled style="border-color:rgba(255,255,255,0.3);">
+      ⬇ CSV
+    </button>
   </div>
 </header>
 
@@ -1355,7 +1358,10 @@ function deleteRow(id){transactions=transactions.filter(x=>x.id!==id);renderAll(
 
 function updateExportBtn(){
   const ready=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
+  const hasAny=transactions.filter(t=>t.selected).length>0;
   document.getElementById('export-btn').disabled=ready.length===0;
+  const csvBtn=document.getElementById('csv-btn');
+  if(csvBtn) csvBtn.disabled=hasAny===false;
   document.getElementById('unknown-notice').style.display=
     transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
 }
@@ -1416,6 +1422,36 @@ function downloadIIF(){
   const blob=new Blob([iif],{type:'text/plain'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`RR_QBO_Import_${today}.iif`; a.click();
+}
+
+function downloadCSV(){
+  const rows=transactions.filter(t=>t.selected);
+  if(!rows.length) return;
+  const today=new Date().toISOString().slice(0,10);
+  const headers=['Date','Platform','Description','QBO Account','QBO Class',
+    'Customer Name','Member #','Gross','Fee','Net','Status','Memo'];
+  const escape=v=>{
+    const s=String(v??'');
+    return s.includes(',')||s.includes('"')||s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const lines=[headers.join(',')];
+  rows.forEach(t=>{
+    lines.push([
+      t.date, t.platform, t.desc, t.acct, t.cls,
+      t.customerName, t.memberNum,
+      t.gross.toFixed(2), t.fee.toFixed(2), t.net.toFixed(2),
+      t.status, t.memo||''
+    ].map(escape).join(','));
+  });
+  // Summary row
+  const totalGross = rows.reduce((s,t)=>s+t.gross,0);
+  const totalFee   = rows.reduce((s,t)=>s+t.fee,0);
+  const totalNet   = rows.reduce((s,t)=>s+t.net,0);
+  lines.push(['','','TOTAL','','','','',
+    totalGross.toFixed(2),totalFee.toFixed(2),totalNet.toFixed(2),'',''].map(escape).join(','));
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`RR_Transactions_${today}.csv`; a.click();
 }
 
 // ── DEMO DATA ──
@@ -1567,9 +1603,10 @@ async function loadSquareTransactions() {
     let count = 0;
     completed.forEach(p => {
       const gross = parseFloat(p.gross_sales) || 0;
-      const fee   = Math.abs(parseFloat(p.fees) || 0);
-      const net   = parseFloat(p.net_total) || (gross - fee);
-      if (gross === 0 && fee === 0) return;
+      if (gross === 0) return;
+      // AffiniPay fee not in API — estimate at 2.9% + $0.30 per transaction
+      const fee   = Math.round((gross * 0.029 + 0.30) * 100) / 100;
+      const net   = Math.round((gross - fee) * 100) / 100;
 
       const rawCustomer = (p.customer_name || '').trim();
       let buyerClean = '', sqMemberNum = '';
@@ -1691,9 +1728,10 @@ async function loadStripeTransactions() {
     let count = 0;
     allPayments.forEach(p => {
       const gross = parseFloat(p.gross_sales) || 0;
-      const fee   = Math.abs(parseFloat(p.fees) || 0);
-      const net   = parseFloat(p.net_total) || (gross - fee);
-      if (gross === 0 && fee === 0) return;
+      if (gross === 0) return;
+      // AffiniPay fee not in API — estimate at 2.9% + $0.30 per transaction
+      const fee   = Math.round((gross * 0.029 + 0.30) * 100) / 100;
+      const net   = Math.round((gross - fee) * 100) / 100;
 
       const buyer = (p.customer_name || '').trim();
       const email = (p.customer_email || '').trim().toLowerCase();
@@ -1912,9 +1950,10 @@ async function load8amTransactions() {
     let count = 0;
     allPayments.forEach(p => {
       const gross = parseFloat(p.gross_sales) || 0;
-      const fee   = Math.abs(parseFloat(p.fees) || 0);
-      const net   = parseFloat(p.net_total) || (gross - fee);
-      if (gross === 0 && fee === 0) return;
+      if (gross === 0) return;
+      // AffiniPay fee not in API — estimate at 2.9% + $0.30 per transaction
+      const fee   = Math.round((gross * 0.029 + 0.30) * 100) / 100;
+      const net   = Math.round((gross - fee) * 100) / 100;
 
       const buyer = (p.customer_name || '').trim();
       const email = (p.customer_email || '').trim().toLowerCase();

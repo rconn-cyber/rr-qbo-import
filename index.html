@@ -1114,6 +1114,7 @@ function ingestRows(platform,parseResult,filename){
       memo:`${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}${email?' | '+email:''}`,
       customerName:resolvedCustomer,
       memberNum:resolvedMemberNum,
+      stmt:stmt||'',
     });
     count++;
   });
@@ -1662,22 +1663,28 @@ function resolveByFormName(formId, formName) {
 // Parses form+entry number from description, calls /.netlify/functions/cognito-lookup
 async function enrichCognitoEntries() {
   // Find transactions with Cognito Forms descriptions that have no member name yet
-  const cognitoRows = transactions.filter(t =>
-    t.desc && t.desc.toLowerCase().includes('cognito') &&
-    (!t.customerName || t.customerName === '' || t.customerName === 'Allocate')
-  );
+  const cognitoRows = transactions.filter(t => {
+    // Square: desc contains "Cognito Forms (Order FXXXEXXXT1)"
+    // Stripe: stmt contains "ROUGHRIDERS-F177E216T1", desc has form name
+    const hasOrderId = /F\d+E\d+T/i.test(t.desc || '') || /F\d+E\d+T/i.test(t.stmt || '');
+    const needsName  = !t.customerName || t.customerName === '' || t.customerName === 'Allocate';
+    return hasOrderId && needsName;
+  });
   if (!cognitoRows.length) return;
 
-  // Parse order ID pattern: F204E7T1 → formId=204, entryId=7
-  const parseOrderId = (desc) => {
-    const m = desc.match(/F(\d+)E(\d+)T/i);
-    if (m) return { formId: m[1], entryId: m[2] };
+  // Parse order ID pattern: F204E7T1 or ROUGHRIDERS-F177E216T1 → formId, entryId
+  const parseOrderId = (desc, stmt) => {
+    // Check both description and statement descriptor
+    for (const s of [stmt||'', desc||'']) {
+      const m = s.match(/F(\d+)E(\d+)T/i);
+      if (m) return { formId: m[1], entryId: m[2] };
+    }
     return null;
   };
 
   let enriched = 0;
   for (const t of cognitoRows) {
-    const parsed = parseOrderId(t.desc);
+    const parsed = parseOrderId(t.desc, t.stmt);
     if (!parsed) continue;
     try {
       const res = await fetch(`/.netlify/functions/cognito-lookup?formId=${parsed.formId}&entryId=${parsed.entryId}`);
@@ -1701,9 +1708,13 @@ async function enrichCognitoEntries() {
           t.cls    = formRule.cls;
           t.status = (t.customerName && t.memberNum) ? 'ok' : formRule.status;
         } else if (t.acct.includes('Uncategorized') || t.acct.includes('5991')) {
-          // Fallback: try matchRule on the form name
-          const rule = matchRule(data.formName || t.desc);
-          if (rule) { t.acct = rule.acct; t.cls = rule.cls; }
+          // Fallback: try matchRule on form name then desc
+          const rule = matchRule(data.formName || '') || matchRule(t.desc || '');
+          if (rule) { t.acct = rule.acct; t.cls = rule.cls; t.status = rule.status || 'ok'; }
+        }
+        // Always update desc to show the actual form name if we got one
+        if (data.formName && (t.desc.toLowerCase().includes('cognito') || !t.desc || t.desc === 'Square payment')) {
+          t.desc = `${data.formName} (Entry ${parsed.entryId})`;
         }
         enriched++;
       }

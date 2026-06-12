@@ -1592,6 +1592,72 @@ async function loadSquareTransactions() {
 }
 
 // ── COGNITO FORMS LOOKUP ──
+// Maps Cognito form ID or form name keywords → QBO account + class
+// Update this when new forms are created. FormId takes priority over name match.
+const COGNITO_FORM_MAP = [
+  // Membership renewals
+  { ids:['177'],       kw:['renewal','reinstatement','regular member','full member'],
+    acct:'4101 Dues, Full Members (Renewal and Reinstatements)', cls:'Management & General:Member Services', status:'ok' },
+  { ids:['204'],       kw:['non-resident','out of town','absentee'],
+    acct:'4103 Dues (Absentee Members)', cls:'Management & General:Member Services', status:'ok' },
+  // New member applications
+  { ids:[],            kw:['new member','application','prospect','applicant','join'],
+    acct:'4102 Dues, New Members', cls:'Management & General:Member Services', status:'ok' },
+  // Fishing tournament
+  { ids:['187'],       kw:['fishing','charity fishing','fishing tournament'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Fishing Tournament', status:'ok' },
+  // Golf tournament
+  { ids:[],            kw:['golf tournament','hunters green','golf registration'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Golf Tournament', status:'ok' },
+  // Gasparilla events
+  { ids:[],            kw:['gasparilla after party','gasparilla breakfast','pre-invasion','gasparilla pre'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Gasparilla Events', status:'defer' },
+  // St. Pats
+  { ids:[],            kw:["st. pat","st pat","patrick","pub crawl"],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:St. Patricks Week', status:'defer' },
+  // Christmas
+  { ids:[],            kw:['christmas','holiday party','carrollwood'],
+    acct:'4401 Member Event - Registration', cls:'Management & General:Small Membership Events:Christmas Party', status:'defer' },
+  // Sporting Clays
+  { ids:[],            kw:['sporting clay','clay shoot','clay tournament'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Sporting Clay Tournament', status:'defer' },
+  // Military Ball
+  { ids:[],            kw:['military ball','mil ball'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other:Military Ball', status:'defer' },
+  // Summer/Social events
+  { ids:[],            kw:['summer theme','summer party','summer social'],
+    acct:'4401 Member Event - Registration', cls:'Fundraising:Summer Theme Party', status:'ok' },
+  // Night at the Museum
+  { ids:[],            kw:['museum','night at the museum','natm'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Historical Related Committees:Night At The Museum', status:'ok' },
+  // Halloween
+  { ids:[],            kw:['halloween','costume'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Halloween Party', status:'defer' },
+  // Valentine's
+  { ids:[],            kw:["valentine","vday"],
+    acct:'4301 Fundraising Registration Revenue', cls:"Fundraising:Valentine's Day Party", status:'defer' },
+  // Parade entry
+  { ids:[],            kw:['parade','desoto','springtime','chasco'],
+    acct:'4201 Program Registration Revenue', cls:'Program Services:Parades', status:'ok' },
+  // Donations
+  { ids:[],            kw:['donation','charitable','teddy bear','honor flight'],
+    acct:'4001 Contribution Revenue: Individual Donations', cls:'Program Services:Charitable Events/Activities', status:'ok' },
+];
+
+function resolveByFormName(formId, formName) {
+  const fl = (formName || '').toLowerCase();
+  // Try form ID match first
+  for (const r of COGNITO_FORM_MAP) {
+    if (r.ids.length && r.ids.includes(String(formId))) return r;
+  }
+  // Then keyword match against form name
+  for (const r of COGNITO_FORM_MAP) {
+    if (r.kw.some(k => fl.includes(k))) return r;
+  }
+  return null;
+}
+
+
 // Called after Square/CSV ingest to enrich "Cognito Forms (Order FXXXEXXXT1)" rows
 // Parses form+entry number from description, calls /.netlify/functions/cognito-lookup
 async function enrichCognitoEntries() {
@@ -1627,11 +1693,17 @@ async function enrichCognitoEntries() {
         }
         // If member number found, set status to matched
         if (t.customerName && t.memberNum) t.status = 'ok';
-        // Update account based on form type if still uncategorized
-        if (t.acct.includes('Uncategorized') || t.acct.includes('5991')) {
-          const descL = t.desc.toLowerCase();
-          const rule  = matchRule(t.desc);
-          if (rule) { t.acct = rule.acct; t.cls = rule.cls; t.status = rule.status || 'ok'; }
+        // Resolve QBO account from form name/ID (works even for uncategorized AND already categorized)
+        // The Cognito API returns the form name in data.formName (we add this to the lookup response)
+        const formRule = resolveByFormName(parsed.formId, data.formName || '');
+        if (formRule) {
+          t.acct   = formRule.acct;
+          t.cls    = formRule.cls;
+          t.status = (t.customerName && t.memberNum) ? 'ok' : formRule.status;
+        } else if (t.acct.includes('Uncategorized') || t.acct.includes('5991')) {
+          // Fallback: try matchRule on the form name
+          const rule = matchRule(data.formName || t.desc);
+          if (rule) { t.acct = rule.acct; t.cls = rule.cls; }
         }
         enriched++;
       }

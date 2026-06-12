@@ -298,12 +298,21 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 
   <!-- UPLOAD -->
   <div class="upload-section">
-    <div class="upload-card" id="card-sq">
-      <input type="file" id="file-sq" accept=".csv" onchange="handleFile('square', this)" onclick="event.stopPropagation()">
+    <div class="upload-card" id="card-sq" style="cursor:default;">
+      <input type="file" id="file-sq" accept=".csv" onchange="handleFile('square', this)" onclick="event.stopPropagation()" style="display:none;">
       <div class="upload-label sq">Square</div>
-      <div class="upload-title">Sales Summary CSV</div>
-      <div class="upload-hint">Export from Square → Reports → Sales Summary</div>
-      <div class="upload-status" id="status-sq"></div>
+      <div class="upload-title" style="margin-bottom:8px;">Transactions</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="date" id="sq-start" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+        <input type="date" id="sq-end" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadSquareTransactions()" id="btn-square" style="width:100%;justify-content:center;background:#2d5a2d;border-color:#2d5a2d;">
+        &#9889; Pull from Square
+      </button>
+      <button onclick="document.getElementById('file-sq').click()" style="width:100%;margin-top:6px;font-size:11px;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);padding:4px;border-radius:4px;cursor:pointer;">
+        &#128196; Upload CSV instead
+      </button>
+      <div class="upload-status" id="status-sq" style="margin-top:6px;font-size:11px;"></div>
     </div>
     <div class="upload-card" id="card-st">
       <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()">
@@ -633,7 +642,7 @@ const RULES = [
   {kw:['lip synch','lip sync'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Lip Synch Battle',status:'ok'},
   {kw:['mini clay','mini shoot'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Mini Clay Shoots',status:'ok'},
   {kw:['presidential trip','medora'],acct:'4401 Member Event - Registration',cls:'Program Services:Program Other:Presidential Trip',status:'ok'},
-  {kw:['bar sale','beverage sale','drink sale','cocktail','beer sale','bar tab','bar total','spirits','liquor sale'],acct:'5001 Sales of Product Revenue: Bar',cls:'Fundraising:Bar',status:'ok'},
+  {kw:['bar sale','beverage sale','drink sale','cocktail','beer sale','bar tab','bar total','spirits','liquor sale','horse soldier','deep eddy','yuengling','famous grouse','mich ultra','mount gay','tangueray','tanqueray','nutrl','cigar $','cigar sale'],acct:'5001 Sales of Product Revenue: Bar',cls:'Fundraising:Bar',status:'ok'},
   {kw:['quartermaster','merchandise','merch','apparel','shirt','hat','patch','store sale'],acct:'5002 Sales of Product Revenue: Quartermaster',cls:'Program Services:Program Other:Quartermaster',status:'ok'},
   {kw:['new member','new dues','join application','new application'],acct:'4102 Dues, New Members',cls:'Management & General:Member Services',status:'ok'},
   {kw:['renewal','reinstatement','annual dues','membership renewal'],acct:'4101 Dues, Full Members (Renewal and Reinstatements)',cls:'Management & General:Member Services',status:'ok'},
@@ -694,9 +703,9 @@ const CLASSES = [
 // Pass 1: what was sold (item/category) → account + base class
 // Pass 2: what event was it at → refine class for raffle/reg/auction/ticket rows
 const SQ_ITEM_RULES = [
-  {kw:['bar','beer','liquor','spirits','wine','cocktail','beverage','drink','bud ','miller','coors','shot ','rum','vodka','whiskey','seltzer','hard seltzer','draft','tap','keg','mixed drink','captain morgan','jack daniel','crown royal','fireball','tito','modelo','michelob','heineken','corona','truly','white claw','regular','light beer','domestic','import','pour','bourbon','tequila','gin ','scotch','brandy'],
+  {kw:['bar','beer','liquor','spirits','wine','cocktail','beverage','drink','bud ','miller','coors','shot ','rum','vodka','whiskey','seltzer','hard seltzer','draft','tap','keg','mixed drink','captain morgan','jack daniel','crown royal','fireball','tito','modelo','michelob','heineken','corona','truly','white claw','regular','light beer','domestic','import','pour','bourbon','tequila','gin ','scotch','brandy','horse soldier','deep eddy','yuengling','famous grouse','mich ultra','bubba','mount gay','tangueray','tanqueray','nutrl','truly hard'],
    acct:'5001 Sales of Product Revenue: Bar',cls:'Fundraising:Bar',customer:'Allocate',memberNum:'888888'},
-  {kw:['quartermaster','qm ','merch','merchandise','shirt','t-shirt','tshirt','hat ','cap ','patch','apparel','jacket','polo','hoodie','vest','coin','pin ','button','souvenir','flag','sticker','store'],
+  {kw:['quartermaster','qm ','merch','merchandise','shirt','t-shirt','tshirt','hat ','cap ','patch','apparel','jacket','polo','hoodie','vest','coin','pin ','button','souvenir','flag','sticker','store','book sale','dri fit','v-neck','polo/'],
    acct:'5002 Sales of Product Revenue: Quartermaster',cls:'Program Services:Program Other:Quartermaster',customer:'Allocate',memberNum:'888888'},
   {kw:['raffle','50/50','50-50','golden ticket','raffle ticket','pull tab'],
    acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
@@ -899,12 +908,21 @@ function extractSquare(row,slugHeaders){
   const fee   = find('service_charges')||find('fee_amount','fees_square','fees','fee','square_fees','processing_fee','card_processing_fees');
   const net   = find('net_sales')||find('net_total','net','net_amount','net_total_collected');
   // Square exports buyer name in "Customer Name" or "Customer ID" columns
-  // Square Sales Summary has no buyer name column — leave blank
-  // Square Transactions report uses 'Customer Name' but Sales Summary doesn't have it
-  const buyer = find('customer_name','cardholder_name') || '';
-  // Validate: if buyer looks like a dollar amount or number, discard it
-  const buyerClean = buyer && !/^[$\d]/.test(buyer.trim()) ? buyer.trim() : '';
-  return{ date:find('date'), desc:combined, gross, fee, net, buyer:buyerClean };
+  // Square Transactions export has Customer Name with embedded member number
+  // Patterns: "Steven 241 Cooper", "Brad Hall 1410", "Billy Hogan (702)"
+  const rawCustomer = find('customer_name') || '';
+  let buyerClean = '', extractedMemberNum = '';
+  if (rawCustomer && !/^[$\d]/.test(rawCustomer.trim())) {
+    // Extract embedded member number (3-4 digit number in the name)
+    const numMatch = rawCustomer.match(/\b(\d{3,4})\b/);
+    if (numMatch) {
+      extractedMemberNum = numMatch[1].padStart(4,'0');
+      buyerClean = rawCustomer.replace(/\s*\(?\d{3,4}\)?\s*/g,' ').replace(/\s+/g,' ').trim();
+    } else {
+      buyerClean = rawCustomer.trim();
+    }
+  }
+  return{ date:find('date'), desc:combined, gross, fee, net, buyer:buyerClean, extractedMemberNum };
 }
 
 function extractStripe(row,slugHeaders){
@@ -925,7 +943,7 @@ function extractStripe(row,slugHeaders){
     gross: find('gross','amount','charge_amount','total'),
     fee:   find('fee','stripe_fee','fees','fee_details'),
     net:   find('net','net_amount','payout_amount'),
-    buyer, email, stmt,
+    buyer, email, stmt, extractedMemberNum:'',
   };
 }
 
@@ -940,7 +958,7 @@ function extract8am(row,slugHeaders){
     gross:find('gross_amount','gross','amount','unit_price','price','total'),
     fee:find('platform_fee','fee','fees','service_fee','booking_fee'),
     net:find('net_amount','net','payout'),
-    buyer,
+    buyer, extractedMemberNum:'',
   };
 }
 
@@ -959,7 +977,7 @@ function showDebugPanel(platform,rawHeaders,rows,extracted){
     <div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()} (dismiss once working)</div>
     <div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div>
     <div style="margin-top:4px;"><span style="color:#888;">Rows parsed:</span> <strong style="color:#fff">${rows.length}</strong> &nbsp;|&nbsp; <span style="color:#888;">Rows with amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>
-    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,50)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span> email:<span style="color:#ff9">"${es.email||'--'}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span></div>`:''}
+    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,50)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span> mbr#:<span style="color:#ff9">"${es.extractedMemberNum||'--'}"</span> email:<span style="color:#ff9">"${es.email||'--'}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span></div>`:''}
     ${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts. Reply with your column headers and I'll fix the parser.</div>`:''}
     <button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
 }
@@ -998,10 +1016,11 @@ function ingestRows(platform,parseResult,filename){
 
   let count=0;
   extracted.forEach(e=>{
-    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw,buyer:buyerRaw,email:emailRaw,stmt:stmtRaw}=e;
+    const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw,buyer:buyerRaw,email:emailRaw,stmt:stmtRaw,extractedMemberNum:extractedNum}=e;
     const buyer=(buyerRaw||'').trim();
     const email=(emailRaw||'').trim().toLowerCase();
     const stmt=(stmtRaw||'').trim();
+    const sqMemberNum=(extractedNum||'').trim();
     const gross=parseAmount(grossRaw);
     const fee=Math.abs(parseAmount(feeRaw));
     const net=parseAmount(netRaw)||(gross-fee);
@@ -1029,13 +1048,18 @@ function ingestRows(platform,parseResult,filename){
     // If we have an individual buyer name, always prefer it over Allocate bulk default
     const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
     if (hasBuyer || (email && memberList.length > 0)) {
-      // Pass 0: Email match — most reliable for member identification
-      if (email && memberEmailMap[email]) {
+      // Pass 0: Square embedded member number — most reliable for Square transactions
+      if (sqMemberNum && buyer) {
+        resolvedCustomer = buyer;
+        resolvedMemberNum = sqMemberNum;
+      }
+      // Pass 1: Email match — most reliable for Stripe
+      else if (email && memberEmailMap[email]) {
         const m = memberEmailMap[email];
         resolvedCustomer = m.fullName;
         resolvedMemberNum = m.id;
       }
-      // Pass 1: If email didn't match but we have Card Name, use it
+      // Pass 2: If email didn't match but we have Card Name, use it
       // Non-member individual payment — per Michael's rules:
       //   >$500 = actual payer name + 999999
       //   <$500 non-member = General Public + 999999
@@ -1407,6 +1431,160 @@ function loadDemo(){
     loadMembersFromSupabase();
   }
 })();
+
+// ── SQUARE DATE DEFAULTS ──
+// Set date pickers to prior Mon-Sun on page load
+(function setSquareDateDefaults() {
+  const today = new Date();
+  const day = today.getDay(); // 0=Sun, 1=Mon...
+  // Prior Monday
+  const priorMon = new Date(today);
+  priorMon.setDate(today.getDate() - ((day + 6) % 7) - 7);
+  // Prior Sunday
+  const priorSun = new Date(priorMon);
+  priorSun.setDate(priorMon.getDate() + 6);
+  const fmt = d => d.toISOString().substring(0, 10);
+  const startEl = document.getElementById('sq-start');
+  const endEl   = document.getElementById('sq-end');
+  if (startEl) startEl.value = fmt(priorMon);
+  if (endEl)   endEl.value   = fmt(priorSun);
+})();
+
+// ── SQUARE API PULL ──
+async function loadSquareTransactions() {
+  const btn      = document.getElementById('btn-square');
+  const statusEl = document.getElementById('status-sq');
+  const start    = document.getElementById('sq-start')?.value;
+  const end      = document.getElementById('sq-end')?.value;
+
+  if (!start || !end) {
+    statusEl.textContent = 'Set start and end dates first.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  if (start > end) {
+    statusEl.textContent = 'Start date must be before end date.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+  statusEl.textContent = 'Connecting to Square...';
+  statusEl.style.color = 'var(--text-mid)';
+
+  let allPayments = [];
+  let cursor = null;
+  let page = 0;
+
+  try {
+    do {
+      page++;
+      let url = `/.netlify/functions/square-transactions?start=${start}&end=${end}`;
+      if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+      statusEl.textContent = `Fetching page ${page}...`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || `Square API error ${res.status}`);
+      }
+
+      allPayments = allPayments.concat(data.payments || []);
+      cursor = data.cursor || null;
+    } while (cursor);
+
+    // Filter to completed payments only
+    const completed = allPayments.filter(p => p.status === 'COMPLETED' || !p.status);
+
+    if (!completed.length) {
+      statusEl.textContent = `No completed transactions found for ${start} to ${end}.`;
+      statusEl.style.color = 'var(--amber)';
+      btn.textContent = 'Pull from Square';
+      btn.disabled = false;
+      return;
+    }
+
+    // Ingest using the same pipeline as CSV — build fake extracted objects
+    let count = 0;
+    completed.forEach(p => {
+      const gross = parseFloat(p.gross_sales) || 0;
+      const fee   = Math.abs(parseFloat(p.fees) || 0);
+      const net   = parseFloat(p.net_total) || (gross - fee);
+      if (gross === 0 && fee === 0) return;
+
+      const rawCustomer = (p.customer_name || '').trim();
+      let buyerClean = '', sqMemberNum = '';
+      if (rawCustomer && !/^[$\d]/.test(rawCustomer)) {
+        const numMatch = rawCustomer.match(/\b(\d{3,4})\b/);
+        if (numMatch) {
+          sqMemberNum = numMatch[1].padStart(4, '0');
+          buyerClean = rawCustomer.replace(/\s*\(?\d{3,4}\)?\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        } else {
+          buyerClean = rawCustomer;
+        }
+      }
+
+      const desc = [p.description, p.location].filter(Boolean).join(' | ') || 'Square payment';
+      const e = { date: p.date, desc, gross: p.gross_sales, fee: p.fees, net: p.net_total,
+                  buyer: buyerClean, extractedMemberNum: sqMemberNum, email: p.customer_email || '', stmt: '' };
+
+      let sqMatch = resolveSquareClass(desc);
+      let rule = null;
+      if (!sqMatch) rule = matchRule(desc);
+
+      const resolvedAcct   = sqMatch ? sqMatch.acct  : (rule ? rule.acct  : '5991 Uncategorized Revenue');
+      const resolvedCls    = sqMatch ? sqMatch.cls   : (rule ? rule.cls   : '');
+      const resolvedStatus = (resolvedAcct.includes('Uncategorized') || (!sqMatch && !rule)) ? 'unknown' : (rule ? rule.status : 'ok');
+      const def = getCustomerDefaults(resolvedAcct);
+
+      let resolvedCustomer  = sqMatch ? (sqMatch.customer || def.c || '') : (def.c || '');
+      let resolvedMemberNum = sqMatch ? (sqMatch.memberNum || def.m || '') : (def.m || '');
+
+      const buyer = buyerClean;
+      const email = (p.customer_email || '').toLowerCase();
+      const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
+
+      if (hasBuyer || (email && memberList.length > 0)) {
+        if (sqMemberNum && buyer) {
+          resolvedCustomer = buyer; resolvedMemberNum = sqMemberNum;
+        } else if (email && memberEmailMap[email]) {
+          const m = memberEmailMap[email];
+          resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
+        } else if (hasBuyer) {
+          resolvedCustomer = gross >= 500 ? buyer : 'General Public';
+          resolvedMemberNum = '999999';
+        }
+      }
+
+      transactions.push({
+        id: nextId++, platform: 'square',
+        date: p.date || new Date().toLocaleDateString('en-US'),
+        desc, acct: resolvedAcct, cls: resolvedCls,
+        gross, fee, net,
+        status: resolvedStatus, selected: resolvedStatus !== 'unknown',
+        memo: `SQUARE import ${new Date().toLocaleDateString('en-US')}`,
+        customerName: resolvedCustomer, memberNum: resolvedMemberNum,
+      });
+      count++;
+    });
+
+    document.getElementById('card-sq').style.background = '#e8f5ec';
+    document.getElementById('card-sq').style.borderColor = '#1a5c2e';
+    statusEl.textContent = `✓ ${count} transactions loaded (${start} to ${end})`;
+    statusEl.style.color = 'var(--green)';
+    btn.textContent = '✓ Loaded from Square';
+    renderAll();
+
+  } catch (err) {
+    statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Check console (F12) for details. Verify SQUARE_ACCESS_TOKEN in Netlify env vars.</span>`;
+    statusEl.style.color = 'var(--red)';
+    btn.textContent = '⚡ Retry';
+    btn.disabled = false;
+    console.error('Square load error:', err);
+  }
+}
 
 </script>
 </body>

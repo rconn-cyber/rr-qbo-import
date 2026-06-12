@@ -1784,30 +1784,29 @@ async function load8amTransactions() {
   statusEl.style.color = 'var(--text-mid)';
 
   let allPayments = [];
-  let offset = 0;
-  let page = 0;
+  let currentPage = 1;
+  const MAX_PAGES = 20;
 
   try {
     do {
-      page++;
-      if (page > 20) { console.warn('8am: hit 20-page safety limit'); break; } // safety cap
-      let url = `/.netlify/functions/8am-transactions?start=${start}&end=${end}&offset=${offset}`;
-      statusEl.textContent = `Fetching page ${page}...`;
+      if (currentPage > MAX_PAGES) { console.warn('8am: hit page limit'); break; }
+      let url = `/.netlify/functions/8am-transactions?start=${start}&end=${end}&page=${currentPage}`;
+      statusEl.textContent = `Fetching page ${currentPage}...`;
 
       const res  = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `8am API error ${res.status}`);
 
-      // Log debug info on first page so we can see AffiniPay response structure
-      if (page === 1 && data._debug) {
+      if (currentPage === 1 && data._debug) {
         console.log('8am API debug:', data._debug);
-        console.log('Sample payment keys:', data.payments?.[0]?._raw_keys);
+        console.log('Sample data keys:', data._debug.sample_data_keys);
+        console.log('Sample data:', data._debug.sample_data);
+        console.log('Sample method:', data._debug.sample_method);
       }
 
       allPayments = allPayments.concat(data.payments || []);
-      // Only continue if API explicitly signals more pages
       if (!data.has_more || data.count === 0) break;
-      offset = data.next_offset;
+      currentPage = data.next_page;
     } while (true);
 
     if (!allPayments.length) {

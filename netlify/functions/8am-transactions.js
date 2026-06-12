@@ -1,7 +1,14 @@
 // netlify/functions/8am-transactions.js
-// AffiniPay confirmed structure:
-// Response: { page, page_size, total_entries, results[] }
-// Transaction: { id, created, amount(cents), status, data{}, method{}, type, ... }
+// AffiniPay confirmed field map:
+//   data.custom_fields.Notes        → event name/description
+//   data.custom_fields.contactName  → member name
+//   data.custom_fields.contactEmail → member email
+//   data.custom_fields.Invoice      → WA invoice number
+//   method.name                     → cardholder name (fallback)
+//   method.email                    → email (fallback)
+//   amount                          → cents
+//   total_entries: 12939 (all-time) — date filter via Unix ts not supported
+//   Use page-based pagination + client-side date filter
 
 exports.handler = async function(event) {
   const secretKey = process.env.EAM_SECRET_KEY;
@@ -10,27 +17,22 @@ exports.handler = async function(event) {
   }
 
   const params = event.queryStringParameters || {};
-  const start  = params.start;   // YYYY-MM-DD
-  const end    = params.end;     // YYYY-MM-DD
+  const start  = params.start;
+  const end    = params.end;
   const page   = parseInt(params.page || '1');
 
   if (!start || !end) {
     return { statusCode: 400, body: JSON.stringify({ error: 'start and end required (YYYY-MM-DD)' }) };
   }
 
-  const auth = Buffer.from(`${secretKey}:`).toString('base64');
-
-  // AffiniPay uses page-based pagination and Unix timestamps for date filtering
-  const startTs = Math.floor(new Date(`${start}T00:00:00Z`).getTime() / 1000);
-  const endTs   = Math.floor(new Date(`${end}T23:59:59Z`).getTime() / 1000);
+  const auth      = Buffer.from(`${secretKey}:`).toString('base64');
+  const startDate = new Date(`${start}T00:00:00Z`);
+  const endDate   = new Date(`${end}T23:59:59Z`);
 
   const url = new URL('https://api.affinipay.com/v1/transactions');
-  // Try Unix timestamp filters — common AffiniPay pattern
-  url.searchParams.set('created_gte', startTs.toString());
-  url.searchParams.set('created_lte', endTs.toString());
-  url.searchParams.set('status',      'COMPLETE');
-  url.searchParams.set('page_size',   '100');
-  url.searchParams.set('page',        page.toString());
+  url.searchParams.set('status',    'COMPLETE');
+  url.searchParams.set('page_size', '100');
+  url.searchParams.set('page',      page.toString());
 
   try {
     const res = await fetch(url.toString(), {
@@ -48,53 +50,56 @@ exports.handler = async function(event) {
       return { statusCode: 500, body: JSON.stringify({ error: 'Invalid JSON', raw: raw.substring(0,200) }) };
     }
 
-    const results       = data.results || [];
-    const totalEntries  = data.total_entries || 0;
-    const pageSize      = data.page_size || 100;
-    const currentPage   = data.page || page;
-    const hasMore       = (currentPage * pageSize) < totalEntries;
+    const results      = data.results || [];
+    const totalEntries = data.total_entries || 0;
+    const pageSize     = data.page_size || 100;
+    const currentPage  = data.page || page;
+    const hasMore      = (currentPage * pageSize) < totalEntries;
 
-    // Filter by date client-side as a safety net since API date filters may not work
-    const startDate = new Date(`${start}T00:00:00Z`);
-    const endDate   = new Date(`${end}T23:59:59Z`);
-
+    // Client-side date filter — AffiniPay API doesn't support date range filtering
     const filtered = results.filter(t => {
-      if (!t.created) return true; // include if no date
+      if (!t.created) return false;
       const d = new Date(t.created);
       return d >= startDate && d <= endDate;
     });
+
+    // If no matches on this page AND all results are older than start date,
+    // we can stop paginating early (results are newest-first)
+    const oldestOnPage = results.length ? new Date(results[results.length - 1].created) : null;
+    const allOlderThanRange = oldestOnPage && oldestOnPage < startDate;
+    // Also stop if this page is entirely in the future (shouldn't happen but safety)
+    const effectiveHasMore = hasMore && !allOlderThanRange;
 
     const payments = filtered.map(t => {
       const amount   = (t.amount || 0) / 100;
       const refunded = (t.amount_refunded || 0) / 100;
       const net      = amount - refunded;
 
-      // method contains card info
-      const method   = t.method || {};
-      const cardName = method.name || method.account_holder_name || method.cardholder_name || '';
-      const email    = method.email || '';
+      // Primary: custom_fields from data object
+      const cf       = t.data?.custom_fields || {};
+      const notes    = cf.Notes || cf.notes || '';
+      const custName = cf.contactName || cf.contact_name || t.method?.name || '';
+      const email    = cf.contactEmail || cf.contact_email || t.method?.email || '';
+      const invoice  = cf.Invoice || cf.invoice || '';
 
-      // data contains description/reference from WA
-      const dataObj  = t.data || {};
-      // Expose ALL data keys for debugging
-      const desc     = dataObj.description || dataObj.reference || dataObj.memo ||
-                       dataObj.note || dataObj.invoice_number || dataObj.custom_fields ||
-                       t.description || t.reference || '';
+      // Parse event name from Notes: 'Registration for "Event Name" (date), Ticket Type'
+      let desc = notes;
+      const evMatch = notes.match(/Registration for ["]?([^"(]+)["]?\s*\(/i);
+      if (evMatch) desc = evMatch[1].trim();
+      if (!desc) desc = t.method?.name ? `WA payment - ${t.method.name}` : 'WA/8am payment';
 
       return {
         date:           (t.created || '').substring(0, 10),
-        description:    typeof desc === 'string' ? desc : JSON.stringify(desc),
-        customer_name:  cardName,
+        description:    desc,
+        customer_name:  custName,
         customer_email: email,
         gross_sales:    amount.toFixed(2),
-        fees:           '0.00',
+        fees:           '0.00',   // AffiniPay fees not in transaction object
         net_total:      net.toFixed(2),
         payment_id:     t.id || '',
         status:         t.status || '',
-        _data_keys:     Object.keys(dataObj).join(',') || 'empty',
-        _method_keys:   Object.keys(method).join(',') || 'empty',
-        _data_sample:   JSON.stringify(dataObj).substring(0, 200),
-        _method_sample: JSON.stringify(method).substring(0, 200),
+        invoice:        invoice,
+        _notes:         notes,    // keep full notes for debugging
       };
     });
 
@@ -105,24 +110,10 @@ exports.handler = async function(event) {
         payments,
         total:      totalEntries,
         page:       currentPage,
-        has_more:   hasMore,
-        next_page:  hasMore ? currentPage + 1 : null,
+        has_more:   effectiveHasMore,
+        next_page:  effectiveHasMore ? currentPage + 1 : null,
         count:      payments.length,
-        _debug: {
-          top_keys:         Object.keys(data).join(','),
-          total_entries:    totalEntries,
-          current_page:     currentPage,
-          page_size:        pageSize,
-          returned:         results.length,
-          filtered:         filtered.length,
-          has_more:         hasMore,
-          sample_data_keys:   results[0] ? Object.keys(results[0].data || {}).join(',') : 'none',
-          sample_method_keys: results[0] ? Object.keys(results[0].method || {}).join(',') : 'none',
-          sample_data:        results[0] ? JSON.stringify(results[0].data || {}).substring(0,300) : 'none',
-          sample_method:      results[0] ? JSON.stringify(results[0].method || {}).substring(0,200) : 'none',
-          sample_created:     results[0]?.created || 'none',
-          url_used:           url.toString().replace(secretKey, '[KEY]'),
-        }
+        all_older:  allOlderThanRange,
       }),
     };
   } catch (e) {

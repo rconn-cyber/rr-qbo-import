@@ -18,10 +18,8 @@ exports.handler = async function(event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'start and end required (YYYY-MM-DD)' }) };
   }
 
-  // AffiniPay uses Basic auth: secret_key as username, blank password
   const auth = Buffer.from(`${secretKey}:`).toString('base64');
 
-  // Build query — AffiniPay supports created_gte/created_lte as ISO date strings
   const url = new URL('https://api.affinipay.com/v1/transactions');
   url.searchParams.set('created_gte', `${start}T00:00:00Z`);
   url.searchParams.set('created_lte', `${end}T23:59:59Z`);
@@ -39,35 +37,42 @@ exports.handler = async function(event) {
       }
     });
 
-    const data = await res.json();
+    const raw = await res.text();
 
     if (!res.ok) {
       return {
         statusCode: res.status,
-        body: JSON.stringify({ error: data.message || data.error || `AffiniPay error ${res.status}`, raw: data })
+        body: JSON.stringify({ error: `AffiniPay error ${res.status}: ${raw.substring(0,300)}` })
       };
     }
 
-    const results = data.results || data.transactions || data.data || [];
-    const total   = data.total_entries || data.total || results.length;
+    let data;
+    try { data = JSON.parse(raw); }
+    catch(e) { return { statusCode: 500, body: JSON.stringify({ error: 'Invalid JSON from AffiniPay', raw: raw.substring(0,300) }) }; }
+
+    // Log the response structure so we can see exactly what AffiniPay returns
+    const topKeys = Object.keys(data);
+    console.log('AffiniPay response keys:', topKeys);
+    console.log('AffiniPay response (truncated):', JSON.stringify(data).substring(0, 500));
+
+    const results       = data.results || data.transactions || data.data || data.charges || [];
+    const totalEntries  = data.total_entries || data.total || data.count || null;
+    const returnedCount = results.length;
+    const nextOffset    = offset + returnedCount;
+    // Only paginate if total_entries is explicitly provided and we haven't reached it
+    const hasMore       = (totalEntries !== null) && (nextOffset < totalEntries) && (returnedCount === 100);
 
     const payments = results.map(t => {
-      const amount  = (t.amount || 0) / 100;         // AffiniPay stores in cents
-      const feeAmt  = (t.fee_amount || t.fees || 0) / 100;
-      const net     = amount - Math.abs(feeAmt);
+      // AffiniPay stores amounts in cents
+      const amount = typeof t.amount === 'number' ? t.amount / 100 : parseFloat(t.amount || 0);
+      const feeAmt = typeof t.fee_amount === 'number' ? t.fee_amount / 100 :
+                     typeof t.fees === 'number' ? t.fees / 100 : 0;
+      const net    = amount - Math.abs(feeAmt);
 
-      // Card holder name
-      const cardName = t.account_holder_name ||
-                       t.card?.cardholder_name ||
-                       t.payment_method?.card?.name || '';
-
-      // Email from billing details
-      const email = t.email ||
-                    t.billing_details?.email ||
-                    t.customer?.email || '';
-
-      // Description — WA sends the event name as the description
-      const desc = t.description || t.reference || t.memo || '';
+      const cardName = t.account_holder_name || t.cardholder_name ||
+                       t.card?.cardholder_name || t.payment_method?.name || '';
+      const email    = t.email || t.billing_details?.email || t.customer?.email || '';
+      const desc     = t.description || t.reference || t.memo || t.invoice_number || '';
 
       return {
         date:           (t.created_at || t.created || '').substring(0, 10),
@@ -79,6 +84,8 @@ exports.handler = async function(event) {
         net_total:      net.toFixed(2),
         payment_id:     t.id || '',
         status:         t.status || '',
+        // Include raw fields for debugging
+        _raw_keys:      Object.keys(t).slice(0, 15).join(','),
       };
     });
 
@@ -87,11 +94,17 @@ exports.handler = async function(event) {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
       body: JSON.stringify({
         payments,
-        total,
+        total:       totalEntries,
         offset,
-        has_more: (offset + results.length) < total,
-        next_offset: offset + results.length,
-        count: payments.length,
+        has_more:    hasMore,
+        next_offset: nextOffset,
+        count:       payments.length,
+        _debug: {
+          top_keys:     topKeys,
+          total_entries: totalEntries,
+          returned:     returnedCount,
+          has_more:     hasMore,
+        }
       }),
     };
 

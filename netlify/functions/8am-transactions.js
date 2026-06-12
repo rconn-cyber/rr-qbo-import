@@ -94,8 +94,10 @@ exports.handler = async function(event) {
         customer_name:  custName,
         customer_email: email,
         gross_sales:    amount.toFixed(2),
-        fees:           '0.00',   // AffiniPay fees not in transaction object
-        net_total:      net.toFixed(2),
+        // AffiniPay doesn't include fee in transaction object
+        // Estimate: 2.9% + $0.30 per transaction (standard AffiniPay/WA rate)
+        fees:           (-(Math.round((amount * 0.029 + 0.30) * 100) / 100)).toFixed(2),
+        net_total:      (amount - Math.round((amount * 0.029 + 0.30) * 100) / 100).toFixed(2),
         payment_id:     t.id || '',
         status:         t.status || '',
         invoice:        invoice,

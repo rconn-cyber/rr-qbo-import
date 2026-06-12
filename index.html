@@ -1805,7 +1805,8 @@ async function load8amTransactions() {
       }
 
       allPayments = allPayments.concat(data.payments || []);
-      if (!data.has_more || data.count === 0) break;
+      // Smart stop: if all transactions on this page are older than the range, stop
+      if (!data.has_more || data.count === 0 || data.all_older) break;
       currentPage = data.next_page;
     } while (true);
 
@@ -1856,7 +1857,7 @@ async function load8amTransactions() {
         gross, fee, net,
         status:       resolvedStatus,
         selected:     resolvedStatus !== 'unknown',
-        memo:         `8AM import ${new Date().toLocaleDateString('en-US')}${email ? ' | '+email : ''}`,
+        memo:         `8AM import ${new Date().toLocaleDateString('en-US')}${email ? ' | '+email : ''}${p.invoice ? ' | INV:'+p.invoice : ''}`,
         customerName: resolvedCustomer,
         memberNum:    resolvedMemberNum,
         stmt: '',

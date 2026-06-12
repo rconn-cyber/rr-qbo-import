@@ -1790,6 +1790,7 @@ async function load8amTransactions() {
   try {
     do {
       page++;
+      if (page > 20) { console.warn('8am: hit 20-page safety limit'); break; } // safety cap
       let url = `/.netlify/functions/8am-transactions?start=${start}&end=${end}&offset=${offset}`;
       statusEl.textContent = `Fetching page ${page}...`;
 
@@ -1797,8 +1798,15 @@ async function load8amTransactions() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `8am API error ${res.status}`);
 
+      // Log debug info on first page so we can see AffiniPay response structure
+      if (page === 1 && data._debug) {
+        console.log('8am API debug:', data._debug);
+        console.log('Sample payment keys:', data.payments?.[0]?._raw_keys);
+      }
+
       allPayments = allPayments.concat(data.payments || []);
-      if (!data.has_more) break;
+      // Only continue if API explicitly signals more pages
+      if (!data.has_more || data.count === 0) break;
       offset = data.next_offset;
     } while (true);
 

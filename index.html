@@ -283,7 +283,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
     <div class="brand-icon">RR</div>
     <div>
       <div class="brand-name">Merchant Staging</div>
-      <div class="brand-sub">Square · Stripe · 8am → QBO IIF</div>
+      <div class="brand-sub">Square · Stripe · WA/8am → QBO IIF</div>
     </div>
   </div>
   <div class="header-actions">
@@ -330,12 +330,21 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       </button>
       <div class="upload-status" id="status-st" style="margin-top:6px;font-size:11px;"></div>
     </div>
-    <div class="upload-card" id="card-am">
-      <input type="file" id="file-am" accept=".csv" onchange="handleFile('8am', this)" onclick="event.stopPropagation()">
-      <div class="upload-label am">8am</div>
-      <div class="upload-title">Orders / Settlement CSV</div>
-      <div class="upload-hint">Export from 8am → Reports → Orders</div>
-      <div class="upload-status" id="status-am"></div>
+    <div class="upload-card" id="card-am" style="cursor:default;">
+      <input type="file" id="file-am" accept=".xls,.xlsx,.csv" onchange="handleFile('8am', this)" onclick="event.stopPropagation()" style="display:none;">
+      <div class="upload-label am">Wild Apricot / 8am</div>
+      <div class="upload-title" style="margin-bottom:8px;">Transactions</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="date" id="am-start" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+        <input type="date" id="am-end" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="load8amTransactions()" id="btn-8am" style="width:100%;justify-content:center;background:#7a4f00;border-color:#7a4f00;">
+        &#9889; Pull from 8am
+      </button>
+      <button onclick="document.getElementById('file-am').click()" style="width:100%;margin-top:6px;font-size:11px;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);padding:4px;border-radius:4px;cursor:pointer;">
+        &#128196; Upload WA Export instead
+      </button>
+      <div class="upload-status" id="status-am" style="margin-top:6px;font-size:11px;"></div>
     </div>
     <div class="upload-card" id="card-mbr" style="border-color:var(--gold-dim);background:var(--gold-light);cursor:default;">
       <div class="upload-label" style="color:var(--navy);">Members</div>
@@ -1455,7 +1464,7 @@ function loadDemo(){
   priorSun.setDate(priorMon.getDate() + 6);
   const fmt = d => d.toISOString().substring(0, 10);
   // Set both Square and Stripe date pickers
-  ['sq','st'].forEach(p => {
+  ['sq','st','am'].forEach(p => {
     const s = document.getElementById(`${p}-start`);
     const e = document.getElementById(`${p}-end`);
     if (s) s.value = fmt(priorMon);
@@ -1707,6 +1716,160 @@ async function loadStripeTransactions() {
     btn.textContent = '⚡ Retry';
     btn.disabled = false;
     console.error('Stripe load error:', err);
+  }
+}
+
+// ── 8AM / AFFINIPAY (Wild Apricot) ──
+// Maps WA event name keywords → QBO account + class
+// The event name comes from the transaction description field in 8am
+const WA_EVENT_MAP = [
+  { kw:['golden ticket','raffle ticket','50/50','raffle drawing'],
+    acct:'4304 Fundraising Raffle & 50/50 Revenue', cls:'Fundraising:Minor Fundraisers' },
+  { kw:['rib fest','ribfest','rib-fest'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Rib Fest' },
+  { kw:['luncheon','teddy','edith roosevelt','history luncheon'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Historical Related Committees:Night At The Museum' },
+  { kw:['karaoke','lipsync','lip sync','lip-sync'],
+    acct:'4401 Member Event - Registration', cls:'Fundraising:Lip Synch Battle' },
+  { kw:['night at the','museum','natm'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Historical Related Committees:Night At The Museum' },
+  { kw:['change of command'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other' },
+  { kw:['desoto','parade bus','bus transportation'],
+    acct:'4201 Program Registration Revenue', cls:'Program Services:Parades' },
+  { kw:['history exhibit','exhibit sponsorship','quarterly history'],
+    acct:'4302 Fundraising Sponsorship Revenue', cls:'Program Services:Historical Related Committees:Night At The Museum' },
+  { kw:['presidential trip','north dakota','medora','badlands'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other:Presidential Trip' },
+  { kw:['krag','pistol shoot','rifle shoot','revolver','clay shoot','sporting clay'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Mini Clay Shoots' },
+  { kw:['theme party','summer theme','summer party','summer social'],
+    acct:'4401 Member Event - Registration', cls:'Fundraising:Summer Theme Party' },
+  { kw:['gasparilla after','gasparilla breakfast','pre-invasion'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Gasparilla Events' },
+  { kw:['st pat','patrick','pub crawl','wristband'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:St. Patricks Week' },
+  { kw:['christmas','holiday party','carrollwood'],
+    acct:'4401 Member Event - Registration', cls:'Management & General:Small Membership Events:Christmas Party' },
+  { kw:['halloween','costume'],
+    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Halloween Party' },
+  { kw:['military ball','mil ball'],
+    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other:Military Ball' },
+  { kw:['donation','donate','charitable'],
+    acct:'4001 Contribution Revenue: Individual Donations', cls:'Program Services:Charitable Events/Activities' },
+  { kw:['membership','dues','renewal'],
+    acct:'4101 Dues, Full Members (Renewal and Reinstatements)', cls:'Management & General:Member Services' },
+];
+
+function resolveWAEvent(desc) {
+  const d = (desc || '').toLowerCase();
+  for (const r of WA_EVENT_MAP) {
+    if (r.kw.some(k => d.includes(k))) return r;
+  }
+  return null;
+}
+
+async function load8amTransactions() {
+  const btn      = document.getElementById('btn-8am');
+  const statusEl = document.getElementById('status-am');
+  const start    = document.getElementById('am-start')?.value;
+  const end      = document.getElementById('am-end')?.value;
+
+  if (!start || !end) { statusEl.textContent = 'Set start and end dates first.'; statusEl.style.color = 'var(--red)'; return; }
+  if (start > end)    { statusEl.textContent = 'Start must be before end.'; statusEl.style.color = 'var(--red)'; return; }
+
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+  statusEl.textContent = 'Connecting to 8am...';
+  statusEl.style.color = 'var(--text-mid)';
+
+  let allPayments = [];
+  let offset = 0;
+  let page = 0;
+
+  try {
+    do {
+      page++;
+      let url = `/.netlify/functions/8am-transactions?start=${start}&end=${end}&offset=${offset}`;
+      statusEl.textContent = `Fetching page ${page}...`;
+
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `8am API error ${res.status}`);
+
+      allPayments = allPayments.concat(data.payments || []);
+      if (!data.has_more) break;
+      offset = data.next_offset;
+    } while (true);
+
+    if (!allPayments.length) {
+      statusEl.textContent = `No transactions found for ${start} to ${end}.`;
+      statusEl.style.color = 'var(--amber)';
+      btn.textContent = '⚡ Pull from 8am';
+      btn.disabled = false;
+      return;
+    }
+
+    let count = 0;
+    allPayments.forEach(p => {
+      const gross = parseFloat(p.gross_sales) || 0;
+      const fee   = Math.abs(parseFloat(p.fees) || 0);
+      const net   = parseFloat(p.net_total) || (gross - fee);
+      if (gross === 0 && fee === 0) return;
+
+      const buyer = (p.customer_name || '').trim();
+      const email = (p.customer_email || '').trim().toLowerCase();
+      const desc  = p.description || 'WA/8am payment';
+
+      // Resolve QBO account from event name
+      const waRule = resolveWAEvent(desc);
+      const rule   = waRule || matchRule(desc);
+      const resolvedAcct   = rule ? rule.acct  : '5991 Uncategorized Revenue';
+      const resolvedCls    = rule ? rule.cls   : '';
+      const resolvedStatus = !rule ? 'unknown' : 'ok';
+      const def = getCustomerDefaults(resolvedAcct);
+
+      // Member matching
+      let resolvedCustomer  = def.c || '';
+      let resolvedMemberNum = def.m || '';
+      const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
+
+      if (email && memberEmailMap[email]) {
+        const m = memberEmailMap[email];
+        resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
+      } else if (hasBuyer) {
+        resolvedCustomer  = gross >= 500 ? buyer : 'General Public';
+        resolvedMemberNum = '999999';
+      }
+
+      transactions.push({
+        id: nextId++, platform: '8am',
+        date:  p.date || new Date().toLocaleDateString('en-US'),
+        desc, acct: resolvedAcct, cls: resolvedCls,
+        gross, fee, net,
+        status:       resolvedStatus,
+        selected:     resolvedStatus !== 'unknown',
+        memo:         `8AM import ${new Date().toLocaleDateString('en-US')}${email ? ' | '+email : ''}`,
+        customerName: resolvedCustomer,
+        memberNum:    resolvedMemberNum,
+        stmt: '',
+      });
+      count++;
+    });
+
+    document.getElementById('card-am').style.background = '#f5edd5';
+    document.getElementById('card-am').style.borderColor = '#7a4f00';
+    statusEl.textContent = `✓ ${count} transactions loaded (${start} to ${end})`;
+    statusEl.style.color = '#7a4f00';
+    btn.textContent = '✓ Loaded from 8am';
+    renderAll();
+
+  } catch (err) {
+    statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Verify EAM_SECRET_KEY in Netlify env vars.</span>`;
+    statusEl.style.color = 'var(--red)';
+    btn.textContent = '⚡ Retry';
+    btn.disabled = false;
+    console.error('8am load error:', err);
   }
 }
 

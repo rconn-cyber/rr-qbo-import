@@ -314,12 +314,21 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       </button>
       <div class="upload-status" id="status-sq" style="margin-top:6px;font-size:11px;"></div>
     </div>
-    <div class="upload-card" id="card-st">
-      <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()">
+    <div class="upload-card" id="card-st" style="cursor:default;">
+      <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()" style="display:none;">
       <div class="upload-label st">Stripe</div>
-      <div class="upload-title">Payout Reconciliation CSV</div>
-      <div class="upload-hint">Export from Stripe → Transactions → Export (all columns, includes Card Name)</div>
-      <div class="upload-status" id="status-st"></div>
+      <div class="upload-title" style="margin-bottom:8px;">Transactions</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="date" id="st-start" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+        <input type="date" id="st-end" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadStripeTransactions()" id="btn-stripe" style="width:100%;justify-content:center;background:#1a3a7a;border-color:#1a3a7a;">
+        &#9889; Pull from Stripe
+      </button>
+      <button onclick="document.getElementById('file-st').click()" style="width:100%;margin-top:6px;font-size:11px;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);padding:4px;border-radius:4px;cursor:pointer;">
+        &#128196; Upload CSV instead
+      </button>
+      <div class="upload-status" id="status-st" style="margin-top:6px;font-size:11px;"></div>
     </div>
     <div class="upload-card" id="card-am">
       <input type="file" id="file-am" accept=".csv" onchange="handleFile('8am', this)" onclick="event.stopPropagation()">
@@ -1437,20 +1446,21 @@ function loadDemo(){
 
 // ── SQUARE DATE DEFAULTS ──
 // Set date pickers to prior Mon-Sun on page load
-(function setSquareDateDefaults() {
+(function setDateDefaults() {
   const today = new Date();
-  const day = today.getDay(); // 0=Sun, 1=Mon...
-  // Prior Monday
+  const day = today.getDay();
   const priorMon = new Date(today);
   priorMon.setDate(today.getDate() - ((day + 6) % 7) - 7);
-  // Prior Sunday
   const priorSun = new Date(priorMon);
   priorSun.setDate(priorMon.getDate() + 6);
   const fmt = d => d.toISOString().substring(0, 10);
-  const startEl = document.getElementById('sq-start');
-  const endEl   = document.getElementById('sq-end');
-  if (startEl) startEl.value = fmt(priorMon);
-  if (endEl)   endEl.value   = fmt(priorSun);
+  // Set both Square and Stripe date pickers
+  ['sq','st'].forEach(p => {
+    const s = document.getElementById(`${p}-start`);
+    const e = document.getElementById(`${p}-end`);
+    if (s) s.value = fmt(priorMon);
+    if (e) e.value = fmt(priorSun);
+  });
 })();
 
 // ── SQUARE API PULL ──
@@ -1589,6 +1599,114 @@ async function loadSquareTransactions() {
     btn.textContent = '⚡ Retry';
     btn.disabled = false;
     console.error('Square load error:', err);
+  }
+}
+
+// ── STRIPE API PULL ──
+async function loadStripeTransactions() {
+  const btn      = document.getElementById('btn-stripe');
+  const statusEl = document.getElementById('status-st');
+  const start    = document.getElementById('st-start')?.value;
+  const end      = document.getElementById('st-end')?.value;
+
+  if (!start || !end) { statusEl.textContent = 'Set start and end dates first.'; statusEl.style.color = 'var(--red)'; return; }
+  if (start > end)    { statusEl.textContent = 'Start must be before end.'; statusEl.style.color = 'var(--red)'; return; }
+
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+  statusEl.textContent = 'Connecting to Stripe...';
+  statusEl.style.color = 'var(--text-mid)';
+
+  let allPayments = [];
+  let startingAfter = null;
+  let page = 0;
+
+  try {
+    do {
+      page++;
+      let url = `/.netlify/functions/stripe-transactions?start=${start}&end=${end}`;
+      if (startingAfter) url += `&starting_after=${encodeURIComponent(startingAfter)}`;
+      statusEl.textContent = `Fetching page ${page}...`;
+
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Stripe API error ${res.status}`);
+
+      allPayments    = allPayments.concat(data.payments || []);
+      startingAfter  = data.has_more ? data.starting_after : null;
+    } while (startingAfter);
+
+    if (!allPayments.length) {
+      statusEl.textContent = `No transactions found for ${start} to ${end}.`;
+      statusEl.style.color = 'var(--amber)';
+      btn.textContent = '⚡ Pull from Stripe';
+      btn.disabled = false;
+      return;
+    }
+
+    let count = 0;
+    allPayments.forEach(p => {
+      const gross = parseFloat(p.gross_sales) || 0;
+      const fee   = Math.abs(parseFloat(p.fees) || 0);
+      const net   = parseFloat(p.net_total) || (gross - fee);
+      if (gross === 0 && fee === 0) return;
+
+      const buyer = (p.customer_name || '').trim();
+      const email = (p.customer_email || '').trim().toLowerCase();
+      const stmt  = (p.stmt || '').trim();
+      const desc  = p.description || stmt || 'Stripe payment';
+
+      // Match rule from description (e.g. "Annual Renewal..." → 4101)
+      let rule = matchRule(desc) || matchRule(stmt);
+      const resolvedAcct   = rule ? rule.acct : '5991 Uncategorized Revenue';
+      const resolvedCls    = rule ? rule.cls  : '';
+      const resolvedStatus = (!rule) ? 'unknown' : (rule.status || 'ok');
+      const def = getCustomerDefaults(resolvedAcct);
+
+      // Member matching — same priority order as ingestRows
+      let resolvedCustomer  = def.c || '';
+      let resolvedMemberNum = def.m || '';
+      const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
+
+      if (hasBuyer || (email && memberList.length > 0)) {
+        if (email && memberEmailMap[email]) {
+          const m = memberEmailMap[email];
+          resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
+        } else if (hasBuyer) {
+          resolvedCustomer  = gross >= 500 ? buyer : 'General Public';
+          resolvedMemberNum = '999999';
+        }
+      }
+
+      transactions.push({
+        id: nextId++, platform: 'stripe',
+        date:  p.date || new Date().toLocaleDateString('en-US'),
+        desc, acct: resolvedAcct, cls: resolvedCls,
+        gross, fee, net,
+        status:       resolvedStatus,
+        selected:     resolvedStatus !== 'unknown',
+        memo:         `STRIPE import ${new Date().toLocaleDateString('en-US')}${email ? ' | '+email : ''}`,
+        customerName: resolvedCustomer,
+        memberNum:    resolvedMemberNum,
+        stmt,
+      });
+      count++;
+    });
+
+    document.getElementById('card-st').style.background = '#e8ecf8';
+    document.getElementById('card-st').style.borderColor = '#1a3a7a';
+    statusEl.textContent = `✓ ${count} transactions loaded (${start} to ${end})`;
+    statusEl.style.color = '#1a3a7a';
+    btn.textContent = '✓ Loaded from Stripe';
+    renderAll();
+    enrichCognitoEntries();
+
+  } catch (err) {
+    statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Verify STRIPE_SECRET_KEY in Netlify env vars.</span>`;
+    statusEl.style.color = 'var(--red)';
+    btn.textContent = '⚡ Retry';
+    btn.disabled = false;
+    console.error('Stripe load error:', err);
   }
 }
 

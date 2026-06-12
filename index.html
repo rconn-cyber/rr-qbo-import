@@ -318,7 +318,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()">
       <div class="upload-label st">Stripe</div>
       <div class="upload-title">Payout Reconciliation CSV</div>
-      <div class="upload-hint">Export from Stripe → Transactions → Export (includes Card Name for auto member match)</div>
+      <div class="upload-hint">Export from Stripe → Transactions → Export (all columns, includes Card Name)</div>
       <div class="upload-status" id="status-st"></div>
     </div>
     <div class="upload-card" id="card-am">
@@ -1526,7 +1526,8 @@ async function loadSquareTransactions() {
         }
       }
 
-      const desc = [p.description, p.location].filter(Boolean).join(' | ') || 'Square payment';
+      // Use order line items if available, otherwise note, otherwise generic
+      const desc = p.description || 'Square payment';
       const e = { date: p.date, desc, gross: p.gross_sales, fee: p.fees, net: p.net_total,
                   buyer: buyerClean, extractedMemberNum: sqMemberNum, email: p.customer_email || '', stmt: '' };
 

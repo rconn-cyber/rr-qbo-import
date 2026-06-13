@@ -179,9 +179,10 @@ thead th {
   font-size: 11px; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.06em;
   padding: 10px 12px; text-align: left;
-  white-space: nowrap; position: sticky; top: 56px; z-index: 10;
+  white-space: nowrap; position: sticky; top: 56px; z-index: 30;
 }
 thead th:first-child { border-radius: 0; }
+tbody td input, tbody td select { position: relative; z-index: 1; }
 thead th input[type=checkbox] { cursor: pointer; }
 
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }

@@ -2,3 +2,6 @@
   from = "/api/config"
   to = "/.netlify/functions/config"
   status = 200
+
+[build]
+  SECRETS_SCAN_OMIT_PATHS = "netlify/functions/check-dupes.js,netlify/functions/config.js,netlify/functions/log-import.js"

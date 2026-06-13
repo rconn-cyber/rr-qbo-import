@@ -326,7 +326,9 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       if (pe && e) pe.value = e;
     });
   }
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Load QBO config (accounts, classes, rules) from Supabase before anything else
+    await loadConfig();
     document.getElementById('global-start')?.addEventListener('change', syncDates);
     document.getElementById('global-end')?.addEventListener('change', syncDates);
   });
@@ -681,173 +683,15 @@ async function loadMembersFromSupabase() {
 }
 
 // ── GENERAL RULES (Stripe / 8am / Square fallback) ──
-const RULES = [
-  {kw:['fishing','boat entry','boat registr','angler','division fee'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
-  {kw:['fishing raffle','fishing auction','silent auction fish'],acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
-  {kw:['fishing beverage','fishing bar','tournament bar'],acct:'4306 Fundraising Beverage Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
-  {kw:['fishing sponsor'],acct:'4302 Fundraising Sponsorship Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},
-  {kw:['golf registr','golf tournam','golfer','hunters green',"hunter's green"],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Golf Tournament',status:'defer'},
-  {kw:['golf sponsor'],acct:'4302 Fundraising Sponsorship Revenue',cls:'Fundraising:Golf Tournament',status:'ok'},
-  {kw:['golf raffle','mulligan'],acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:'Fundraising:Golf Tournament',status:'ok'},
-  {kw:['night at the museum','natm','museum ticket'],acct:'4401 Member Event - Registration',cls:'Program Services:Historical Related Committees:Night At The Museum',status:'ok'},
-  {kw:['summer theme','summer party','summer social'],acct:'4401 Member Event - Registration',cls:'Fundraising:Summer Theme Party',status:'ok'},
-  {kw:['christmas party','holiday party','carrollwood'],acct:'4401 Member Event - Registration',cls:'Management & General:Small Membership Events:Christmas Party',status:'defer'},
-  {kw:['gasparilla after party','gsp after'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events:Gasparilla After Party',status:'defer'},
-  {kw:['gasparilla breakfast','gsp breakfast'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events:Gasparilla Breakfast',status:'defer'},
-  {kw:['pre-invasion','pre invasion','gasparilla pre','gsp pre'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events:Gasparilla Pre-Invasion Party',status:'defer'},
-  {kw:['gasparilla hotel','gsp hotel','hotel block'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events',status:'defer'},
-  {kw:['st pat','st. pat','patrick wrist','pub crawl','patrick brunch','patrick post','patrick pre','patrick parade'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:St. Patricks Week',status:'defer'},
-  {kw:['valentine','vday','val party'],acct:'4301 Fundraising Registration Revenue',cls:"Fundraising:Valentine's Day Party",status:'defer'},
-  {kw:['halloween','costume party'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Halloween Party',status:'defer'},
-  {kw:['sporting clay','clay shoot','clay tournament'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Sporting Clay Tournament',status:'defer'},
-  {kw:['military ball','mil ball'],acct:'4401 Member Event - Registration',cls:'Program Services:Program Other:Military Ball',status:'defer'},
-  {kw:['lip synch','lip sync'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Lip Synch Battle',status:'ok'},
-  {kw:['mini clay','mini shoot'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Mini Clay Shoots',status:'ok'},
-  {kw:['presidential trip','medora'],acct:'4401 Member Event - Registration',cls:'Program Services:Program Other:Presidential Trip',status:'ok'},
-  {kw:['bar sale','beverage sale','drink sale','cocktail','beer sale','bar tab','bar total','spirits','liquor sale','horse soldier','deep eddy','yuengling','famous grouse','mich ultra','mount gay','tangueray','tanqueray','nutrl','cigar $','cigar sale'],acct:'5001 Sales of Product Revenue: Bar',cls:'Fundraising:Bar',status:'ok'},
-  {kw:['quartermaster','merchandise','merch','apparel','shirt','hat','patch','store sale'],acct:'5002 Sales of Product Revenue: Quartermaster',cls:'Program Services:Program Other:Quartermaster',status:'ok'},
-  {kw:['new member','new dues','join application','new application'],acct:'4102 Dues, New Members',cls:'Management & General:Member Services',status:'ok'},
-  {kw:['renewal','reinstatement','annual dues','membership renewal'],acct:'4101 Dues, Full Members (Renewal and Reinstatements)',cls:'Management & General:Member Services',status:'ok'},
-  {kw:['absentee','non-resident','nonresident'],acct:'4103 Dues (Absentee Members)',cls:'Management & General:Member Services',status:'ok'},
-  {kw:['late fee','membership late'],acct:'4104 Membership Late Fees',cls:'Management & General:Member Services',status:'ok'},
-  {kw:['cigar locker','cigar rental'],acct:'5511 Misc Income: Cigar Locker Rentals',cls:'Unrelated Business Taxable Income:Cigar Locker Rentals',status:'ok'},
-  {kw:['float locker','float rental'],acct:'5512 Misc Income: Float Locker Rental Income',cls:'Unrelated Business Taxable Income:Parade Float Locker Rentals',status:'ok'},
-  {kw:['rental income','warehouse rent'],acct:'5513 Misc Income: Rental Income',cls:'Unrelated Business Taxable Income',status:'ok'},
-  {kw:['donation','contribute','charitable','teddy bear','honor flight','make-a-wish','joshua house','special olympics'],acct:'4001 Contribution Revenue: Individual Donations',cls:'Program Services:Charitable Events/Activities',status:'ok'},
-  {kw:['parade entry','parade fee','desoto','springtime tallahassee','strawberry parade','chasco','veterans day parade','independence day parade','knights parade'],acct:'4201 Program Registration Revenue',cls:'Program Services:Parades',status:'ok'},
-  {kw:['processing fee','merchant fee','platform fee','stripe fee','square fee','cc fee','bank charge','8am fee','service fee'],acct:'8101 Bank Charges & CC Fees',cls:'Management & General:Administration',status:'ok'},
-  {kw:['raffle ticket','golden ticket','50/50'],acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:'Fundraising:Minor Fundraisers',status:'ok'},
-];
+// ── CONFIG — loaded dynamically from /.netlify/functions/qbo-config ──
+// These are populated by loadConfig() on startup. Do not edit here.
+let RULES = [];
+let ACCOUNTS = [];
+let CLASSES = [];
+let SQ_ITEM_RULES = [];
+let SQ_EVENT_CONTEXT = [];
+let CUSTOMER_DEFAULTS = {};
 
-const ACCOUNTS = [
-  '4101 Dues, Full Members (Renewal and Reinstatements)','4102 Dues, New Members',
-  '4103 Dues (Absentee Members)','4104 Membership Late Fees',
-  '4201 Program Registration Revenue','4202 Program Sponsorship Revenue',
-  '4301 Fundraising Registration Revenue','4302 Fundraising Sponsorship Revenue',
-  '4304 Fundraising Raffle & 50/50 Revenue','4305 Fundraising Auction Revenue',
-  '4306 Fundraising Beverage Revenue','4401 Member Event - Registration',
-  '4404 Member Event Raffle & 50/50','4405 Member Event Auction Revenue',
-  '4406 Member Event Product Revenue','5001 Sales of Product Revenue: Bar',
-  '5002 Sales of Product Revenue: Quartermaster',
-  '5511 Misc Income: Cigar Locker Rentals','5512 Misc Income: Float Locker Rental Income',
-  '5513 Misc Income: Rental Income','5991 Uncategorized Revenue',
-  '8101 Bank Charges & CC Fees','2150.1 Deferred Income - Fishing',
-  '2150.2 Deferred Income - Military Ball','2150.3 Deferred Income - Gasparilla After Party',
-  '2150.4 Deferred Income - Christmas Party','2150.7 Deferred Income - Golf Tournament',
-  '2150.8 Deferred Income - Halloween Party','2150.13 Deferred Income - St Patricks Events',
-  '4001 Contribution Revenue: Individual Donations',
-];
-
-const CLASSES = [
-  'Fundraising:Fishing Tournament','Fundraising:Golf Tournament','Fundraising:Bar',
-  'Fundraising:Summer Theme Party','Fundraising:Halloween Party',
-  "Fundraising:Valentine's Day Party",'Fundraising:Sporting Clay Tournament',
-  'Fundraising:Lip Synch Battle','Fundraising:Mini Clay Shoots',
-  'Fundraising:Gasparilla Events:Gasparilla After Party',
-  'Fundraising:Gasparilla Events:Gasparilla Breakfast',
-  'Fundraising:Gasparilla Events:Gasparilla Pre-Invasion Party',
-  'Fundraising:St. Patricks Week','Fundraising:St. Patricks Week:St. Pats Brunch',
-  'Fundraising:St. Patricks Week:St. Pats Wristbands',
-  'Fundraising:Minor Fundraisers','Fundraising:Rib Fest',
-  'Management & General:Administration','Management & General:Member Services',
-  'Management & General:Small Membership Events:Christmas Party',
-  'Management & General:Small Membership Events:Cigar Club',
-  'Program Services:Charitable Events/Activities',
-  'Program Services:Historical Related Committees:Night At The Museum',
-  'Program Services:Parades','Program Services:Program Other:Military Ball',
-  'Program Services:Program Other:Quartermaster',
-  'Program Services:Program Other:Presidential Trip',
-  'Unrelated Business Taxable Income:Cigar Locker Rentals',
-  'Unrelated Business Taxable Income:Parade Float Locker Rentals',
-];
-
-// ── SQUARE ITEM → CLASS RESOLVER ──
-// Pass 1: what was sold (item/category) → account + base class
-// Pass 2: what event was it at → refine class for raffle/reg/auction/ticket rows
-const SQ_ITEM_RULES = [
-  {kw:['bar','beer','liquor','spirits','wine','cocktail','beverage','drink','bud ','miller','coors','shot ','rum','vodka','whiskey','seltzer','hard seltzer','draft','tap','keg','mixed drink','captain morgan','jack daniel','crown royal','fireball','tito','modelo','michelob','heineken','corona','truly','white claw','regular','light beer','domestic','import','pour','bourbon','tequila','gin ','scotch','brandy','horse soldier','deep eddy','yuengling','famous grouse','mich ultra','bubba','mount gay','tangueray','tanqueray','nutrl','truly hard'],
-   acct:'5001 Sales of Product Revenue: Bar',cls:'Fundraising:Bar',customer:'Allocate',memberNum:'888888'},
-  {kw:['quartermaster','qm ','merch','merchandise','shirt','t-shirt','tshirt','hat ','cap ','patch','apparel','jacket','polo','hoodie','vest','coin','pin ','button','souvenir','flag','sticker','store','book sale','dri fit','v-neck','polo/'],
-   acct:'5002 Sales of Product Revenue: Quartermaster',cls:'Program Services:Program Other:Quartermaster',customer:'Allocate',memberNum:'888888'},
-  {kw:['raffle','50/50','50-50','golden ticket','raffle ticket','pull tab'],
-   acct:'4304 Fundraising Raffle & 50/50 Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
-  {kw:['auction','silent auction','bid ','auction item','auction lot'],
-   acct:'4305 Fundraising Auction Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
-  {kw:['bead','beads','throw ','throws','doubloon'],
-   acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events',customer:'Allocate',memberNum:'888888'},
-  {kw:['on-site reg','onsite reg','walk-in','walk in','entry fee','day-of entry','day of entry','on site registration'],
-   acct:'4301 Fundraising Registration Revenue',cls:null,customer:'Allocate',memberNum:'888888'},
-  {kw:['ticket','tickets','admission','cover charge','entry ticket'],
-   acct:'4401 Member Event - Registration',cls:null,customer:'Allocate',memberNum:'888888'},
-  {kw:['cigar locker','locker rental','cigar rental'],
-   acct:'5511 Misc Income: Cigar Locker Rentals',cls:'Unrelated Business Taxable Income:Cigar Locker Rentals',customer:'',memberNum:''},
-  {kw:['float locker','float rental','parade locker'],
-   acct:'5512 Misc Income: Float Locker Rental Income',cls:'Unrelated Business Taxable Income:Parade Float Locker Rentals',customer:'',memberNum:''},
-  {kw:['donation','donate','charitable'],
-   acct:'4001 Contribution Revenue: Individual Donations',cls:'Program Services:Charitable Events/Activities',customer:'',memberNum:''},
-];
-
-// Event context: used when SQ_ITEM_RULES sets cls:null
-const SQ_EVENT_CONTEXT = [
-  {kw:['fishing','fish tournam'],cls:'Fundraising:Fishing Tournament'},
-  {kw:['golf','hunters green'],cls:'Fundraising:Golf Tournament'},
-  {kw:['gasparilla','gsp ','krewe'],cls:'Fundraising:Gasparilla Events'},
-  {kw:['st pat','st. pat','patrick','pub crawl'],cls:'Fundraising:St. Patricks Week'},
-  {kw:['christmas','holiday party','xmas'],cls:'Management & General:Small Membership Events:Christmas Party'},
-  {kw:['halloween','costume'],cls:'Fundraising:Halloween Party'},
-  {kw:['valentine','vday'],cls:"Fundraising:Valentine's Day Party"},
-  {kw:['sporting clay','clay shoot'],cls:'Fundraising:Sporting Clay Tournament'},
-  {kw:['summer party','summer theme','summer social'],cls:'Fundraising:Summer Theme Party'},
-  {kw:['military ball','mil ball'],cls:'Program Services:Program Other:Military Ball'},
-  {kw:['rib fest','ribfest'],cls:'Fundraising:Rib Fest'},
-  {kw:['lip synch','lip sync'],cls:'Fundraising:Lip Synch Battle'},
-  {kw:['mini clay'],cls:'Fundraising:Mini Clay Shoots'},
-  {kw:['museum','natm','night at the museum'],cls:'Program Services:Historical Related Committees:Night At The Museum'},
-  {kw:['parade','desoto','springtime'],cls:'Program Services:Parades'},
-];
-
-function resolveSquareClass(desc) {
-  const d = desc.toLowerCase();
-  let match = null;
-  for (const r of SQ_ITEM_RULES) {
-    if (r.kw.some(k => d.includes(k))) { match = {...r}; break; }
-  }
-  if (!match) return null;
-  if (match.cls === null) {
-    for (const ev of SQ_EVENT_CONTEXT) {
-      if (ev.kw.some(k => d.includes(k))) { match.cls = ev.cls; break; }
-    }
-    if (match.cls === null) match.cls = '';
-  }
-  return match;
-}
-
-// ── CUSTOMER / MEMBER # DEFAULTS by account ──
-const CUSTOMER_DEFAULTS = {
-  '4101 Dues, Full Members (Renewal and Reinstatements)':{c:'',m:''},
-  '4102 Dues, New Members':{c:'',m:''},
-  '4103 Dues (Absentee Members)':{c:'',m:''},
-  '4104 Membership Late Fees':{c:'',m:''},
-  '4201 Program Registration Revenue':{c:'Allocate',m:'888888'},
-  '4202 Program Sponsorship Revenue':{c:'',m:''},
-  '4301 Fundraising Registration Revenue':{c:'Allocate',m:'888888'},
-  '4302 Fundraising Sponsorship Revenue':{c:'',m:''},
-  '4304 Fundraising Raffle & 50/50 Revenue':{c:'Allocate',m:'888888'},
-  '4305 Fundraising Auction Revenue':{c:'Allocate',m:'888888'},
-  '4306 Fundraising Beverage Revenue':{c:'Allocate',m:'888888'},
-  '4401 Member Event - Registration':{c:'Allocate',m:'888888'},
-  '4404 Member Event Raffle & 50/50':{c:'Allocate',m:'888888'},
-  '4405 Member Event Auction Revenue':{c:'Allocate',m:'888888'},
-  '4406 Member Event Product Revenue':{c:'Allocate',m:'888888'},
-  '5001 Sales of Product Revenue: Bar':{c:'Allocate',m:'888888'},
-  '5002 Sales of Product Revenue: Quartermaster':{c:'Allocate',m:'888888'},
-  '5511 Misc Income: Cigar Locker Rentals':{c:'',m:''},
-  '5512 Misc Income: Float Locker Rental Income':{c:'',m:''},
-  '5513 Misc Income: Rental Income':{c:'',m:''},
-  '4001 Contribution Revenue: Individual Donations':{c:'',m:''},
-  '8101 Bank Charges & CC Fees':{c:'General Public',m:'999999'},
-  '5991 Uncategorized Revenue':{c:'',m:''},
-};
 function getCustomerDefaults(acct){ return CUSTOMER_DEFAULTS[acct]||{c:'',m:''}; }
 
 function validateTxn(t){
@@ -1106,39 +950,27 @@ function ingestRows(platform,parseResult,filename){
     let resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
 
     // ── MEMBER AUTO-MATCH ──
-    // Priority: buyer name (Card Name) > email match > description scan > bulk default
-    // If we have an individual buyer name, always prefer it over Allocate bulk default
-    const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
-    if (hasBuyer || (email && memberList.length > 0)) {
-      // Pass 0: Square embedded member number — most reliable for Square transactions
-      if (sqMemberNum && buyer) {
-        resolvedCustomer = buyer;
-        resolvedMemberNum = sqMemberNum;
-      }
-      // Pass 1: Email match — most reliable for Stripe
-      else if (email && memberEmailMap[email]) {
-        const m = memberEmailMap[email];
-        resolvedCustomer = m.fullName;
-        resolvedMemberNum = m.id;
-      }
-      // Pass 2: If email didn't match but we have Card Name, use it
-      // Non-member individual payment — per Michael's rules:
-      //   >$500 = actual payer name + 999999
-      //   <$500 non-member = General Public + 999999
-      else if (hasBuyer) {
-        const gross = parseAmount(grossRaw);
-        if (gross >= 500) {
-          resolvedCustomer = buyer;
-          resolvedMemberNum = '999999';
-        } else {
-          resolvedCustomer = 'General Public';
-          resolvedMemberNum = '999999';
-        }
-      }
+    // Priority: embedded member# > email match > $500 rule
+    // Raw card/cardholder names from Square are NOT reliable QBO customer names
+    // (e.g. "Jim Beam" typed by a customer). Only trust names with a member# or email match.
+    if (sqMemberNum && buyer) {
+      // Pass 0: Square embedded member number — most reliable
+      resolvedCustomer = buyer;
+      resolvedMemberNum = sqMemberNum;
+    } else if (email && memberList.length > 0 && memberEmailMap[email]) {
+      // Pass 1: Email match
+      const m = memberEmailMap[email];
+      resolvedCustomer = m.fullName;
+      resolvedMemberNum = m.id;
+    } else if (!resolvedCustomer) {
+      // Pass 2: No verified identity — apply $500 rule, ignore raw card name
+      const gross = parseAmount(grossRaw);
+      resolvedCustomer = gross >= 500 ? buyer : 'General Public';
+      resolvedMemberNum = '999999';
     }
 
     const needsMemberLookup = !resolvedCustomer || resolvedCustomer === '' || resolvedCustomer === 'Allocate';
-    if (needsMemberLookup && memberList.length > 0 && !hasBuyer) {
+    if (needsMemberLookup && memberList.length > 0) {
       // Description scan — last resort for cases with no buyer and no email match
       const SKIP = new Set(['payment','rough','riders','rider','import','square','stripe','membership',
         'renewal','registration','dues','annual','fee','ticket','deposit','entry','regular','light',
@@ -1666,15 +1498,22 @@ async function loadSquareTransactions() {
 
       const buyer = buyerClean;
       const email = (p.customer_email || '').toLowerCase();
-      const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
+      // Only treat a Square name as meaningful if it has an extracted member# or matches by email.
+      // Raw card/cardholder names (e.g. "Jim Beam") are NOT reliable QBO customer names.
+      const hasMemberNum = !!sqMemberNum;
+      const hasEmail = email && memberList.length > 0;
 
-      if (hasBuyer || (email && memberList.length > 0)) {
-        if (sqMemberNum && buyer) {
-          resolvedCustomer = buyer; resolvedMemberNum = sqMemberNum;
-        } else if (email && memberEmailMap[email]) {
-          const m = memberEmailMap[email];
-          resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
-        } else if (hasBuyer) {
+      if (hasMemberNum && buyer) {
+        // Name came with an embedded member number — trust it
+        resolvedCustomer = buyer; resolvedMemberNum = sqMemberNum;
+      } else if (hasEmail && memberEmailMap[email]) {
+        // Matched by email to a known member
+        const m = memberEmailMap[email];
+        resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
+      } else {
+        // Unknown or unverifiable buyer — apply $500 rule
+        // Do NOT use raw card name; it could be anything
+        if (!resolvedCustomer) {
           resolvedCustomer = gross >= 500 ? buyer : 'General Public';
           resolvedMemberNum = '999999';
         }
@@ -1878,44 +1717,48 @@ async function pullAllPlatforms() {
 // ── 8AM / AFFINIPAY (Wild Apricot) ──
 // Maps WA event name keywords → QBO account + class
 // The event name comes from the transaction description field in 8am
-const WA_EVENT_MAP = [
-  { kw:['golden ticket','raffle ticket','50/50','raffle drawing'],
-    acct:'4304 Fundraising Raffle & 50/50 Revenue', cls:'Fundraising:Minor Fundraisers' },
-  { kw:['rib fest','ribfest','rib-fest'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Rib Fest' },
-  { kw:['luncheon','teddy','edith roosevelt','history luncheon'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Historical Related Committees:Night At The Museum' },
-  { kw:['karaoke','lipsync','lip sync','lip-sync'],
-    acct:'4401 Member Event - Registration', cls:'Fundraising:Lip Synch Battle' },
-  { kw:['night at the','museum','natm'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Historical Related Committees:Night At The Museum' },
-  { kw:['change of command'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other' },
-  { kw:['desoto','parade bus','bus transportation'],
-    acct:'4201 Program Registration Revenue', cls:'Program Services:Parades' },
-  { kw:['history exhibit','exhibit sponsorship','quarterly history'],
-    acct:'4302 Fundraising Sponsorship Revenue', cls:'Program Services:Historical Related Committees:Night At The Museum' },
-  { kw:['presidential trip','north dakota','medora','badlands'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other:Presidential Trip' },
-  { kw:['krag','pistol shoot','rifle shoot','revolver','clay shoot','sporting clay'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Mini Clay Shoots' },
-  { kw:['theme party','summer theme','summer party','summer social'],
-    acct:'4401 Member Event - Registration', cls:'Fundraising:Summer Theme Party' },
-  { kw:['gasparilla after','gasparilla breakfast','pre-invasion'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Gasparilla Events' },
-  { kw:['st pat','patrick','pub crawl','wristband'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:St. Patricks Week' },
-  { kw:['christmas','holiday party','carrollwood'],
-    acct:'4401 Member Event - Registration', cls:'Management & General:Small Membership Events:Christmas Party' },
-  { kw:['halloween','costume'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Halloween Party' },
-  { kw:['military ball','mil ball'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other:Military Ball' },
-  { kw:['donation','donate','charitable'],
-    acct:'4001 Contribution Revenue: Individual Donations', cls:'Program Services:Charitable Events/Activities' },
-  { kw:['membership','dues','renewal'],
-    acct:'4101 Dues, Full Members (Renewal and Reinstatements)', cls:'Management & General:Member Services' },
-];
+let WA_EVENT_MAP = [];
+
+// ── CONFIG LOADER ──
+async function loadConfig() {
+  try {
+    const res = await fetch('/.netlify/functions/qbo-config');
+    if (!res.ok) throw new Error('Config fetch failed: ' + res.status);
+    const cfg = await res.json();
+
+    ACCOUNTS         = cfg.accounts || [];
+    CLASSES          = cfg.classes  || [];
+    CUSTOMER_DEFAULTS = cfg.customerDefaults || {};
+
+    // Convert Supabase rule rows back to the format the app expects
+    function toRule(r) {
+      return { kw: r.keywords, acct: r.qbo_account, cls: r.qbo_class,
+               customer: r.customer_default || '', memberNum: r.member_num_default || '',
+               status: r.status || 'ok' };
+    }
+    function toEvt(r) {
+      return { kw: r.keywords, cls: r.qbo_class };
+    }
+
+    RULES           = (cfg.rules.general  || []).map(toRule);
+    SQ_ITEM_RULES   = (cfg.rules.sq_item  || []).map(toRule);
+    SQ_EVENT_CONTEXT = (cfg.rules.sq_event || []).map(toEvt);
+    WA_EVENT_MAP    = (cfg.rules.wa_event || []).map(r => ({
+      kw: r.keywords, acct: r.qbo_account, cls: r.qbo_class
+    }));
+
+    console.log(`Config loaded: ${ACCOUNTS.length} accounts, ${CLASSES.length} classes, ${RULES.length + SQ_ITEM_RULES.length + WA_EVENT_MAP.length} rules`);
+  } catch (err) {
+    console.error('loadConfig error:', err);
+    // Show non-blocking warning in UI
+    const warn = document.createElement('div');
+    warn.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);background:#c85a5a;color:#fff;padding:8px 18px;border-radius:6px;z-index:9999;font-size:13px;';
+    warn.textContent = '⚠ Could not load QBO config from server. Account/class lists may be incomplete.';
+    document.body.appendChild(warn);
+    setTimeout(() => warn.remove(), 8000);
+  }
+}
+
 
 function resolveWAEvent(desc) {
   const d = (desc || '').toLowerCase();

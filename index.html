@@ -191,6 +191,9 @@ tbody tr.selected { background: #f0ede8; }
 tbody tr.flag-unknown { background: var(--red-bg); }
 tbody tr.flag-deferred { background: var(--amber-bg); }
 tbody tr.flag-ok { }
+tbody tr.flag-dupe { background: #f0e8f8; }
+tbody tr.flag-dupe td { opacity: 0.8; }
+.badge-dupe { background: #ede0f8; color: #5a1a8b; }
 
 td { padding: 8px 12px; font-size: 13px; vertical-align: middle; }
 td.mono { font-family: var(--mono); font-size: 12px; }
@@ -500,6 +503,14 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 <div class="notice notice-warn" id="unknown-notice" style="display:none;margin-top:16px">
     <span>⚠</span>
     <span><strong>Rows need attention before export.</strong> Rows highlighted in red are missing a QBO account, Customer Name, or Member #. Fix them inline or delete them. Only rows with all three fields complete will be included in the IIF.</span>
+  </div>
+<!-- IMPORT HISTORY PANEL -->
+  <div id="import-log-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:13px;color:var(--navy);">Import History <span style="font-weight:400;font-size:11px;color:var(--text-muted);">— exports logged to Supabase · duplicate protection active</span></div>
+      <button class="btn btn-sm" style="background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);" onclick="loadImportHistory()">↺ Load History</button>
+    </div>
+    <div id="import-log-body"><div style="font-size:12px;color:var(--text-muted);">Click Load History to view past exports. Each IIF download is automatically logged to prevent duplicate imports.</div></div>
   </div>
 
 </main>
@@ -1155,7 +1166,7 @@ function ingestRows(platform,parseResult,filename){
     }
 
     transactions.push({
-      id:nextId++, platform,
+     id:nextId++, txnId:platform+'_csv_'+Date.now()+'_'+nextId, platform,
       date:parseDate(date)||new Date().toLocaleDateString('en-US'),
       desc:resolvedDesc,
       acct:resolvedAcct, cls:resolvedCls,
@@ -1234,9 +1245,9 @@ function renderTable(){
   tbody.innerHTML=filtered.map(t=>{
     const pb=t.platform==='square'?'badge-sq':t.platform==='stripe'?'badge-st':'badge-am';
     const errs=validateTxn(t); const hasErr=errs.length>0;
-    const sb=hasErr?'badge-unknown':t.status==='ok'?'badge-ok':t.status==='defer'?'badge-defer':'badge-unknown';
-    const sl=hasErr?errs.join(', '):t.status==='ok'?'Auto-matched':t.status==='defer'?'Deferred check':'Unknown';
-    const rc=hasErr?'flag-unknown':t.status==='defer'?'flag-deferred':'flag-ok';
+    const sb=hasErr?'badge-unknown':t._isDupe?'badge-dupe':t.status==='ok'?'badge-ok':t.status==='defer'?'badge-defer':'badge-unknown';
+    const sl=hasErr?errs.join(', '):t._isDupe?'Already exported':t.status==='ok'?'Auto-matched':t.status==='defer'?'Deferred check':'Unknown';
+    const rc=hasErr?'flag-unknown':t._isDupe?'flag-dupe':t.status==='defer'?'flag-deferred':'flag-ok';
     const fa=(v)=>v===0?'--':(v<0?'-':'')+' $'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     const cb=(!t.customerName)?'border-color:#c85a5a;':'';
     const mb=(!t.memberNum)?'border-color:#c85a5a;':'';
@@ -1408,21 +1419,30 @@ function buildIIF(){
   return lines.join('\n');
 }
 
-function openExportModal(){
+async function openExportModal() {
+  const rows=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
+  const count=rows.length;
   const iif=buildIIF();
   const previewLines=iif.split('\n').slice(0,20).join('\n')+(iif.split('\n').length>20?'\n…':'');
   document.getElementById('iif-preview').textContent=previewLines;
-  const count=transactions.filter(t=>t.selected&&validateTxn(t).length===0).length;
   document.getElementById('export-count').textContent=`${count} transaction${count===1?'':'s'} will be exported`;
+  document.getElementById('export-count').style.color='';
   document.getElementById('export-modal').classList.add('open');
-}
-function closeExportModal(){document.getElementById('export-modal').classList.remove('open');}
-function downloadIIF(){
-  const iif=buildIIF(); const today=new Date().toISOString().slice(0,10);
-  const blob=new Blob([iif],{type:'text/plain'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`RR_QBO_Import_${today}.iif`; a.click();
-}
+  const prior=document.getElementById('dupe-notice');if(prior)prior.remove();
+  const txnIds=rows.map(t=>t.txnId).filter(Boolean);
+  if(!txnIds.length)return;
+  try {
+    const res=await fetch('/.netlify/functions/check-dupes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({txnIds})});
+    if(!res.ok)return;
+    const data=await res.json();
+    if(data.duplicates&&data.duplicates.length>0){
+      const dupeSet=new Set(data.duplicates);
+      transactions.forEach(t=>{t._isDupe=dupeSet.has(t.txnId);});
+      const dupeLines=(data.details||[]).map(d=>{const when=d.exported_at?new Date(d.exported_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';return `• ${d.transaction_id} ($${parseFloat(d.amount||0).toFixed(2)}, ${d.platform}, exported ${when} by ${d.exported_by||'unknown'})`;}).join('\n');
+      const modalBody=document.querySelector('#export-modal .modal-body');
+      const dupeNotice=document.createElement('div');
+      dupeNotice.id='dupe-notice';dupeNotice.className='notice notice-warn';dupeNotice.style.cssText='margin-bottom:14px;white-space:pre-line;';
+      dupeNotice.innerHTML=
 
 function downloadCSV(){
   const rows=transactions.filter(t=>t.selected);
@@ -1469,7 +1489,7 @@ function loadDemo(){
     {platform:'stripe',date:today,desc:'Membership Renewal - Annual Dues',gross:150,fee:4.65,net:145.35},
     {platform:'stripe',date:last,desc:'Christmas Party Deposit - Ticket Presale',gross:65,fee:2.19,net:62.81},
     {platform:'stripe',date:last,desc:'New Member Application',gross:250,fee:7.55,net:242.45},
-    {platform:'8am',date:today,desc:'Night at the Museum - Adult Ticket',gross:40,fee:2.50,net:37.50},
+    {date:today,desc:'Night at the Museum - Adult Ticket',gross:40,fee:2.50,net:37.50},
     {platform:'8am',date:last,desc:'Summer Theme Party Ticket',gross:55,fee:3.00,net:52.00},
     {platform:'stripe',date:today,desc:'Unknown payment ref #8821',gross:125,fee:3.93,net:121.07},
   ].forEach(r=>{
@@ -1481,8 +1501,7 @@ function loadDemo(){
     const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
     const def=getCustomerDefaults(resolvedAcct);
     transactions.push({
-      id:nextId++, platform:r.platform, date:r.date, desc:r.desc,
-      acct:resolvedAcct, cls:resolvedCls,
+      id:nextId++, txnId:r.platform+'_demo_'+Date.now()+'_'+nextId, platform:r.platform, date:r.date, desc:r.desc,
       gross:r.gross, fee:r.fee, net:r.net,
       status:resolvedStatus, selected:resolvedStatus!=='unknown',
       memo:`${r.platform.toUpperCase()} import ${r.date}`,
@@ -1654,7 +1673,7 @@ async function loadSquareTransactions() {
       }
 
       transactions.push({
-        id: nextId++, platform: 'square',
+       id: nextId++, txnId: p.payment_id||p.id||('sq_'+nextId), platform: 'square',
         date: p.date || new Date().toLocaleDateString('en-US'),
         desc, acct: resolvedAcct, cls: resolvedCls,
         gross, fee, net,
@@ -1761,7 +1780,7 @@ async function loadStripeTransactions() {
       }
 
       transactions.push({
-        id: nextId++, platform: 'stripe',
+       id: nextId++, txnId: p.charge_id||p.id||('st_'+nextId), platform: 'stripe',
         date:  p.date || new Date().toLocaleDateString('en-US'),
         desc, acct: resolvedAcct, cls: resolvedCls,
         gross, fee, net,
@@ -1981,7 +2000,7 @@ async function load8amTransactions() {
       }
 
       transactions.push({
-        id: nextId++, platform: '8am',
+        id: nextId++, txnId: p.id||p.transaction_id||('am_'+nextId), platform: '8am',
         date:  p.date || new Date().toLocaleDateString('en-US'),
         desc, acct: resolvedAcct, cls: resolvedCls,
         gross, fee, net,
@@ -2159,6 +2178,27 @@ async function enrichCognitoEntries() {
 
 // Cognito enrichment is called directly after ingest — see enrichCognitoEntries()
 
+async function loadImportHistory() {
+  const body=document.getElementById('import-log-body');
+  body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Loading…</div>';
+  const key=SUPABASE_ANON_KEY||sessionStorage.getItem('rr_sb_key')||'';
+  if(!key){body.innerHTML='<div style="font-size:12px;color:var(--red);">Pull members from Supabase first.</div>';return;}
+  try {
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/qbo_import_log?select=*&order=exported_at.desc&limit=100`,{headers:{'apikey':key,'Authorization':`Bearer ${key}`}});
+    if(!res.ok)throw new Error('Supabase error '+res.status);
+    const rows=await res.json();
+    if(!rows.length){body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No exports logged yet. Download an IIF file to create the first log entry.</div>';return;}
+    const runs={};
+    rows.forEach(r=>{const k=r.exported_at?r.exported_at.substring(0,16):'unknown';if(!runs[k])runs[k]={at:r.exported_at,by:r.exported_by,rows:[]};runs[k].rows.push(r);});
+    body.innerHTML=Object.entries(runs).map(([k,run])=>{
+      const when=run.at?new Date(run.at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';
+      const total=run.rows.reduce((s,r)=>s+parseFloat(r.amount||0),0);
+      const byPlat={};run.rows.forEach(r=>{byPlat[r.platform]=(byPlat[r.platform]||0)+1;});
+      const platformCounts=Object.entries(byPlat).map(([p,n])=>`${p}: ${n}`).join(' · ');
+      return `<div style="border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:500;font-size:13px;">${when}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${platformCounts} · Exported by: ${run.by||'unknown'}</div></div><div style="text-align:right;"><div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--green);">$${total.toFixed(2)}</div><div style="font-size:11px;color:var(--text-muted);">${run.rows.length} transactions</div></div></div>`;
+    }).join('');
+  } catch(e){body.innerHTML=`<div style="font-size:12px;color:var(--red);">Error: ${e.message}</div>`;}
+}
 </script>
 </body>
 </html>

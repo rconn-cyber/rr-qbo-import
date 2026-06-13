@@ -171,7 +171,8 @@ select.filter-sel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
+  overflow: auto;
+  max-height: calc(100vh - 320px);
 }
 table { width: 100%; border-collapse: collapse; }
 thead th {
@@ -179,7 +180,7 @@ thead th {
   font-size: 11px; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.06em;
   padding: 10px 12px; text-align: left;
-  white-space: nowrap; position: sticky; top: 56px; z-index: 30;
+  white-space: nowrap; position: sticky; top: 0; z-index: 30;
 }
 thead th:first-child { border-radius: 0; }
 tbody td input, tbody td select { position: relative; z-index: 1; }
@@ -1053,6 +1054,16 @@ function renderAll(){
   document.getElementById('stats-bar').style.display=transactions.length?'flex':'none';
   document.getElementById('toolbar').style.display=transactions.length?'flex':'none';
   updateExportBtn();
+  // Recalculate sticky header offset after layout settles
+  requestAnimationFrame(() => {
+    const tableWrap = document.getElementById('table-wrap');
+    if (tableWrap) {
+      const top = tableWrap.getBoundingClientRect().top + window.scrollY;
+      const scrollTop = window.scrollY;
+      const offset = tableWrap.getBoundingClientRect().top;
+      document.documentElement.style.setProperty('--thead-top', Math.max(0, offset) + 'px');
+    }
+  });
 }
 
 function updateStats(){

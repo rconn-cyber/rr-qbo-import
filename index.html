@@ -1443,7 +1443,15 @@ async function openExportModal() {
       const dupeNotice=document.createElement('div');
       dupeNotice.id='dupe-notice';dupeNotice.className='notice notice-warn';dupeNotice.style.cssText='margin-bottom:14px;white-space:pre-line;';
       dupeNotice.innerHTML=
-
+dupeNotice.innerHTML=`<span>⚠</span><div><strong>${data.duplicates.length} transaction${data.duplicates.length===1?'':'s'} already exported to QBO</strong> — importing again will create duplicates.<br><br>Uncheck these rows before downloading, or proceed only if re-import is intentional.</div>`;
+      modalBody.insertBefore(dupeNotice,modalBody.firstChild);
+      document.getElementById('export-count').textContent=`${count} selected · ⚠ ${data.duplicates.length} already exported`;
+      document.getElementById('export-count').style.color='var(--amber)';
+      renderTable();
+    }
+  } catch(e){console.warn('Dupe check failed (non-blocking):',e.message);}
+}
+function closeExportModal(){document.getElementById('export-modal').classList.remove('open');const prior=document.getElementById('dupe-notice');if(prior)prior.remove();}
 function downloadCSV(){
   const rows=transactions.filter(t=>t.selected);
   if(!rows.length) return;
@@ -2190,7 +2198,7 @@ async function loadImportHistory() {
     if(!rows.length){body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No exports logged yet. Download an IIF file to create the first log entry.</div>';return;}
     const runs={};
     rows.forEach(r=>{const k=r.exported_at?r.exported_at.substring(0,16):'unknown';if(!runs[k])runs[k]={at:r.exported_at,by:r.exported_by,rows:[]};runs[k].rows.push(r);});
-    body.innerHTML=Object.entries(runs).map(([k,run])=>{
+   body.innerHTML=Object.entries(runs).map(([k,run])=>{
       const when=run.at?new Date(run.at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';
       const total=run.rows.reduce((s,r)=>s+parseFloat(r.amount||0),0);
       const byPlat={};run.rows.forEach(r=>{byPlat[r.platform]=(byPlat[r.platform]||0)+1;});
@@ -2199,6 +2207,8 @@ async function loadImportHistory() {
     }).join('');
   } catch(e){body.innerHTML=`<div style="font-size:12px;color:var(--red);">Error: ${e.message}</div>`;}
 }
+
+
 </script>
 </body>
 </html>

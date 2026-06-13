@@ -1031,6 +1031,22 @@ function matchRule(desc){
   return null;
 }
 
+function resolveSquareClass(desc) {
+  const d = desc.toLowerCase();
+  let match = null;
+  for (const r of SQ_ITEM_RULES) {
+    if (r.kw.some(k => d.includes(k))) { match = {...r}; break; }
+  }
+  if (!match) return null;
+  if (!match.cls) {
+    for (const ev of SQ_EVENT_CONTEXT) {
+      if (ev.kw.some(k => d.includes(k))) { match.cls = ev.cls; break; }
+    }
+    if (!match.cls) match.cls = '';
+  }
+  return match;
+}
+
 // ── RENDER ──
 function renderAll(){
   updateStats(); renderTable();

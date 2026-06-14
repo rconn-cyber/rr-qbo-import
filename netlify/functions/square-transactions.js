@@ -62,23 +62,32 @@ exports.handler = async function(event) {
       });
       const orderData = await orderRes.json();
       (orderData.orders || []).forEach(order => {
-        // Build description from line items
+        // Build description from line items including modifiers
         const items = (order.line_items || []).map(li => {
-          const qty      = parseFloat(li.quantity) || 1;
-          const name     = li.name || '';
+          const qty       = parseFloat(li.quantity) || 1;
+          const name      = li.name || '';
           const variation = (li.variation_name && li.variation_name !== 'Regular'
                              && li.variation_name !== name) ? ` (${li.variation_name})` : '';
-          const note     = li.note ? ` [${li.note}]` : '';
-          const label    = `${name}${variation}${note}` || 'Item';
+          const mods      = (li.modifiers || []).map(m => m.name).filter(Boolean).join(', ');
+          const modStr    = mods ? ` [${mods}]` : '';
+          const note      = li.note ? ` {${li.note}}` : '';
+          const label     = `${name}${variation}${modStr}${note}` || 'Item';
           return qty > 1 ? `${qty} x ${label}` : label;
         }).filter(Boolean);
 
-        // Customer name from fulfillments or customer_id lookup (best effort)
+        // Order-level note (e.g. cashier notes, member number)
+        const orderNote = order.reference_id ? ` | Ref: ${order.reference_id}` : '';
+        const tenderNote = (order.tenders || []).map(t => t.note).filter(Boolean).join('; ');
+
+        // Customer name from fulfillments
         const custName = order.fulfillments?.[0]?.pickup_details?.recipient?.display_name || '';
 
         orderMap[order.id] = {
-          desc:     items.join(', ') || '',
-          custName: custName,
+          desc:      items.join(', ') || '',
+          custName:  custName,
+          orderNote: orderNote,
+          tenderNote: tenderNote,
+          source:    order.source?.name || '',
         };
       });
     } catch (e) {
@@ -101,6 +110,8 @@ exports.handler = async function(event) {
     // Description: prefer order line items, fall back to note, then payment source
     const order = orderMap[p.order_id] || {};
     const desc  = order.desc || p.note || '';
+    // Build full memo with all available context
+    const memoExtra = [order.tenderNote, order.orderNote].filter(Boolean).join(' ');
 
     // Customer name: prefer Square register customer, then card name
     const custName = order.custName || cardName || '';
@@ -123,6 +134,8 @@ exports.handler = async function(event) {
       location:       p.location_id || '',
       payment_id:     p.id || '',
       status:         p.status || '',
+      memo_extra:     memoExtra || '',
+      source:         order.source || '',
     };
   });
 

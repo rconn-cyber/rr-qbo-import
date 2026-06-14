@@ -1954,9 +1954,11 @@ async function enrichCognitoEntries() {
     // Square: desc contains "Cognito Forms (Order FXXXEXXXT1)"
     // Stripe: stmt contains "ROUGHRIDERS-F177E216T1", desc has form name
     const hasOrderId = /F\d+E\d+T/i.test(t.desc || '') || /F\d+E\d+T/i.test(t.stmt || '');
-    const needsName  = !t.customerName || t.customerName === '' || t.customerName === 'Allocate';
+ const needsName  = !t.customerName || t.customerName === '' || t.customerName === 'Allocate' || t.customerName === 'General Public';
     return hasOrderId && needsName;
   });
+ console.log('Cognito enrich: found', cognitoRows.length, 'rows to enrich');
+  cognitoRows.forEach(t => console.log('  →', t.desc, '| stmt:', t.stmt));
   if (!cognitoRows.length) return;
 
   // Parse order ID pattern: F204E7T1 or ROUGHRIDERS-F177E216T1 → formId, entryId
@@ -1974,9 +1976,10 @@ async function enrichCognitoEntries() {
     const parsed = parseOrderId(t.desc, t.stmt);
     if (!parsed) continue;
     try {
-      const res = await fetch(`/.netlify/functions/cognito-lookup?formId=${parsed.formId}&entryId=${parsed.entryId}`);
-      if (!res.ok) continue;
+   const res = await fetch(`/.netlify/functions/cognito-lookup?formId=${parsed.formId}&entryId=${parsed.entryId}`);
       const data = await res.json();
+      console.log(`Cognito lookup F${parsed.formId}E${parsed.entryId}:`, res.status, data);
+      if (!res.ok) continue;
       if (data.fullName) {
         t.customerName = data.fullName;
         t.memberNum    = data.memberNo ? data.memberNo.toString().padStart(4,'0') : (data.email && memberEmailMap[data.email.toLowerCase()] ? memberEmailMap[data.email.toLowerCase()].id : '');

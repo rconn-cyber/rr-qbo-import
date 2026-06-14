@@ -135,6 +135,9 @@ main { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
 .stat:last-child { border-right: none; }
 .stat-val { font-size: 24px; font-weight: 600; font-family: var(--mono); color: var(--navy); }
 .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-clickable { cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
+.stat-clickable:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); transform: translateY(-1px); }
+.stat-clickable:hover .stat-lbl { color: var(--navy); }
 .stat-val.green { color: var(--green); }
 .stat-val.amber { color: var(--amber); }
 .stat-val.red { color: var(--red); }
@@ -262,39 +265,6 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 .empty-state .big { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
 .empty-state h3 { font-size: 16px; font-weight: 500; color: var(--text-mid); margin-bottom: 6px; }
 
-/* ── IIF MODAL ── */
-.modal-backdrop {
-  display: none; position: fixed; inset: 0;
-  background: rgba(13,31,60,0.55);
-  z-index: 200; align-items: center; justify-content: center;
-}
-.modal-backdrop.open { display: flex; }
-.modal {
-  background: var(--surface); border-radius: 12px;
-  width: 700px; max-width: 95vw; max-height: 85vh;
-  display: flex; flex-direction: column;
-  border: 1px solid var(--border);
-}
-.modal-header {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.modal-header h2 { font-size: 16px; font-weight: 600; }
-.modal-body { flex: 1; overflow: auto; padding: 20px 24px; }
-.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
-.iif-preview {
-  font-family: var(--mono); font-size: 12px;
-  background: #f5f3ee; border: 1px solid var(--border);
-  border-radius: 6px; padding: 14px; white-space: pre;
-  overflow: auto; max-height: 360px; color: var(--text);
-  line-height: 1.6;
-}
-.iif-instructions { font-size: 13px; color: var(--text-mid); line-height: 1.7; }
-.iif-instructions ol { margin: 10px 0 0 20px; }
-.iif-instructions li { margin-bottom: 6px; }
-.iif-instructions code { font-family: var(--mono); background: #f0ede8; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
-
 /* ── NOTICE ── */
 .notice {
   padding: 10px 16px; border-radius: 8px; font-size: 13px;
@@ -311,16 +281,13 @@ td.mono { font-family: var(--mono); font-size: 12px; }
     <div class="brand-icon">RR</div>
     <div>
       <div class="brand-name">Merchant Staging</div>
-      <div class="brand-sub">Square · Stripe · WA/8am → QBO IIF</div>
+      <div class="brand-sub">Square · Stripe · WA/8am → QBO CSV</div>
     </div>
   </div>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="clearAll()">↺ Clear all</button>
-    <button class="btn btn-gold" id="export-btn" onclick="openExportModal()" disabled>
-      ⬇ Export QBO IIF
-    </button>
-    <button class="btn btn-ghost" id="csv-btn" onclick="downloadCSV()" disabled style="border-color:rgba(255,255,255,0.3);">
-      ⬇ CSV
+    <button class="btn btn-gold" id="csv-btn" onclick="downloadCSV()" disabled>
+      ⬇ Export CSV
     </button>
   </div>
 </header>
@@ -438,8 +405,8 @@ td.mono { font-family: var(--mono); font-size: 12px; }
     <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total transactions</div></div>
     <div class="stat"><div class="stat-val" id="s-mbr" style="color:var(--navy);">—</div><div class="stat-lbl">Members loaded</div></div>
     <div class="stat"><div class="stat-val green" id="s-ok">0</div><div class="stat-lbl">Auto-matched</div></div>
-    <div class="stat"><div class="stat-val amber" id="s-defer">0</div><div class="stat-lbl">Needs deferred check</div></div>
-    <div class="stat"><div class="stat-val red" id="s-unknown">0</div><div class="stat-lbl">Unknown — review required</div></div>
+    <div class="stat stat-clickable" onclick="filterByStatus('defer')" title="Click to filter deferred transactions"><div class="stat-val amber" id="s-defer">0</div><div class="stat-lbl">Needs deferred check</div></div>
+    <div class="stat stat-clickable" onclick="filterByStatus('unknown')" title="Click to filter unknown transactions"><div class="stat-val red" id="s-unknown">0</div><div class="stat-lbl">Unknown — review required</div></div>
     <div class="stat"><div class="stat-val" id="s-gross">$0</div><div class="stat-lbl">Gross income</div></div>
     <div class="stat"><div class="stat-val red" id="s-fees">$0</div><div class="stat-lbl">Total fees</div></div>
   </div>
@@ -539,7 +506,7 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 
 <div class="notice notice-warn" id="unknown-notice" style="display:none;margin-top:16px">
     <span>⚠</span>
-    <span><strong>Rows need attention before export.</strong> Rows highlighted in red are missing a QBO account, Customer Name, or Member #. Fix them inline or delete them. Only rows with all three fields complete will be included in the IIF.</span>
+    <span><strong>Rows need attention before export.</strong> Rows highlighted in red are missing a QBO account, Customer Name, or Member #. Fix them inline or delete them before exporting.</span>
   </div>
 <!-- IMPORT HISTORY PANEL -->
   <div id="import-log-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:16px;">
@@ -547,48 +514,12 @@ td.mono { font-family: var(--mono); font-size: 12px; }
       <div style="font-weight:600;font-size:13px;color:var(--navy);">Import History <span style="font-weight:400;font-size:11px;color:var(--text-muted);">— exports logged to Supabase · duplicate protection active</span></div>
       <button class="btn btn-sm" style="background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);" onclick="loadImportHistory()">↺ Load History</button>
     </div>
-    <div id="import-log-body"><div style="font-size:12px;color:var(--text-muted);">Click Load History to view past exports. Each IIF download is automatically logged to prevent duplicate imports.</div></div>
+    <div id="import-log-body"><div style="font-size:12px;color:var(--text-muted);">Click Load History to view past exports. Each CSV download is automatically logged.</div></div>
   </div>
 
 </main>
 
-<!-- EXPORT MODAL -->
-<div class="modal-backdrop" id="export-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Export QBO IIF File</h2>
-      <button class="btn btn-ghost btn-sm" style="background:transparent;color:var(--text-muted);border:none;font-size:18px;" onclick="closeExportModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="notice notice-info" style="margin-bottom:16px;">
-        <span>ℹ</span>
-        <div>IIF (Intuit Interchange Format) imports directly into QBO's general ledger with account number, class, memo, and split lines preserved. Only approved (checked) rows with an assigned account will be included.</div>
-      </div>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:12px;font-family:var(--mono);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:6px;">IIF Preview (first 20 lines)</div>
-        <div class="iif-preview" id="iif-preview">Generating…</div>
-      </div>
-      <div class="iif-instructions">
-        <strong>How to import into QBO:</strong>
-        <ol>
-          <li>Download the IIF file using the button below.</li>
-          <li>In QBO, go to <code>Settings (gear icon) → Import Data → QuickBooks Desktop (IIF)</code>.</li>
-          <li>Click <code>Browse</code>, select the downloaded <code>.iif</code> file, then <code>Import</code>.</li>
-          <li>QBO will show a summary of transactions imported. Verify the count matches the row count below.</li>
-          <li>Go to <code>Banking → For Review</code> to confirm each transaction is categorized correctly.</li>
-        </ol>
-        <div style="margin-top:10px;font-size:12px;color:var(--text-muted);">
-          Note: If QBO shows an IIF error on import, check that no account names contain special characters. The IIF format requires account names to match exactly as they appear in your QBO Chart of Accounts.
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div style="font-size:13px;color:var(--text-muted);margin-right:auto;" id="export-count"></div>
-      <button class="btn btn-ghost" onclick="closeExportModal()">Cancel</button>
-      <button class="btn btn-gold" onclick="downloadIIF()">⬇ Download IIF</button>
-    </div>
-  </div>
-</div>
+
 
 <script>
 // ── SUPABASE CONFIG ──
@@ -1118,6 +1049,13 @@ function renderAll(){
   });
 }
 
+function filterByStatus(status) {
+  const sel = document.getElementById('filter-status');
+  if (sel) { sel.value = status; renderTable(); }
+  // Scroll to table
+  document.getElementById('table-wrap')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
 function updateStats(){
   const ok=transactions.filter(t=>t.status==='ok').length;
   const defer=transactions.filter(t=>t.status==='defer').length;
@@ -1282,7 +1220,7 @@ function deleteRow(id){transactions=transactions.filter(x=>x.id!==id);renderAll(
 function updateExportBtn(){
   const ready=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
   const hasAny=transactions.filter(t=>t.selected).length>0;
-  document.getElementById('export-btn').disabled=ready.length===0;
+  document.getElementById('csv-btn').disabled=transactions.length===0;
   const csvBtn=document.getElementById('csv-btn');
   if(csvBtn) csvBtn.disabled=hasAny===false;
   document.getElementById('unknown-notice').style.display=
@@ -1307,63 +1245,10 @@ function clearAll(){
   document.getElementById('stats-bar').style.display='none';
   document.getElementById('toolbar').style.display='none';
   document.getElementById('unknown-notice').style.display='none';
-  document.getElementById('export-btn').disabled=true;
+  document.getElementById('csv-btn').disabled=true;
 }
 
-// ── IIF EXPORT ──
-function buildIIF(){
-  const rows=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
-  const lines=['!TRNS\tTRNSTYPE\tDATE\tACCNT\tNAME\tCLASS\tAMOUNT\tMEMO',
-               '!SPL\tTRNSTYPE\tDATE\tACCNT\tNAME\tCLASS\tAMOUNT\tMEMO','!ENDTRNS'];
-  const depositAcct=p=>p==='square'?'Square Clearing':p==='stripe'?'Regions Operating':'Undeposited Funds';
-  rows.forEach(t=>{
-    const acctName=t.acct.replace(/^\d+[\d.]*\s+/,'');
-    const amt=t.net.toFixed(2); const gross=t.gross.toFixed(2); const fee=(-t.fee).toFixed(2);
-    const memo=t.memo||t.desc; const cls=t.cls||'';
-    const deposit=depositAcct(t.platform);
-    const custName=t.customerName||'General Public';
-    const fullMemo=`${memo} | Member#:${t.memberNum||'999999'}`;
-    lines.push(`TRNS\tDEPOSIT\t${t.date}\t${deposit}\t${custName}\t${cls}\t${amt}\t${fullMemo}`);
-    lines.push(`SPL\tDEPOSIT\t${t.date}\t${acctName}\t${custName}\t${cls}\t${(-parseFloat(gross)).toFixed(2)}\t${fullMemo}`);
-    if(t.fee>0) lines.push(`SPL\tDEPOSIT\t${t.date}\tBank Charges & CC Fees\t${custName}\tManagement & General:Administration\t${(-parseFloat(fee)).toFixed(2)}\t${memo} - merchant fee`);
-    lines.push('ENDTRNS');
-  });
-  return lines.join('\n');
-}
-
-async function openExportModal() {
-  const rows=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
-  const count=rows.length;
-  const iif=buildIIF();
-  const previewLines=iif.split('\n').slice(0,20).join('\n')+(iif.split('\n').length>20?'\n…':'');
-  document.getElementById('iif-preview').textContent=previewLines;
-  document.getElementById('export-count').textContent=`${count} transaction${count===1?'':'s'} will be exported`;
-  document.getElementById('export-count').style.color='';
-  document.getElementById('export-modal').classList.add('open');
-  const prior=document.getElementById('dupe-notice');if(prior)prior.remove();
-  const txnIds=rows.map(t=>t.txnId).filter(Boolean);
-  if(!txnIds.length)return;
-  try {
-    const res=await fetch('/.netlify/functions/check-dupes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({txnIds})});
-    if(!res.ok)return;
-    const data=await res.json();
-    if(data.duplicates&&data.duplicates.length>0){
-      const dupeSet=new Set(data.duplicates);
-      transactions.forEach(t=>{t._isDupe=dupeSet.has(t.txnId);});
-      const dupeLines=(data.details||[]).map(d=>{const when=d.exported_at?new Date(d.exported_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';return `• ${d.transaction_id} ($${parseFloat(d.amount||0).toFixed(2)}, ${d.platform}, exported ${when} by ${d.exported_by||'unknown'})`;}).join('\n');
-      const modalBody=document.querySelector('#export-modal .modal-body');
-      const dupeNotice=document.createElement('div');
-      dupeNotice.id='dupe-notice';dupeNotice.className='notice notice-warn';dupeNotice.style.cssText='margin-bottom:14px;white-space:pre-line;';
-      dupeNotice.innerHTML=
-dupeNotice.innerHTML=`<span>⚠</span><div><strong>${data.duplicates.length} transaction${data.duplicates.length===1?'':'s'} already exported to QBO</strong> — importing again will create duplicates.<br><br>Uncheck these rows before downloading, or proceed only if re-import is intentional.</div>`;
-      modalBody.insertBefore(dupeNotice,modalBody.firstChild);
-      document.getElementById('export-count').textContent=`${count} selected · ⚠ ${data.duplicates.length} already exported`;
-      document.getElementById('export-count').style.color='var(--amber)';
-      renderTable();
-    }
-  } catch(e){console.warn('Dupe check failed (non-blocking):',e.message);}
-}
-function closeExportModal(){document.getElementById('export-modal').classList.remove('open');const prior=document.getElementById('dupe-notice');if(prior)prior.remove();}
+// ── CSV EXPORT ──
 function downloadCSV(){
   // CSV always includes ALL transactions — checkboxes don't filter CSV
   const rows=transactions.filter(t=>!t._splitFrom||t._splitFrom); // all rows
@@ -2129,7 +2014,7 @@ async function loadImportHistory() {
     const res=await fetch(`${SUPABASE_URL}/rest/v1/qbo_import_log?select=*&order=exported_at.desc&limit=100`,{headers:{'apikey':key,'Authorization':`Bearer ${key}`}});
     if(!res.ok)throw new Error('Supabase error '+res.status);
     const rows=await res.json();
-    if(!rows.length){body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No exports logged yet. Download an IIF file to create the first log entry.</div>';return;}
+    if(!rows.length){body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No exports logged yet. Download a CSV file to create the first log entry.</div>';return;}
     const runs={};
     rows.forEach(r=>{const k=r.exported_at?r.exported_at.substring(0,16):'unknown';if(!runs[k])runs[k]={at:r.exported_at,by:r.exported_by,rows:[]};runs[k].rows.push(r);});
    body.innerHTML=Object.entries(runs).map(([k,run])=>{

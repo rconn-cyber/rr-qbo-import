@@ -16,24 +16,29 @@ async function stripeGet(path, key) {
 async function getLineItems(paymentIntentId, key) {
   try {
     // Find checkout session for this payment intent
+    // Step 1: get session with line items (max 3 expand levels)
     const sessions = await stripeGet(
-      `/checkout/sessions?payment_intent=${paymentIntentId}&limit=1&expand[]=data.line_items&expand[]=data.line_items.data.price.product`,
+      `/checkout/sessions?payment_intent=${paymentIntentId}&limit=1&expand[]=data.line_items`,
       key
     );
     const session = sessions.data?.[0];
     if (!session) return null;
 
-    const items = session.line_items?.data || [];
+    // Step 2: get full line items with price expanded (but not product)
+    const lineItemsData = await stripeGet(
+      `/checkout/sessions/${session.id}/line_items?limit=10&expand[]=data.price.product`,
+      key
+    );
+    const items = lineItemsData.data || [];
     if (!items.length) return null;
 
     // Build summary string with full product detail
-    // e.g. "VIP Tent · 39th Annual Charity Golf Tournament · Hunter's Green CC · Sept 14, 2026 ($1,500.00)"
     const summary = items.map(item => {
-      const name    = item.description || item.price?.product?.name || 'Item';
+      const name     = item.description || item.price?.product?.name || 'Item';
       const prodDesc = item.price?.product?.description || '';
-      const qty     = item.quantity > 1 ? `${item.quantity}x ` : '';
-      const amt     = ((item.amount_total || 0) / 100).toFixed(2);
-      const detail  = prodDesc ? `${name} · ${prodDesc}` : name;
+      const qty      = item.quantity > 1 ? `${item.quantity}x ` : '';
+      const amt      = ((item.amount_total || 0) / 100).toFixed(2);
+      const detail   = prodDesc ? `${name} · ${prodDesc}` : name;
       return `${qty}${detail} ($${parseFloat(amt).toLocaleString('en-US', {minimumFractionDigits:2})})`;
     }).join(' | ');
 

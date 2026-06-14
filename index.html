@@ -1959,7 +1959,7 @@ async function enrichCognitoEntries() {
   });
  console.log('Cognito enrich: found', cognitoRows.length, 'rows to enrich');
   cognitoRows.forEach(t => console.log('  →', t.desc, '| stmt:', t.stmt));
-  if (!cognitoRows.length) return;
+  console.log('=== Cognito enrich called, total transactions:', transactions.length);   transactions.filter(t => t.platform === 'stripe').forEach(t => {     console.log('stripe txn:', t.desc?.substring(0,50), '| stmt:', t.stmt, '| customer:', t.customerName);   });   if (!cognitoRows.length) { console.log('No cognito rows found to enrich'); return; }   console.log('Cognito rows to enrich:', cognitoRows.length);
 
   // Parse order ID pattern: F204E7T1 or ROUGHRIDERS-F177E216T1 → formId, entryId
   const parseOrderId = (desc, stmt) => {

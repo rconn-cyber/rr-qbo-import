@@ -95,21 +95,37 @@ exports.handler = async function(event) {
       }
       if (!desc) desc = t.method?.name ? `WA payment - ${t.method.name}` : 'WA/8am payment';
 
+      // Collect ALL custom fields as a flat object for transparency
+      const allCustomFields = Object.entries(cf)
+        .filter(([k]) => !['Notes','notes','contactName','contact_name','contactEmail','contact_email','Invoice','invoice'].includes(k))
+        .reduce((acc, [k, v]) => { if (v) acc[k] = v; return acc; }, {});
+
+      // Build full memo from all available context
+      const fullMemo = [
+        desc,
+        invoice ? `Invoice: ${invoice}` : '',
+        ...Object.entries(allCustomFields).map(([k,v]) => `${k}: ${v}`)
+      ].filter(Boolean).join(' | ');
+
+      const feeEst = Math.round((amount * 0.029 + 0.30) * 100) / 100;
+
       return {
-        date:           (t.created || '').substring(0, 10),
-        description:    desc,
-        customer_name:  custName,
-        customer_email: email,
-        gross_sales:    amount.toFixed(2),
-        // AffiniPay doesn't include fee in transaction object
-        // Estimate: 2.9% + $0.30 per transaction (standard AffiniPay/WA rate)
-        fees:           (-(Math.round((amount * 0.029 + 0.30) * 100) / 100)).toFixed(2),
-        net_total:      (amount - Math.round((amount * 0.029 + 0.30) * 100) / 100).toFixed(2),
-        payment_id:     t.id || '',
-        status:         t.status || '',
-        invoice:        invoice,
-        description_raw: notes,   // full notes for keyword matching
-        _notes:         notes,    // keep full notes for debugging
+        date:            (t.created || '').substring(0, 10),
+        description:     desc,
+        description_full: fullMemo,
+        customer_name:   custName,
+        customer_email:  email,
+        gross_sales:     amount.toFixed(2),
+        fees:            (-feeEst).toFixed(2),
+        net_total:       (amount - feeEst).toFixed(2),
+        payment_id:      t.id || '',
+        status:          t.status || '',
+        invoice:         invoice,
+        payment_type:    t.method?.type || '',
+        reference:       t.reference || '',
+        description_raw: notes,
+        custom_fields:   allCustomFields,
+        _notes:          notes,
       };
     });
 

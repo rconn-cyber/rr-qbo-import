@@ -421,10 +421,16 @@ td.mono { font-family: var(--mono); font-size: 12px; }
   </div>
 
   <!-- DEMO LOAD -->
-  <div style="text-align:center;margin:-10px 0 18px;">
+  <div style="text-align:center;margin:-10px 0 8px;">
     <button class="btn btn-ghost btn-sm" style="background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);" onclick="loadDemo()">
       Load sample data to try the workflow
     </button>
+  </div>
+
+  <!-- PROCESSING NOTICE -->
+  <div id="processing-notice" style="display:none;text-align:center;margin:0 0 14px;padding:10px 20px;background:#eef4ff;border:1px solid #c0d4f5;border-radius:8px;font-size:13px;color:var(--navy);font-weight:500;gap:10px;align-items:center;justify-content:center;">
+    <span style="display:inline-block;width:16px;height:16px;border:2px solid #c0d4f5;border-top-color:var(--navy);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;"></span>
+    <span id="processing-notice-msg">Analyzing transactions…</span>
   </div>
 
   <!-- STATS -->
@@ -1076,12 +1082,21 @@ function resolveSquareClass(desc) {
 }
 
 // ── RENDER ──
+let _bulkPulling = false; // suppress early overlay hide during pullAllPlatforms
+
 function showTableLoading(msg) {
+  const n = document.getElementById('processing-notice');
+  const m = document.getElementById('processing-notice-msg');
+  if (n) { n.style.display = 'flex'; if (m) m.textContent = msg || 'Analyzing transactions…'; }
+  // Also keep table overlay for when table is visible
   const o = document.getElementById('table-overlay');
-  const m = document.getElementById('overlay-msg');
-  if (o) { o.classList.add('active'); if (m) m.textContent = msg || 'Analyzing transactions…'; }
+  const om = document.getElementById('overlay-msg');
+  if (o) { o.classList.add('active'); if (om) om.textContent = msg || 'Analyzing transactions…'; }
 }
-function hideTableLoading() {
+function hideTableLoading(force=false) {
+  if (_bulkPulling && !force) return; // don't hide mid-pull
+  const n = document.getElementById('processing-notice');
+  if (n) n.style.display = 'none';
   const o = document.getElementById('table-overlay');
   if (o) o.classList.remove('active');
 }
@@ -1753,6 +1768,7 @@ async function pullAllPlatforms() {
   btn.disabled = true;
   statusEl.textContent = 'Pulling Square, Stripe, and 8am...';
   statusEl.style.color = 'var(--text-mid)';
+  _bulkPulling = true;
   showTableLoading('Fetching transactions…');
 
   // Fire all three simultaneously
@@ -1779,8 +1795,9 @@ async function pullAllPlatforms() {
   }
 
   // renderAll does name/status resolution — hide overlay only after DOM fully paints
+  _bulkPulling = false;
   renderAll();
-  requestAnimationFrame(() => requestAnimationFrame(() => hideTableLoading()));
+  requestAnimationFrame(() => requestAnimationFrame(() => hideTableLoading(true)));
 
   // Run Cognito enrichment after all three complete
   await enrichCognitoEntries();

@@ -173,7 +173,30 @@ select.filter-sel {
   border-radius: 10px;
   overflow: auto;
   max-height: calc(100vh - 320px);
+  position: relative;
 }
+.table-loading-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.82);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: 10px;
+}
+.table-loading-overlay.active { display: flex; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-msg { font-size: 13px; color: var(--navy); font-weight: 500; }
 table { width: 100%; border-collapse: collapse; }
 thead th {
   background: var(--navy); color: #fff;
@@ -455,6 +478,10 @@ td.mono { font-family: var(--mono); font-size: 12px; }
   </div>
 
   <div class="table-wrap" id="table-wrap">
+    <div class="table-loading-overlay" id="table-overlay">
+      <div class="spinner"></div>
+      <div class="spinner-msg" id="overlay-msg">Analyzing transactions…</div>
+    </div>
     <div class="empty-state" id="empty-state">
       <div class="big">⟳</div>
       <h3>No transactions loaded</h3>
@@ -1049,6 +1076,16 @@ function resolveSquareClass(desc) {
 }
 
 // ── RENDER ──
+function showTableLoading(msg) {
+  const o = document.getElementById('table-overlay');
+  const m = document.getElementById('overlay-msg');
+  if (o) { o.classList.add('active'); if (m) m.textContent = msg || 'Analyzing transactions…'; }
+}
+function hideTableLoading() {
+  const o = document.getElementById('table-overlay');
+  if (o) o.classList.remove('active');
+}
+
 function renderAll(){
   updateStats(); renderTable();
   document.getElementById('stats-bar').style.display=transactions.length?'flex':'none';
@@ -1716,6 +1753,7 @@ async function pullAllPlatforms() {
   btn.disabled = true;
   statusEl.textContent = 'Pulling Square, Stripe, and 8am...';
   statusEl.style.color = 'var(--text-mid)';
+  showTableLoading('Fetching transactions…');
 
   // Fire all three simultaneously
   const results = await Promise.allSettled([
@@ -1727,9 +1765,12 @@ async function pullAllPlatforms() {
   const succeeded = results.filter(r => r.status === 'fulfilled').length;
   const failed    = results.filter(r => r.status === 'rejected').length;
 
+  showTableLoading('Analyzing transactions…');
+  await new Promise(r => setTimeout(r, 50)); // let overlay render
   btn.textContent = '⚡ Pull All Platforms';
   btn.disabled = false;
 
+  hideTableLoading();
   if (failed === 0) {
     statusEl.textContent = `✓ All 3 platforms loaded`;
     statusEl.style.color = 'var(--green)';

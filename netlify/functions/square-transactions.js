@@ -64,9 +64,13 @@ exports.handler = async function(event) {
       (orderData.orders || []).forEach(order => {
         // Build description from line items
         const items = (order.line_items || []).map(li => {
-          const qty  = parseFloat(li.quantity) || 1;
-          const name = li.name || li.variation_name || '';
-          return qty > 1 ? `${qty} x ${name}` : name;
+          const qty      = parseFloat(li.quantity) || 1;
+          const name     = li.name || '';
+          const variation = (li.variation_name && li.variation_name !== 'Regular'
+                             && li.variation_name !== name) ? ` (${li.variation_name})` : '';
+          const note     = li.note ? ` [${li.note}]` : '';
+          const label    = `${name}${variation}${note}` || 'Item';
+          return qty > 1 ? `${qty} x ${label}` : label;
         }).filter(Boolean);
 
         // Customer name from fulfillments or customer_id lookup (best effort)
@@ -101,11 +105,18 @@ exports.handler = async function(event) {
     // Customer name: prefer Square register customer, then card name
     const custName = order.custName || cardName || '';
 
+    // Extract member number from order note if present (e.g. "#1234" or "Member 1234")
+    const noteRaw = p.note || order.note || '';
+    const memberMatch = noteRaw.match(/(?:member\s*#?|#)(\d{3,6})/i);
+    const sqMemberNum = memberMatch ? memberMatch[1] : '';
+
     return {
       date:           (p.created_at || '').substring(0, 10),
       description:    desc,
+      description_raw: p.note || '',
       customer_name:  custName,
       customer_email: buyerEmail,
+      sq_member_num:  sqMemberNum,
       gross_sales:    amount.toFixed(2),
       fees:           (-absFee).toFixed(2),
       net_total:      net.toFixed(2),

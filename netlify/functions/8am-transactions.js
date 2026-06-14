@@ -82,10 +82,17 @@ exports.handler = async function(event) {
       const email    = cf.contactEmail || cf.contact_email || t.method?.email || '';
       const invoice  = cf.Invoice || cf.invoice || '';
 
-      // Parse event name from Notes: 'Registration for "Event Name" (date), Ticket Type'
+      // Parse event name + ticket type from Notes:
+      // 'Registration for "Event Name" (date), Ticket Type'
       let desc = notes;
-      const evMatch = notes.match(/Registration for ["]?([^"(]+)["]?\s*\(/i);
-      if (evMatch) desc = evMatch[1].trim();
+      let ticketType = '';
+      const evMatch     = notes.match(/Registration for [\"']?([^\"'(]+)[\"']?\s*\(/i);
+      const ticketMatch = notes.match(/,\s*([^,]+)$/);
+      if (evMatch)    desc = evMatch[1].trim();
+      if (ticketMatch && ticketMatch[1].length < 60) ticketType = ticketMatch[1].trim();
+      if (desc && ticketType && !desc.toLowerCase().includes(ticketType.toLowerCase())) {
+        desc = `${desc} — ${ticketType}`;
+      }
       if (!desc) desc = t.method?.name ? `WA payment - ${t.method.name}` : 'WA/8am payment';
 
       return {
@@ -101,6 +108,7 @@ exports.handler = async function(event) {
         payment_id:     t.id || '',
         status:         t.status || '',
         invoice:        invoice,
+        description_raw: notes,   // full notes for keyword matching
         _notes:         notes,    // keep full notes for debugging
       };
     });

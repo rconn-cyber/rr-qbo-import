@@ -1381,8 +1381,14 @@ async function loadSquareTransactions() {
     statusEl.style.color = 'var(--red)';
     return;
   }
-  if (start > end) {
+if (start > end) {
     statusEl.textContent = 'Start date must be before end date.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  const _todaySq = new Date().toISOString().substring(0, 10);
+  if (end >= _todaySq) {
+    statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.';
     statusEl.style.color = 'var(--red)';
     return;
   }
@@ -1524,8 +1530,17 @@ async function loadStripeTransactions() {
   const end      = document.getElementById('st-end')?.value;
 
   if (!start || !end) { statusEl.textContent = 'Set start and end dates first.'; statusEl.style.color = 'var(--red)'; return; }
-  if (start > end)    { statusEl.textContent = 'Start must be before end.'; statusEl.style.color = 'var(--red)'; return; }
-
+  if (start > end) {
+    statusEl.textContent = 'Start must be before end.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  const _todayAll = new Date().toISOString().substring(0, 10);
+  if (end >= _todayAll) {
+    statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
   btn.textContent = 'Loading...';
   btn.disabled = true;
   statusEl.textContent = 'Connecting to Stripe...';
@@ -1642,6 +1657,12 @@ async function pullAllPlatforms() {
     statusEl.style.color = 'var(--red)';
     return;
   }
+  const _todayAll = new Date().toISOString().substring(0, 10);
+  if (end >= _todayAll) {
+    statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
 
   // Sync dates to all platform pickers
   ['sq','st','am'].forEach(p => {
@@ -1751,8 +1772,9 @@ async function load8amTransactions() {
   const end      = document.getElementById('am-end')?.value;
 
   if (!start || !end) { statusEl.textContent = 'Set start and end dates first.'; statusEl.style.color = 'var(--red)'; return; }
-  if (start > end)    { statusEl.textContent = 'Start must be before end.'; statusEl.style.color = 'var(--red)'; return; }
-
+ if (start > end)    { statusEl.textContent = 'Start must be before end.'; statusEl.style.color = 'var(--red)'; return; }
+  const _today8am = new Date().toISOString().substring(0, 10);
+  if (end >= _today8am) { statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.'; statusEl.style.color = 'var(--red)'; return; }
   btn.textContent = 'Loading...';
   btn.disabled = true;
   statusEl.textContent = 'Connecting to 8am...';

@@ -1118,7 +1118,7 @@ function renderTable(){
       <td class="mono" style="font-size:11px;">${t.date}</td>
       <td><span class="badge ${pb}">${t.platform}</span></td>
       <td>
-        <div style="font-weight:500;font-size:12px;">${t.desc}</div>
+        <div style="font-weight:500;font-size:12px;white-space:normal;min-width:180px;max-width:260px;line-height:1.4;">${t.desc}</div>
         <input type="text" value="${(t.memo||'').replace(/"/g,'&quot;')}" style="font-size:10px;font-family:var(--mono);margin-top:2px;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:#faf9f7;color:var(--text-muted);width:100%;max-width:280px;" onchange="updateField(${t.id},'memo',this.value)" placeholder="QBO memo…">
       </td>
       <td class="editable-cell">

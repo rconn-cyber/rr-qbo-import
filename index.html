@@ -1365,11 +1365,12 @@ dupeNotice.innerHTML=`<span>⚠</span><div><strong>${data.duplicates.length} tra
 }
 function closeExportModal(){document.getElementById('export-modal').classList.remove('open');const prior=document.getElementById('dupe-notice');if(prior)prior.remove();}
 function downloadCSV(){
-  const rows=transactions.filter(t=>t.selected);
+  // CSV always includes ALL transactions — checkboxes don't filter CSV
+  const rows=transactions.filter(t=>!t._splitFrom||t._splitFrom); // all rows
   if(!rows.length) return;
   const today=new Date().toISOString().slice(0,10);
   const headers=['Date','Platform','Description','QBO Account','QBO Class',
-    'Customer Name','Member #','Gross','Fee','Net','Status','Memo'];
+    'Customer Name','Member #','Gross','Fee','Net','Status','Memo','Included'];
   const escape=v=>{
     const s=String(v??'');
     return s.includes(',')||s.includes('"')||s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
@@ -1380,15 +1381,16 @@ function downloadCSV(){
       t.date, t.platform, t.desc, t.acct, t.cls,
       t.customerName, t.memberNum,
       t.gross.toFixed(2), t.fee.toFixed(2), t.net.toFixed(2),
-      t.status, t.memo||''
+      t.status, t.memo||'',
+      t.selected ? 'Yes' : 'No'
     ].map(escape).join(','));
   });
-  // Summary row
+  // Summary row (all transactions)
   const totalGross = rows.reduce((s,t)=>s+t.gross,0);
   const totalFee   = rows.reduce((s,t)=>s+t.fee,0);
   const totalNet   = rows.reduce((s,t)=>s+t.net,0);
   lines.push(['','','TOTAL','','','','',
-    totalGross.toFixed(2),totalFee.toFixed(2),totalNet.toFixed(2),'',''].map(escape).join(','));
+    totalGross.toFixed(2),totalFee.toFixed(2),totalNet.toFixed(2),'','',''].map(escape).join(','));
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`RR_Transactions_${today}.csv`; a.click();

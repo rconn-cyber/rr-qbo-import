@@ -1770,7 +1770,6 @@ async function pullAllPlatforms() {
   btn.textContent = '⚡ Pull All Platforms';
   btn.disabled = false;
 
-  hideTableLoading();
   if (failed === 0) {
     statusEl.textContent = `✓ All 3 platforms loaded`;
     statusEl.style.color = 'var(--green)';
@@ -1778,6 +1777,10 @@ async function pullAllPlatforms() {
     statusEl.textContent = `${succeeded} of 3 succeeded — check cards for errors`;
     statusEl.style.color = 'var(--amber)';
   }
+
+  // renderAll does name/status resolution — hide overlay only after DOM fully paints
+  renderAll();
+  requestAnimationFrame(() => requestAnimationFrame(() => hideTableLoading()));
 
   // Run Cognito enrichment after all three complete
   await enrichCognitoEntries();

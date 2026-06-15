@@ -31,16 +31,20 @@ exports.handler = async function(event) {
 
     const entry = await res.json();
 
-    // Member name — check multiple possible field locations
-    const firstName = entry.FirstName || entry.Name?.First || '';
-    const lastName  = entry.LastName  || entry.Name?.Last  || '';
-    const fullName  = [firstName, lastName].filter(Boolean).join(' ').trim();
+    // Log raw entry to diagnose field mapping issues
+        console.log('Cognito raw entry F'+formId+'E'+entryId+':', JSON.stringify(entry).substring(0,500));
 
-    // Member number — Cognito stores as MemberNo, MemberNumber, or MemberNum
-    const memberNo  = (entry.MemberNo || entry.MemberNumber || entry.MemberNum || '').toString().trim();
+        // Member name — check multiple possible field locations including nested sections
+        const ci        = entry.ContactInformation || {};
+        const firstName = entry.FirstName || entry.Name?.First || ci.Name?.First || ci.FirstName || '';
+        const lastName  = entry.LastName  || entry.Name?.Last  || ci.Name?.Last  || ci.LastName  || '';
+        const fullName  = [firstName, lastName].filter(Boolean).join(' ').trim();
 
-    // Email
-    const email     = entry.EMail || entry.Email || '';
+        // Member number
+        const memberNo  = (entry.MemberNo || entry.MemberNumber || entry.MemberNum || ci.MemberNo || '').toString().trim();
+
+        // Email
+        const email     = entry.EMail || entry.Email || ci.Email || ci.EMail || '';
 
     // Form name — used to guess QBO account/class
     const formName  = entry.Form?.Name || '';

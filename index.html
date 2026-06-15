@@ -1980,14 +1980,20 @@ async function enrichCognitoEntries() {
       const data = await res.json();
       console.log(`Cognito lookup F${parsed.formId}E${parsed.entryId}:`, res.status, data);
       if (!res.ok) continue;
-      if (data.fullName) {
+     if (data.fullName) {
         t.customerName = data.fullName;
-        t.memberNum    = data.memberNo ? data.memberNo.toString().padStart(4,'0') : (data.email && memberEmailMap[data.email.toLowerCase()] ? memberEmailMap[data.email.toLowerCase()].id : '');
-        // If still no member number, try email lookup
-        if (!t.memberNum && data.email) {
-          const m = memberEmailMap[data.email.toLowerCase()];
-          if (m) t.memberNum = m.id;
+        // Try member number from Cognito first, then email lookup, then name lookup
+        let resolvedMbr = '';
+        if (data.memberNo) {
+          resolvedMbr = data.memberNo.toString().padStart(4,'0');
+        } else if (data.email && memberEmailMap[data.email.toLowerCase()]) {
+          resolvedMbr = memberEmailMap[data.email.toLowerCase()].id;
+        } else if (data.fullName) {
+          // Try name lookup against loaded members
+          const m = lookupMember(data.fullName);
+          if (m) resolvedMbr = m.id;
         }
+        t.memberNum = resolvedMbr;
         // If member number found, set status to matched
         if (t.customerName && t.memberNum) { t.status = 'ok'; t.selected = true; }
         // Resolve QBO account from form name/ID (works even for uncategorized AND already categorized)

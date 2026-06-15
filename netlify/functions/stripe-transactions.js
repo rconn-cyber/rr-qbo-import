@@ -109,9 +109,11 @@ exports.handler = async function(event) {
 
       // Build enhanced description:
       // If we have line items, use them; otherwise fall back to charge description
-      let enhancedDesc = desc;
+    let enhancedDesc = desc;
       if (lineData?.summary) {
-        enhancedDesc = lineData.summary;
+        // For invoices, prepend the invoice number so it's still traceable
+        const isInvoice = desc && desc.toLowerCase().startsWith('invoice ');
+        enhancedDesc = isInvoice ? `${desc} | ${lineData.summary}` : lineData.summary;
       }
 
       return {

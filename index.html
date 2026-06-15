@@ -1598,14 +1598,15 @@ async function loadStripeTransactions() {
       let resolvedMemberNum = def.m || '';
       const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
 
-      if (hasBuyer || (email && memberList.length > 0)) {
-        if (email && memberEmailMap[email]) {
-          const m = memberEmailMap[email];
-          resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
-        } else if (hasBuyer) {
-          resolvedCustomer  = gross >= 500 ? buyer : 'General Public';
-          resolvedMemberNum = '999999';
-        }
+      if (email && memberEmailMap[email]) {
+        const m = memberEmailMap[email];
+        resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
+      } else if (hasBuyer) {
+        resolvedCustomer  = gross >= 500 ? buyer : 'General Public';
+        resolvedMemberNum = '999999';
+      } else if (!resolvedCustomer && gross >= 500 && buyer) {
+        resolvedCustomer  = buyer;
+        resolvedMemberNum = '999999';
       }
 
       transactions.push({

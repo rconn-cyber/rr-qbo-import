@@ -1303,7 +1303,7 @@ function loadDemo(){
     let sqMatch=null, rule=null;
     if(r.platform==='square') sqMatch=resolveSquareClass(r.desc);
     if(!sqMatch) rule=matchRule(r.desc);
-    const resolvedAcct=sqMatch?sqMatch.acct:(rule?rule.acct:'5991 Uncategorized Revenue');
+    const resolvedAcct=(sqMatch?sqMatch.acct:(rule?rule.acct:''))||'5991 Uncategorized Revenue';
     const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
     const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
     const def=getCustomerDefaults(resolvedAcct);

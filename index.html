@@ -1311,7 +1311,7 @@ function loadDemo(){
       id:nextId++, txnId:r.platform+'_demo_'+Date.now()+'_'+nextId, platform:r.platform, date:r.date, desc:r.desc,
       gross:r.gross, fee:r.fee, net:r.net,
       status:resolvedStatus, selected:resolvedStatus!=='unknown',
-      memo:`${r.platform.toUpperCase()} import ${r.date}`,
+     memo:`${(r.platform||'import').toUpperCase()} import ${r.date}`,
       customerName:sqMatch?(sqMatch.customer||def.c||''):(def.c||''),
       memberNum:sqMatch?(sqMatch.memberNum||def.m||''):(def.m||''),
     });

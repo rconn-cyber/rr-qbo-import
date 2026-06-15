@@ -109,11 +109,29 @@ exports.handler = async function(event) {
 
       // Build enhanced description:
       // If we have line items, use them; otherwise fall back to charge description
-    let enhancedDesc = desc;
-      if (lineData?.summary) {
-        // For invoices, prepend the invoice number so it's still traceable
-        const isInvoice = desc && desc.toLowerCase().startsWith('invoice ');
-        enhancedDesc = isInvoice ? `${desc} | ${lineData.summary}` : lineData.summary;
+   // For invoices, try to get line items from the invoice object directly
+      let invoiceSummary = '';
+      if (desc && desc.toLowerCase().startsWith('invoice ') && c.invoice) {
+        try {
+          const inv = await stripeGet(`/invoices/${c.invoice}?expand[]=lines.data.price.product`, key);
+          const invItems = inv.lines?.data || [];
+          if (invItems.length) {
+            invoiceSummary = invItems.map(item => {
+              const name = item.description || item.price?.product?.name || 'Item';
+              const amt  = ((item.amount || 0) / 100).toFixed(2);
+              return `${name} ($${parseFloat(amt).toLocaleString('en-US', {minimumFractionDigits:2})})`;
+            }).join(' | ');
+          }
+        } catch(e) {
+          console.warn('Could not fetch invoice lines for', c.invoice, e.message);
+        }
+      }
+
+      let enhancedDesc = desc;
+      if (invoiceSummary) {
+        enhancedDesc = `${desc} | ${invoiceSummary}`;
+      } else if (lineData?.summary) {
+        enhancedDesc = lineData.summary;
       }
 
       return {

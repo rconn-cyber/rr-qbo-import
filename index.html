@@ -1060,7 +1060,7 @@ function updateStats(){
   const ok=transactions.filter(t=>t.status==='ok').length;
   const defer=transactions.filter(t=>t.status==='defer').length;
   const unk=transactions.filter(t=>t.status==='unknown').length;
-  const grossIncome=transactions.filter(t=>!t.acct.includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
+  const grossIncome=transactions.filter(t=>!(t.acct||'').includes('8101')).reduce((s,t)=>s+Math.abs(t.gross),0);
   const totalFees=transactions.reduce((s,t)=>s+Math.abs(t.fee||0),0);
   document.getElementById('s-total').textContent=transactions.length;
   document.getElementById('s-ok').textContent=ok;

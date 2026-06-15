@@ -94,7 +94,7 @@ exports.handler = async function(event) {
       charges.map(c => c.payment_intent ? getLineItems(c.payment_intent, key) : Promise.resolve(null))
     );
 
-    const payments = charges.map((c, i) => {
+    const payments = await Promise.all(charges.map(async (c, i) => {
       const amount   = (c.amount || 0) / 100;
       const feeAmt   = (c.balance_transaction?.fee || 0) / 100;
       const net      = amount - feeAmt;

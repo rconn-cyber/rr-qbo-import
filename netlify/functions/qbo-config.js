@@ -51,7 +51,7 @@ exports.handler = async function () {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'public, max-age=300'
       },
       body: JSON.stringify({
         accounts: accounts.map(a => a.full_name),

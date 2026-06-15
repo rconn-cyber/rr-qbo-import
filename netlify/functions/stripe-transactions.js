@@ -148,7 +148,7 @@ exports.handler = async function(event) {
         stmt:           stmt,
         line_items:     lineData?.items || null,
       };
-    });
+   }));
 
     return {
       statusCode: 200,

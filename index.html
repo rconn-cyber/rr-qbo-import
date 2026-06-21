@@ -5,273 +5,340 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RR Merchant Staging — QBO Import</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  --navy: #0D1F3C;
-  --navy-mid: #1a3a6e;
-  --gold: #C9A84C;
-  --gold-light: #F5EDD5;
-  --gold-dim: #8a6f2e;
-  --bg: #f7f5f0;
+  --sys: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
+  --navy: #0d1f3c;
+  --gold: #c9a84c;
+  --bg: #f5f5f7;
   --surface: #ffffff;
-  --border: #e2ddd4;
-  --border-strong: #c8c2b6;
-  --text: #1a1814;
-  --text-mid: #4a4540;
-  --text-muted: #8a8480;
-  --green: #1a5c2e;
-  --green-bg: #e8f5ec;
+  --surface2: #f5f5f7;
+  --border: #d2d2d7;
+  --border-light: rgba(0,0,0,0.08);
+  --text: #1d1d1f;
+  --text-mid: #424245;
+  --text-muted: #86868b;
+  --blue: #0071e3;
+  --blue-hover: #0077ed;
+  --green: #30a340;
+  --green-bg: #d1f0d8;
+  --green-text: #1a5c2e;
   --amber: #7a4f00;
-  --amber-bg: #fef3d8;
-  --red: #8b1a1a;
-  --red-bg: #fdecea;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
+  --amber-bg: #fff3d0;
+  --red: #cc2200;
+  --red-bg: #ffe0de;
+  --red-accent: #ff3b30;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-pill: 980px;
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: var(--sans);
+  font-family: var(--sys);
   background: var(--bg);
   color: var(--text);
   font-size: 14px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── HEADER ── */
 header {
-  background: var(--navy);
-  padding: 0 32px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 52px;
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 2px solid var(--gold-dim);
+  border-bottom: 0.5px solid var(--border);
 }
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 16px; }
 .brand-icon {
-  width: 30px; height: 30px;
-  background: var(--gold);
-  border-radius: 6px;
+  width: 28px; height: 28px;
+  background: var(--navy);
+  border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 600; color: var(--navy);
-  font-family: var(--mono);
+  font-size: 11px; font-weight: 600; color: var(--gold);
+  letter-spacing: 0.03em;
 }
-.brand-name { color: #fff; font-weight: 500; font-size: 15px; letter-spacing: 0.02em; }
-.brand-sub { color: var(--gold); font-size: 11px; font-family: var(--mono); letter-spacing: 0.05em; }
-
+.brand-name { color: var(--text); font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+.brand-divider { width: 1px; height: 14px; background: var(--border); }
+.brand-sub { color: var(--text-muted); font-size: 12px; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 
 /* ── BUTTONS ── */
 .btn {
-  font-family: var(--sans); font-size: 13px; font-weight: 500;
-  padding: 7px 14px; border-radius: 6px; border: none;
+  font-family: var(--sys); font-size: 13px; font-weight: 500;
+  padding: 7px 16px; border-radius: var(--radius-pill); border: none;
   cursor: pointer; transition: all 0.15s; display: inline-flex;
   align-items: center; gap: 6px; white-space: nowrap;
+  letter-spacing: -0.01em;
 }
-.btn-ghost { background: transparent; color: #aab; border: 1px solid rgba(255,255,255,0.2); }
-.btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
-.btn-gold { background: var(--gold); color: var(--navy); }
-.btn-gold:hover { background: #d4af5a; }
-.btn-gold:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-primary { background: var(--navy); color: #fff; }
-.btn-primary:hover { background: var(--navy-mid); }
-.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #f5c8c8; }
-.btn-danger:hover { background: #fbd8d8; }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
-.btn-xs { padding: 2px 7px; font-size: 11px; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 0.5px solid var(--border); }
+.btn-ghost:hover { background: #e8e8ed; }
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-blue:hover { background: var(--blue-hover); }
+.btn-blue:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-navy { background: var(--navy); color: #fff; }
+.btn-navy:hover { background: #1a3a6e; }
+.btn-danger { background: var(--red-bg); color: var(--red); }
+.btn-danger:hover { background: #ffd0cc; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-xs { padding: 3px 9px; font-size: 11px; }
 
-/* ── MAIN LAYOUT ── */
-main { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+/* ── MAIN ── */
+main { max-width: 1400px; margin: 0 auto; padding: 20px 28px; }
 
-/* ── UPLOAD ZONE ── */
+/* ── DATE BAR ── */
+.date-bar {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.date-bar-label { font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; }
+.date-input {
+  font-family: var(--sys); font-size: 12px;
+  background: var(--surface); color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 10px;
+}
+.pull-status { font-size: 12px; font-weight: 500; margin-left: auto; }
+.pull-status.ok { color: var(--green); }
+.pull-status.err { color: var(--red-accent); }
+
+/* ── UPLOAD SECTION ── */
 .upload-section {
   display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 16px; margin-bottom: 24px;
+  gap: 12px; margin-bottom: 14px;
 }
 .upload-card {
   background: var(--surface);
-  border: 1.5px dashed var(--border-strong);
-  border-radius: 10px;
-  padding: 20px;
-  cursor: pointer;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: default;
   transition: all 0.2s;
   position: relative;
 }
-.upload-card:hover, .upload-card.drag { border-color: var(--gold); background: var(--gold-light); }
-.upload-card.loaded { border-style: solid; border-color: var(--green); background: var(--green-bg); }
+.upload-card.loaded { border-color: #a0d8b0; background: #f0faf3; }
 .upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.upload-label {
-  font-size: 12px; font-family: var(--mono); font-weight: 500;
-  letter-spacing: 0.05em; text-transform: uppercase;
-  margin-bottom: 6px;
+.upload-dot {
+  width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle;
 }
-.upload-label.sq { color: #2d5a2d; }
-.upload-label.st { color: #1a3a7a; }
-.upload-label.am { color: #7a4f00; }
-.upload-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
-.upload-hint { font-size: 12px; color: var(--text-muted); }
-.upload-status { font-size: 12px; font-weight: 500; margin-top: 8px; }
+.upload-label {
+  font-size: 11px; font-weight: 600; letter-spacing: -0.01em;
+  margin-bottom: 8px; display: flex; align-items: center;
+}
+.upload-title { font-weight: 500; font-size: 13px; margin-bottom: 10px; color: var(--text); }
+.upload-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4; }
+.upload-status { font-size: 11px; font-weight: 500; margin-top: 8px; }
 .upload-status.ok { color: var(--green); }
+
+.date-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.date-row input { flex: 1; font-family: var(--sys); font-size: 11px; padding: 5px 6px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
 
 /* ── STATS BAR ── */
 .stats-bar {
-  display: flex; gap: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--surface2);
+  border-radius: var(--radius);
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
+  display: flex;
 }
 .stat {
-  flex: 1; padding: 14px 20px;
-  border-right: 1px solid var(--border);
+  flex: 1; padding: 14px 16px;
+  border-right: 0.5px solid var(--border);
 }
 .stat:last-child { border-right: none; }
-.stat-val { font-size: 24px; font-weight: 600; font-family: var(--mono); color: var(--navy); }
-.stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
-.stat-clickable { cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
-.stat-clickable:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); transform: translateY(-1px); }
-.stat-clickable:hover .stat-lbl { color: var(--navy); }
+.stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.stat-clickable { cursor: pointer; transition: background 0.15s; }
+.stat-clickable:hover { background: rgba(0,0,0,0.04); }
 .stat-val.green { color: var(--green); }
-.stat-val.amber { color: var(--amber); }
-.stat-val.red { color: var(--red); }
+.stat-val.amber { color: #ff9500; }
+.stat-val.red { color: var(--red-accent); }
 
 /* ── TOOLBAR ── */
 .toolbar {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 14px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; flex-wrap: wrap;
 }
-.toolbar-left { display: flex; gap: 8px; align-items: center; flex: 1; }
 .search-wrap { position: relative; }
 .search-wrap input {
-  font-family: var(--sans); font-size: 13px;
+  font-family: var(--sys); font-size: 13px;
   padding: 7px 12px 7px 32px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px; background: var(--surface);
-  color: var(--text); width: 220px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface2);
+  color: var(--text); width: 200px;
 }
+.search-wrap input:focus { outline: none; border-color: var(--blue); background: var(--surface); }
 .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
 select.filter-sel {
-  font-family: var(--sans); font-size: 13px;
-  padding: 7px 10px; border: 1px solid var(--border-strong);
-  border-radius: 6px; background: var(--surface); color: var(--text);
+  font-family: var(--sys); font-size: 13px;
+  padding: 7px 10px; border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface2); color: var(--text);
 }
+select.filter-sel:focus { outline: none; border-color: var(--blue); }
 .filter-chip {
-  font-size: 12px; padding: 4px 10px; border-radius: 20px;
-  cursor: pointer; border: 1px solid var(--border-strong);
-  background: var(--surface); transition: all 0.15s;
+  font-size: 12px; padding: 5px 12px; border-radius: var(--radius-pill);
+  cursor: pointer; border: 0.5px solid var(--border);
+  background: var(--surface); transition: all 0.15s; color: var(--text);
 }
 .filter-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 
 /* ── TABLE ── */
 .table-wrap {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
   overflow: auto;
   max-height: calc(100vh - 320px);
   position: relative;
 }
 .table-loading-overlay {
-  display: none;
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.82);
-  z-index: 50;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 12px;
-  border-radius: 10px;
+  display: none; position: absolute; inset: 0;
+  background: rgba(255,255,255,0.8); z-index: 50;
+  align-items: center; justify-content: center; flex-direction: column; gap: 10px;
+  border-radius: var(--radius);
 }
 .table-loading-overlay.active { display: flex; }
 .spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--navy);
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--blue);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.spinner-msg { font-size: 13px; color: var(--navy); font-weight: 500; }
+.spinner-msg { font-size: 13px; color: var(--text-mid); font-weight: 500; }
+
 table { width: 100%; border-collapse: collapse; }
 thead th {
-  background: var(--navy); color: #fff;
-  font-size: 11px; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  padding: 10px 12px; text-align: left;
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 9px 12px; text-align: left;
   white-space: nowrap; position: sticky; top: 0; z-index: 30;
+  border-bottom: 0.5px solid var(--border);
 }
-thead th:first-child { border-radius: 0; }
-tbody td input, tbody td select { position: relative; z-index: 1; }
 thead th input[type=checkbox] { cursor: pointer; }
 
-tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; }
 tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: #faf9f7; }
-tbody tr.selected { background: #f0ede8; }
-tbody tr.flag-unknown { background: var(--red-bg); }
-tbody tr.flag-deferred { background: var(--amber-bg); }
-tbody tr.flag-ok { }
-tbody tr.flag-dupe { background: #f0e8f8; }
-tbody tr.flag-dupe td { opacity: 0.8; }
-.badge-dupe { background: #ede0f8; color: #5a1a8b; }
+tbody tr:hover { background: #fafafa; }
+tbody tr.selected { background: #f0f6ff; }
+tbody tr.flag-unknown { background: #fff7f7; }
+tbody tr.flag-deferred { background: #fffbf0; }
+tbody tr.flag-dupe { background: #faf0ff; opacity: 0.85; }
 
 td { padding: 8px 12px; font-size: 13px; vertical-align: middle; }
 td.mono { font-family: var(--mono); font-size: 12px; }
 
-/* Status badge */
+/* Badge */
 .badge {
   display: inline-block; font-size: 11px; font-weight: 500;
-  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap;
 }
-.badge-ok { background: var(--green-bg); color: var(--green); }
+.badge-ok { background: var(--green-bg); color: var(--green-text); }
 .badge-defer { background: var(--amber-bg); color: var(--amber); }
 .badge-unknown { background: var(--red-bg); color: var(--red); }
 .badge-sq { background: #e8f0e8; color: #1a4a1a; }
 .badge-st { background: #e3eaf8; color: #1a3a7a; }
-.badge-am { background: var(--gold-light); color: var(--amber); }
+.badge-am { background: #fef3d8; color: #7a4f00; }
+.badge-dupe { background: #ede0f8; color: #5a1a8b; }
 
 /* Editable cells */
-.editable-cell {
-  min-width: 0;
-}
 .editable-cell select, .editable-cell input {
-  font-family: var(--sans); font-size: 12px;
-  padding: 3px 6px; border: 1px solid var(--border-strong);
-  border-radius: 4px; background: var(--surface); color: var(--text);
+  font-family: var(--sys); font-size: 12px;
+  padding: 4px 8px; border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface2); color: var(--text);
   width: 100%; max-width: 220px;
 }
 .editable-cell select:focus, .editable-cell input:focus {
-  outline: 2px solid var(--gold); border-color: var(--gold);
+  outline: none; border-color: var(--blue); background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(0,113,227,0.12);
 }
 
 /* Amount */
-.amount { text-align: right; font-family: var(--mono); }
-.amount.positive { color: var(--green); }
-.amount.negative { color: var(--red); }
+.amount { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.amount.positive { color: var(--green-text); }
+.amount.negative { color: var(--red-accent); }
 
 /* ── EMPTY STATE ── */
-.empty-state {
-  text-align: center; padding: 60px 20px;
-  color: var(--text-muted);
-}
-.empty-state .big { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state .big { font-size: 36px; margin-bottom: 12px; opacity: 0.2; }
 .empty-state h3 { font-size: 16px; font-weight: 500; color: var(--text-mid); margin-bottom: 6px; }
 
 /* ── NOTICE ── */
 .notice {
-  padding: 10px 16px; border-radius: 8px; font-size: 13px;
-  margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px;
+  margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px;
 }
-.notice-info { background: #e8f0fc; color: #1a3a7a; border: 1px solid #b5d0f0; }
-.notice-warn { background: var(--amber-bg); color: var(--amber); border: 1px solid #f0d090; }
+.notice-info { background: #e8f0fc; color: #1a3a7a; border: 0.5px solid #b5d0f0; }
+.notice-warn { background: var(--amber-bg); color: var(--amber); border: 0.5px solid #f0d090; }
+
+/* ── LEGEND TABLE ── */
+.legend-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-top: 14px;
+}
+.legend-card h3 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; letter-spacing: -0.01em; }
+.legend-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.legend-card thead tr { background: var(--surface2); }
+.legend-card th { padding: 6px 10px; text-align: left; font-weight: 500; border-bottom: 0.5px solid var(--border); color: var(--text-mid); }
+.legend-card td { padding: 6px 10px; border-bottom: 0.5px solid var(--border); }
+.legend-card tbody tr:last-child td { border-bottom: none; }
+.legend-card tbody tr:nth-child(even) { background: #fafafa; }
+.mono-val { font-family: var(--mono); font-size: 11px; color: var(--navy); }
+
+/* ── MEMBER PANEL ── */
+.member-panel {
+  display: none;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+.member-panel h3 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+
+/* ── IMPORT LOG ── */
+.import-log-card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-top: 14px;
+}
+
+/* ── PROCESSING NOTICE ── */
+#processing-notice {
+  text-align: center; padding: 10px 20px;
+  background: #e8f0fc;
+  border: 0.5px solid #b5d0f0;
+  border-radius: var(--radius-sm);
+  font-size: 13px; color: #1a3a7a; font-weight: 500;
+  gap: 10px; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+
+/* Demo banner */
+.demo-banner { text-align: center; margin: -4px 0 8px; }
 </style>
 </head>
 <body>
@@ -279,14 +346,13 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 <header>
   <div class="brand">
     <div class="brand-icon">RR</div>
-    <div>
-      <div class="brand-name">Merchant Staging</div>
-      <div class="brand-sub">Square · Stripe · WA/8am → QBO CSV</div>
-    </div>
+    <div class="brand-name">Merchant Staging</div>
+    <div class="brand-divider"></div>
+    <div class="brand-sub">Square · Stripe · 8am → QBO CSV</div>
   </div>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="clearAll()">↺ Clear all</button>
-    <button class="btn btn-gold" id="csv-btn" onclick="downloadCSV()" disabled>
+    <button class="btn btn-blue" id="csv-btn" onclick="downloadCSV()" disabled>
       ⬇ Export CSV
     </button>
   </div>
@@ -294,20 +360,20 @@ td.mono { font-family: var(--mono); font-size: 12px; }
 
 <main>
 
-  <!-- GLOBAL DATE + PULL ALL -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div style="font-size:13px;font-weight:500;color:var(--navy);white-space:nowrap;">Week of:</div>
-    <input type="date" id="global-start" style="font-size:13px;padding:6px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);">
+  <!-- DATE BAR -->
+  <div class="date-bar">
+    <div class="date-bar-label">Week of</div>
+    <input type="date" id="global-start" class="date-input">
     <span style="color:var(--text-muted);font-size:13px;">to</span>
-    <input type="date" id="global-end" style="font-size:13px;padding:6px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);">
-    <button class="btn btn-gold" onclick="pullAllPlatforms()" id="btn-pull-all" style="padding:8px 20px;font-size:14px;font-weight:600;">
-      &#9889; Pull All Platforms
+    <input type="date" id="global-end" class="date-input">
+    <button class="btn btn-blue" onclick="pullAllPlatforms()" id="btn-pull-all" style="padding:8px 20px;font-size:13px;">
+      ⚡ Pull All Platforms
     </button>
     <div style="font-size:12px;color:var(--text-muted);">Square · Stripe · 8am simultaneously</div>
-    <div id="pull-all-status" style="font-size:12px;font-weight:500;color:var(--green);margin-left:auto;"></div>
+    <div id="pull-all-status" class="pull-status" style="margin-left:auto;"></div>
   </div>
+
   <script>
-  // Sync global date pickers → individual platform pickers
   function syncDates() {
     const s = document.getElementById('global-start')?.value;
     const e = document.getElementById('global-end')?.value;
@@ -319,137 +385,135 @@ td.mono { font-family: var(--mono); font-size: 12px; }
     });
   }
   document.addEventListener('DOMContentLoaded', async () => {
-    // Load QBO config (accounts, classes, rules) from Supabase before anything else
     await loadConfig();
     document.getElementById('global-start')?.addEventListener('change', syncDates);
     document.getElementById('global-end')?.addEventListener('change', syncDates);
   });
   </script>
 
-  <!-- UPLOAD -->
+  <!-- UPLOAD CARDS -->
   <div class="upload-section">
-    <div class="upload-card" id="card-sq" style="cursor:default;">
+    <!-- Square -->
+    <div class="upload-card" id="card-sq">
       <input type="file" id="file-sq" accept=".csv" onchange="handleFile('square', this)" onclick="event.stopPropagation()" style="display:none;">
-      <div class="upload-label sq">Square</div>
-      <div class="upload-title" style="margin-bottom:8px;">Transactions</div>
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <input type="date" id="sq-start" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
-        <input type="date" id="sq-end" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+      <div class="upload-label"><span class="upload-dot" style="background:#2d5a2d;"></span>Square</div>
+      <div class="upload-title">Transactions</div>
+      <div class="date-row">
+        <input type="date" id="sq-start">
+        <input type="date" id="sq-end">
       </div>
-      <button class="btn btn-primary btn-sm" onclick="loadSquareTransactions()" id="btn-square" style="width:100%;justify-content:center;background:#2d5a2d;border-color:#2d5a2d;">
-        &#9889; Pull from Square
+      <button class="btn btn-navy btn-sm" onclick="loadSquareTransactions()" id="btn-square" style="width:100%;justify-content:center;">
+        ⚡ Pull from Square
       </button>
-      <button onclick="document.getElementById('file-sq').click()" style="width:100%;margin-top:6px;font-size:11px;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);padding:4px;border-radius:4px;cursor:pointer;">
-        &#128196; Upload CSV instead
+      <button onclick="document.getElementById('file-sq').click()" style="width:100%;margin-top:6px;font-size:11px;background:var(--surface2);color:var(--text-mid);border:0.5px solid var(--border);padding:5px;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--sys);">
+        📄 Upload CSV instead
       </button>
-      <div class="upload-status" id="status-sq" style="margin-top:6px;font-size:11px;"></div>
+      <div class="upload-status" id="status-sq"></div>
     </div>
-    <div class="upload-card" id="card-st" style="cursor:default;">
+    <!-- Stripe -->
+    <div class="upload-card" id="card-st">
       <input type="file" id="file-st" accept=".csv" onchange="handleFile('stripe', this)" onclick="event.stopPropagation()" style="display:none;">
-      <div class="upload-label st">Stripe</div>
-      <div class="upload-title" style="margin-bottom:8px;">Transactions</div>
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <input type="date" id="st-start" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
-        <input type="date" id="st-end" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+      <div class="upload-label"><span class="upload-dot" style="background:#1a3a7a;"></span>Stripe</div>
+      <div class="upload-title">Transactions</div>
+      <div class="date-row">
+        <input type="date" id="st-start">
+        <input type="date" id="st-end">
       </div>
-      <button class="btn btn-primary btn-sm" onclick="loadStripeTransactions()" id="btn-stripe" style="width:100%;justify-content:center;background:#1a3a7a;border-color:#1a3a7a;">
-        &#9889; Pull from Stripe
+      <button class="btn btn-navy btn-sm" onclick="loadStripeTransactions()" id="btn-stripe" style="width:100%;justify-content:center;">
+        ⚡ Pull from Stripe
       </button>
-      <button onclick="document.getElementById('file-st').click()" style="width:100%;margin-top:6px;font-size:11px;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);padding:4px;border-radius:4px;cursor:pointer;">
-        &#128196; Upload CSV instead
+      <button onclick="document.getElementById('file-st').click()" style="width:100%;margin-top:6px;font-size:11px;background:var(--surface2);color:var(--text-mid);border:0.5px solid var(--border);padding:5px;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--sys);">
+        📄 Upload CSV instead
       </button>
-      <div class="upload-status" id="status-st" style="margin-top:6px;font-size:11px;"></div>
+      <div class="upload-status" id="status-st"></div>
     </div>
-    <div class="upload-card" id="card-am" style="cursor:default;">
+    <!-- 8am -->
+    <div class="upload-card" id="card-am">
       <input type="file" id="file-am" accept=".xls,.xlsx,.csv" onchange="handleFile('8am', this)" onclick="event.stopPropagation()" style="display:none;">
-      <div class="upload-label am">Wild Apricot / 8am</div>
-      <div class="upload-title" style="margin-bottom:8px;">Transactions</div>
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <input type="date" id="am-start" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
-        <input type="date" id="am-end" style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--border-strong);border-radius:4px;background:var(--surface);">
+      <div class="upload-label"><span class="upload-dot" style="background:#7a4f00;"></span>Wild Apricot / 8am</div>
+      <div class="upload-title">Transactions</div>
+      <div class="date-row">
+        <input type="date" id="am-start">
+        <input type="date" id="am-end">
       </div>
-      <button class="btn btn-primary btn-sm" onclick="load8amTransactions()" id="btn-8am" style="width:100%;justify-content:center;background:#7a4f00;border-color:#7a4f00;">
-        &#9889; Pull from 8am
+      <button class="btn btn-navy btn-sm" onclick="load8amTransactions()" id="btn-8am" style="width:100%;justify-content:center;">
+        ⚡ Pull from 8am
       </button>
-      <button onclick="document.getElementById('file-am').click()" style="width:100%;margin-top:6px;font-size:11px;background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);padding:4px;border-radius:4px;cursor:pointer;">
-        &#128196; Upload WA Export instead
+      <button onclick="document.getElementById('file-am').click()" style="width:100%;margin-top:6px;font-size:11px;background:var(--surface2);color:var(--text-mid);border:0.5px solid var(--border);padding:5px;border-radius:var(--radius-sm);cursor:pointer;font-family:var(--sys);">
+        📄 Upload WA Export instead
       </button>
-      <div class="upload-status" id="status-am" style="margin-top:6px;font-size:11px;"></div>
+      <div class="upload-status" id="status-am"></div>
     </div>
-    <div class="upload-card" id="card-mbr" style="border-color:var(--gold-dim);background:var(--gold-light);cursor:default;">
-      <div class="upload-label" style="color:var(--navy);">Members</div>
-      <div class="upload-title" style="margin-bottom:6px;">Member lookup</div>
-      <div class="upload-hint" style="margin-bottom:10px;">Pulls live from Supabase rr_members table — 637+ members.</div>
-      <button class="btn btn-primary btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
+    <!-- Members -->
+    <div class="upload-card" id="card-mbr">
+      <div class="upload-label"><span class="upload-dot" style="background:var(--blue);"></span>Members</div>
+      <div class="upload-title">Member lookup</div>
+      <div class="upload-hint">Pulls live from Supabase rr_members table — 637+ members.</div>
+      <button class="btn btn-blue btn-sm" onclick="loadMembersFromSupabase()" id="btn-supabase" style="width:100%;justify-content:center;">
         ⚡ Pull from Supabase
       </button>
       <div class="upload-status" id="status-mbr" style="margin-top:8px;min-height:16px;font-size:12px;"></div>
     </div>
   </div>
 
-  <!-- DEMO LOAD -->
-  <div style="text-align:center;margin:-10px 0 8px;">
-    <button class="btn btn-ghost btn-sm" style="background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);" onclick="loadDemo()">
+  <!-- DEMO -->
+  <div class="demo-banner">
+    <button class="btn btn-ghost btn-sm" onclick="loadDemo()">
       Load sample data to try the workflow
     </button>
   </div>
 
   <!-- PROCESSING NOTICE -->
-  <div id="processing-notice" style="display:none;text-align:center;margin:0 0 14px;padding:10px 20px;background:#eef4ff;border:1px solid #c0d4f5;border-radius:8px;font-size:13px;color:var(--navy);font-weight:500;gap:10px;align-items:center;justify-content:center;">
-    <span style="display:inline-block;width:16px;height:16px;border:2px solid #c0d4f5;border-top-color:var(--navy);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;"></span>
-    <span id="processing-notice-msg">Analyzing transactions…</span>
-  </div>
+  <div id="processing-notice" style="display:none;"></div>
 
   <!-- STATS -->
   <div class="stats-bar" id="stats-bar" style="display:none">
     <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total transactions</div></div>
-    <div class="stat"><div class="stat-val" id="s-mbr" style="color:var(--navy);">—</div><div class="stat-lbl">Members loaded</div></div>
+    <div class="stat"><div class="stat-val" id="s-mbr" style="color:var(--text);">—</div><div class="stat-lbl">Members loaded</div></div>
     <div class="stat"><div class="stat-val green" id="s-ok">0</div><div class="stat-lbl">Auto-matched</div></div>
-    <div class="stat stat-clickable" onclick="filterByStatus('defer')" title="Click to filter deferred transactions"><div class="stat-val amber" id="s-defer">0</div><div class="stat-lbl">Needs deferred check</div></div>
-    <div class="stat stat-clickable" onclick="filterByStatus('unknown')" title="Click to filter unknown transactions"><div class="stat-val red" id="s-unknown">0</div><div class="stat-lbl">Unknown — review required</div></div>
+    <div class="stat stat-clickable" onclick="filterByStatus('defer')"><div class="stat-val amber" id="s-defer">0</div><div class="stat-lbl">Needs deferred check</div></div>
+    <div class="stat stat-clickable" onclick="filterByStatus('unknown')"><div class="stat-val red" id="s-unknown">0</div><div class="stat-lbl">Unknown — review</div></div>
     <div class="stat"><div class="stat-val" id="s-gross">$0</div><div class="stat-lbl">Gross income</div></div>
     <div class="stat"><div class="stat-val red" id="s-fees">$0</div><div class="stat-lbl">Total fees</div></div>
   </div>
 
   <!-- TOOLBAR -->
   <div class="toolbar" id="toolbar" style="display:none">
-    <div class="toolbar-left">
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" placeholder="Search descriptions…" oninput="filterTable()" id="search-box">
-      </div>
-      <select class="filter-sel" onchange="filterTable()" id="filter-platform">
-        <option value="">All platforms</option>
-        <option value="square">Square</option>
-        <option value="stripe">Stripe</option>
-        <option value="8am">8am</option>
-      </select>
-      <select class="filter-sel" onchange="filterTable()" id="filter-status">
-        <option value="">All statuses</option>
-        <option value="ok">Auto-matched</option>
-        <option value="defer">Deferred check</option>
-        <option value="unknown">Unknown</option>
-      </select>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" placeholder="Search descriptions…" oninput="filterTable()" id="search-box">
     </div>
-    <div style="font-size:12px;color:var(--text-muted)" id="row-count"></div>
-      <button class="btn btn-sm" id="mbr-lookup-toggle" style="background:#f5edd5;color:#5a3e00;border:1px solid #d4b96c;" onclick="toggleMemberPanel()">
-        🔍 Member lookup
-      </button>
-    <button class="btn btn-sm btn-primary" onclick="selectAll(true)">Select all</button>
-    <button class="btn btn-sm btn-ghost" style="background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);" onclick="selectAll(false)">Deselect all</button>
+    <select class="filter-sel" onchange="filterTable()" id="filter-platform">
+      <option value="">All platforms</option>
+      <option value="square">Square</option>
+      <option value="stripe">Stripe</option>
+      <option value="8am">8am</option>
+    </select>
+    <select class="filter-sel" onchange="filterTable()" id="filter-status">
+      <option value="">All statuses</option>
+      <option value="ok">Auto-matched</option>
+      <option value="defer">Deferred check</option>
+      <option value="unknown">Unknown</option>
+    </select>
+    <span style="font-size:12px;color:var(--text-muted);margin-left:4px;" id="row-count"></span>
+    <button class="btn btn-ghost btn-sm" id="mbr-lookup-toggle" onclick="toggleMemberPanel()">
+      🔍 Member lookup
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="selectAll(true)">Select all</button>
+    <button class="btn btn-ghost btn-sm" onclick="selectAll(false)">Deselect all</button>
   </div>
 
-  <!-- TABLE -->
   <!-- MEMBER LOOKUP PANEL -->
-  <div id="member-panel" style="display:none;background:var(--surface);border:1px solid var(--gold);border-radius:10px;padding:16px 20px;margin-bottom:14px;">
-    <div style="font-size:13px;font-weight:500;margin-bottom:10px;color:var(--navy);">Member lookup <span style="font-weight:400;font-size:12px;color:var(--text-muted);">— search your loaded member list</span></div>
+  <div class="member-panel" id="member-panel">
+    <h3>Member lookup <span style="font-weight:400;font-size:12px;color:var(--text-muted);">— search your loaded member list</span></h3>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="mbr-search" placeholder="Type name or member #…" style="flex:1;min-width:200px;font-size:13px;padding:7px 12px;border:1px solid var(--border-strong);border-radius:6px;" oninput="searchMembers(this.value)">
-      <span style="font-size:12px;color:var(--text-muted);" id="mbr-search-hint">Load member CSV to enable</span>
+      <input type="text" id="mbr-search" placeholder="Type name or member #…" style="flex:1;min-width:200px;font-size:13px;padding:7px 12px;border:0.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--sys);" oninput="searchMembers(this.value)">
+      <span style="font-size:12px;color:var(--text-muted);" id="mbr-search-hint">Load member list to enable</span>
     </div>
     <div id="mbr-results" style="margin-top:10px;"></div>
   </div>
 
+  <!-- TABLE -->
   <div class="table-wrap" id="table-wrap">
     <div class="table-loading-overlay" id="table-overlay">
       <div class="spinner"></div>
@@ -458,24 +522,24 @@ td.mono { font-family: var(--mono); font-size: 12px; }
     <div class="empty-state" id="empty-state">
       <div class="big">⟳</div>
       <h3>No transactions loaded</h3>
-      <p>Upload one or more CSV files above, or load the sample data to see how it works.</p>
+      <p style="font-size:13px;">Upload one or more CSV files above, or load the sample data.</p>
     </div>
     <table id="txn-table" style="display:none">
       <thead>
         <tr>
           <th style="width:36px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"></th>
-          <th style="width:88px">Date</th>
-          <th style="width:72px">Platform</th>
+          <th style="width:86px">Date</th>
+          <th style="width:70px">Platform</th>
           <th>Description / Memo</th>
           <th style="width:200px">QBO Account</th>
-          <th style="width:160px">QBO Class</th>
-          <th style="width:160px">Customer Name <span style="color:#f5a;font-weight:400;font-size:10px;">*req</span></th>
-          <th style="width:82px">Mbr # <span style="color:#f5a;font-weight:400;font-size:10px;">*req</span></th>
+          <th style="width:156px">QBO Class</th>
+          <th style="width:156px">Customer Name <span style="color:#ff3b30;font-weight:400;font-size:10px;">*req</span></th>
+          <th style="width:80px">Mbr # <span style="color:#ff3b30;font-weight:400;font-size:10px;">*req</span></th>
           <th style="width:80px" class="amount">Gross</th>
-          <th style="width:68px" class="amount">Fee</th>
-          <th style="width:68px" class="amount">Net</th>
-          <th style="width:90px">Status</th>
-          <th style="width:40px">Del</th>
+          <th style="width:66px" class="amount">Fee</th>
+          <th style="width:66px" class="amount">Net</th>
+          <th style="width:88px">Status</th>
+          <th style="width:38px">Del</th>
         </tr>
       </thead>
       <tbody id="txn-body"></tbody>
@@ -483,183 +547,114 @@ td.mono { font-family: var(--mono); font-size: 12px; }
   </div>
 
   <!-- UNKNOWN NOTICE -->
-  <!-- ATTRIBUTION LEGEND -->
-<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:16px;font-size:12px;" id="attr-legend">
-  <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--navy);">Customer Name &amp; Member # Quick Reference <span style="font-weight:400;color:var(--text-muted);font-size:11px;">(per Michael Jaap / 1Source Partners)</span></div>
-  <table style="width:100%;border-collapse:collapse;font-size:12px;">
-    <thead><tr style="background:#f0ede8;">
-      <th style="padding:6px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);width:22%">Situation</th>
-      <th style="padding:6px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);width:30%">Customer Name field</th>
-      <th style="padding:6px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);width:18%">Member # field</th>
-      <th style="padding:6px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Examples</th>
-    </tr></thead>
-    <tbody>
-      <tr><td style="padding:6px 10px;border-bottom:1px solid var(--border);">Known member payment (any amount)</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);color:var(--navy);">Member's actual name</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">Member's #</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">Dues, event entry, donation from member</td></tr>
-      <tr style="background:#faf9f7;"><td style="padding:6px 10px;border-bottom:1px solid var(--border);">Non-member, single payment &gt;$500</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);color:var(--navy);">Actual payer name</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">999999</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">Corporate sponsor, large donor</td></tr>
-      <tr><td style="padding:6px 10px;border-bottom:1px solid var(--border);">Non-member, single payment &lt;$500</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);color:var(--navy);">General Public</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">999999</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">Walk-in ticket buyer, casual bar patron</td></tr>
-      <tr style="background:#faf9f7;"><td style="padding:6px 10px;border-bottom:1px solid var(--border);">Bulk member-influenced payments</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);color:var(--navy);">Allocate</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">888888</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">Member bar/bead sales, event ticket batch</td></tr>
-      <tr><td style="padding:6px 10px;border-bottom:1px solid var(--border);">Mixed source event (use ⚖ Split)</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);">Two rows: <span style="font-family:var(--mono);color:var(--navy);">Allocate</span> + <span style="font-family:var(--mono);color:var(--navy);">General Public</span></td><td style="padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">888888 / 999999</td><td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">Public bar night ~70% member / 30% public</td></tr>
-      <tr style="background:#faf9f7;"><td style="padding:6px 10px;">One member pays for a group</td><td style="padding:6px 10px;">Separate rows, one per member</td><td style="padding:6px 10px;font-family:var(--mono);">Each member's #</td><td style="padding:6px 10px;color:var(--text-muted);">$1,000 entry fee covers 4 members at $250 each → 4 rows</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="notice notice-warn" id="unknown-notice" style="display:none;margin-top:16px">
+  <div class="notice notice-warn" id="unknown-notice" style="display:none;margin-top:12px">
     <span>⚠</span>
-    <span><strong>Rows need attention before export.</strong> Rows highlighted in red are missing a QBO account, Customer Name, or Member #. Fix them inline or delete them before exporting.</span>
+    <span><strong>Rows need attention before export.</strong> Rows highlighted in red are missing a QBO account, Customer Name, or Member #. Fix them inline or delete before exporting.</span>
   </div>
-<!-- IMPORT HISTORY PANEL -->
-  <div id="import-log-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-top:16px;">
+
+  <!-- LEGEND -->
+  <div class="legend-card">
+    <h3>Customer Name &amp; Member # Quick Reference <span style="font-weight:400;color:var(--text-muted);font-size:11px;">per Michael Jaap / 1Source Partners</span></h3>
+    <table>
+      <thead><tr>
+        <th style="width:22%">Situation</th>
+        <th style="width:30%">Customer Name field</th>
+        <th style="width:18%">Member # field</th>
+        <th>Examples</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Known member payment (any amount)</td><td class="mono-val">Member's actual name</td><td class="mono-val">Member's #</td><td style="color:var(--text-muted);">Dues, event entry, donation from member</td></tr>
+        <tr><td>Non-member, single payment &gt;$500</td><td class="mono-val">Actual payer name</td><td class="mono-val">999999</td><td style="color:var(--text-muted);">Corporate sponsor, large donor</td></tr>
+        <tr><td>Non-member, single payment &lt;$500</td><td class="mono-val">General Public</td><td class="mono-val">999999</td><td style="color:var(--text-muted);">Walk-in ticket buyer, casual bar patron</td></tr>
+        <tr><td>Bulk member-influenced payments</td><td class="mono-val">Allocate</td><td class="mono-val">888888</td><td style="color:var(--text-muted);">Member bar/bead sales, event ticket batch</td></tr>
+        <tr><td>Mixed source event (use ⚖ Split)</td><td>Two rows: <span class="mono-val">Allocate</span> + <span class="mono-val">General Public</span></td><td class="mono-val">888888 / 999999</td><td style="color:var(--text-muted);">Public bar night ~70% member / 30% public</td></tr>
+        <tr><td>One member pays for a group</td><td>Separate rows, one per member</td><td class="mono-val">Each member's #</td><td style="color:var(--text-muted);">$1,000 entry fee covers 4 members → 4 rows</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- IMPORT HISTORY -->
+  <div class="import-log-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-weight:600;font-size:13px;color:var(--navy);">Import History <span style="font-weight:400;font-size:11px;color:var(--text-muted);">— exports logged to Supabase · duplicate protection active</span></div>
-      <button class="btn btn-sm" style="background:#f0ede8;color:var(--text-mid);border:1px solid var(--border-strong);" onclick="loadImportHistory()">↺ Load History</button>
+      <div>
+        <span style="font-weight:600;font-size:13px;color:var(--text);">Import History</span>
+        <span style="font-weight:400;font-size:11px;color:var(--text-muted);margin-left:6px;">exports logged to Supabase · duplicate protection active</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadImportHistory()">↺ Load History</button>
     </div>
-    <div id="import-log-body"><div style="font-size:12px;color:var(--text-muted);">Click Load History to view past exports. Each CSV download is automatically logged.</div></div>
+    <div id="import-log-body"><div style="font-size:12px;color:var(--text-muted);">Click Load History to view past exports.</div></div>
   </div>
 
 </main>
 
-
-
 <script>
 // ── SUPABASE CONFIG ──
-// Key is loaded from Netlify environment variable via /api/config
-// Set SUPABASE_ANON_KEY in Netlify → Site config → Environment variables
 const SUPABASE_URL = 'https://qyoqyeaqacdjstvkonwx.supabase.co';
 let SUPABASE_ANON_KEY = '';
 
 async function loadMembersFromSupabase() {
   const btn = document.getElementById('btn-supabase');
   const statusEl = document.getElementById('status-mbr');
-
-  // Get key from module-level var (loaded via /api/config at startup)
   let key = SUPABASE_ANON_KEY || sessionStorage.getItem('rr_sb_key') || '';
   if (!key) {
-    // Last resort: try fetching config again
     try {
       const cfgRes = await fetch('/.netlify/functions/config');
       if (cfgRes.ok) { const cfg = await cfgRes.json(); key = cfg.supabaseAnonKey || ''; SUPABASE_ANON_KEY = key; }
     } catch(e) {}
   }
   if (!key) {
-    statusEl.innerHTML = '✗ Key not configured. Set SUPABASE_ANON_KEY in Netlify environment variables.';
-    statusEl.style.color = 'var(--red)';
-    btn.textContent = '⚡ Pull from Supabase';
-    btn.disabled = false;
+    statusEl.innerHTML = '✗ Key not configured.';
+    statusEl.style.color = 'var(--red-accent)';
+    btn.disabled = false; btn.textContent = '⚡ Pull from Supabase';
     return;
   }
-
-  btn.textContent = '⟳ Loading…';
-  btn.disabled = true;
-  statusEl.textContent = 'Connecting to Supabase…';
-  statusEl.className = 'upload-status';
-  statusEl.style.color = 'var(--text-mid)';
-  statusEl.style.display = 'block';
-  console.log('Supabase fetch starting, URL:', SUPABASE_URL);
-  console.log('Key present:', !!key, 'Key length:', key.length);
-  console.log('Key preview:', key.substring(0, 20) + '...');
-  // Test with a simple HEAD request first
+  btn.textContent = '⟳ Loading…'; btn.disabled = true;
+  statusEl.textContent = 'Connecting…'; statusEl.className = 'upload-status';
   try {
-    const testRes = await fetch(`${SUPABASE_URL}/rest/v1/rr_members?limit=1&select=member_number`, {
-      method: 'HEAD',
-      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-    });
-    console.log('HEAD test status:', testRes.status, testRes.statusText);
-  } catch(e) { console.log('HEAD test failed:', e.message); }
-
-  try {
-    // Fetch all members from rr_members table
-    // WA sync stores: id, member_id (WA User ID), first_name, last_name, email,
-    //   member_number (the 4-digit #), membership_level, status, phone
-    // We page through in batches of 1000 to get all 637+
-    let allRows = [];
-    let from = 0;
-    const pageSize = 1000;
-
+    let allRows = [], from = 0;
     while (true) {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/rr_members?select=member_number,first_name,last_name,email,membership_level,status&order=last_name.asc&limit=${pageSize}&offset=${from}`,
-        { headers: {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json',
-        }}
+        `${SUPABASE_URL}/rest/v1/rr_members?select=member_number,first_name,last_name,email,membership_level,status&order=last_name.asc&limit=1000&offset=${from}`,
+        { headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }}
       );
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Supabase error ${res.status}: ${err.substring(0, 200)}`);
-      }
+      if (!res.ok) throw new Error(`Supabase error ${res.status}`);
       const batch = await res.json();
       allRows = allRows.concat(batch);
-      if (batch.length < pageSize) break;
-      from += pageSize;
+      if (batch.length < 1000) break;
+      from += 1000;
     }
-
-    // Ingest into memberMap / memberList using same structure as CSV handler
     memberMap = {}; memberList = [];
     let loaded = 0;
     allRows.forEach(row => {
-      const id    = (row.member_number || '').toString().trim();
-      const fn    = (row.first_name || '').trim();
-      const ln    = (row.last_name  || '').trim();
-      const email = (row.email || '').trim();
-      const level = (row.membership_level || '').trim();
-      const status= (row.status || '').trim();
+      const id = (row.member_number || '').toString().trim();
+      const fn = (row.first_name || '').trim();
+      const ln = (row.last_name || '').trim();
       if (!fn && !ln) return;
       const fullName = `${fn} ${ln}`.trim();
       if (!fullName) return;
-      const entry = { id, firstName: fn, lastName: ln, fullName, email, level, status };
+      const entry = { id, firstName: fn, lastName: ln, fullName, email: (row.email || '').trim(), level: (row.membership_level || '').trim(), status: (row.status || '').trim() };
       memberMap[fullName.toLowerCase()] = entry;
-      if (ln) {
-        const lk = '_ln_' + ln.toLowerCase();
-        if (!memberMap[lk]) memberMap[lk] = [];
-        memberMap[lk].push(entry);
-      }
-      memberList.push(entry);
-      loaded++;
+      if (ln) { const lk = '_ln_' + ln.toLowerCase(); if (!memberMap[lk]) memberMap[lk] = []; memberMap[lk].push(entry); }
+      memberList.push(entry); loaded++;
     });
-
     memberList.sort((a, b) => a.lastName.localeCompare(b.lastName));
-    // Build email index for Stripe matching
     memberEmailMap = {};
-    memberList.forEach(m => { if(m.email) memberEmailMap[m.email.toLowerCase()] = m; });
+    memberList.forEach(m => { if (m.email) memberEmailMap[m.email.toLowerCase()] = m; });
     rebuildDatalist();
-
-    document.getElementById('card-mbr').style.background = '#e8f5ec';
-    document.getElementById('card-mbr').style.borderColor = '#1a5c2e';
-    statusEl.textContent = `✓ ${loaded} members loaded`;
-    statusEl.className = 'upload-status ok';
+    document.getElementById('card-mbr').classList.add('loaded');
+    statusEl.textContent = `✓ ${loaded} members loaded`; statusEl.className = 'upload-status ok';
     btn.textContent = '✓ Loaded from Supabase';
-
     if (transactions.length) renderTable();
     updateStats();
-
   } catch (err) {
-    const errMsg = err.message || String(err);
-    statusEl.innerHTML = `✗ ${errMsg}<br><span style="font-size:10px;opacity:0.8;">Check console (F12) for details</span>`;
-    statusEl.className = 'upload-status';
-    statusEl.style.color = 'var(--red)';
-    statusEl.style.display = 'block';
-    btn.textContent = '⚡ Retry';
-    btn.disabled = false;
-    console.error('Supabase member load error:', err);
-    console.error('Full error:', JSON.stringify(err, null, 2));
-    console.log('Request was to:', `${SUPABASE_URL}/rest/v1/rr_members`);
+    statusEl.innerHTML = `✗ ${err.message}`; statusEl.style.color = 'var(--red-accent)';
+    btn.textContent = '⚡ Retry'; btn.disabled = false;
+    console.error('Supabase error:', err);
   }
 }
 
-// ── GENERAL RULES (Stripe / 8am / Square fallback) ──
-// ── CONFIG — loaded dynamically from /.netlify/functions/qbo-config ──
-// These are populated by loadConfig() on startup. Do not edit here.
-let RULES = [];
-let ACCOUNTS = [];
-let CLASSES = [];
-let SQ_ITEM_RULES = [];
-let SQ_EVENT_CONTEXT = [];
-let CUSTOMER_DEFAULTS = {};
-
+let RULES = [], ACCOUNTS = [], CLASSES = [], SQ_ITEM_RULES = [], SQ_EVENT_CONTEXT = [], CUSTOMER_DEFAULTS = {};
 function getCustomerDefaults(acct){ return CUSTOMER_DEFAULTS[acct]||{c:'',m:''}; }
-
 function validateTxn(t){
   const e=[];
   if(!t.acct||t.acct.includes('Uncategorized')) e.push('No account');
@@ -667,7 +662,6 @@ function validateTxn(t){
   if(!t.memberNum||!t.memberNum.trim()) e.push('Member # required');
   return e;
 }
-
 function splitTransaction(id, memberPct){
   const idx=transactions.findIndex(t=>t.id===id); if(idx===-1)return;
   const o=transactions[idx]; const pub=100-memberPct;
@@ -679,18 +673,14 @@ function splitTransaction(id, memberPct){
   renderAll();
 }
 
-// ── STATE ──
 let transactions=[]; let nextId=1;
 let memberMap={}; let memberList=[]; let memberEmailMap={};
-
-// Member data loads from Supabase only - see loadMembersFromSupabase()
 
 function rebuildDatalist(){
   let dl=document.getElementById('member-datalist');
   if(!dl){dl=document.createElement('datalist');dl.id='member-datalist';document.body.appendChild(dl);}
   dl.innerHTML=memberList.slice(0,600).map(m=>`<option value="${m.fullName}">${m.fullName} — #${m.id} (${m.level.substring(0,30)})</option>`).join('');
 }
-
 function lookupMember(nameInput){
   if(!nameInput||!memberList.length) return null;
   const key=nameInput.trim().toLowerCase();
@@ -699,7 +689,6 @@ function lookupMember(nameInput){
   if(lnRes&&lnRes.length===1) return lnRes[0];
   return memberList.find(m=>m.fullName.toLowerCase().startsWith(key))||null;
 }
-
 function onCustomerNameInput(id,val){
   const t=transactions.find(x=>x.id===id); if(!t) return;
   t.customerName=val;
@@ -707,13 +696,12 @@ function onCustomerNameInput(id,val){
     const m=lookupMember(val);
     if(m&&m.id){ t.memberNum=m.id;
       const ni=document.getElementById('mnum-'+id);
-      if(ni){ni.value=m.id;ni.style.borderColor='#1a5c2e';ni.style.background='#f0fff4';}
+      if(ni){ni.value=m.id;ni.style.borderColor='var(--green)';ni.style.background='#f0fff4';}
     }
   }
   updateExportBtn();
 }
 
-// ── CSV PARSER ──
 function splitCSVLine(line){
   const res=[]; let cur=''; let inQ=false;
   for(let i=0;i<line.length;i++){
@@ -724,7 +712,6 @@ function splitCSVLine(line){
   }
   res.push(cur); return res;
 }
-
 function parseCSV(text){
   const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
   if(!lines.length) return{rows:[],rawHeaders:[],slugHeaders:[]};
@@ -749,7 +736,6 @@ function parseCSV(text){
   }
   return{rows,rawHeaders,slugHeaders};
 }
-
 function makeFinder(row,slugHeaders){
   return function find(...candidates){
     for(const candidate of candidates){
@@ -763,299 +749,117 @@ function makeFinder(row,slugHeaders){
     return '';
   };
 }
-
-// Square: combine category + item + description + notes for rich matching
 function extractSquare(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
   const clean=s=>(s||'').replace(/https?:\/\/\S+/g,'').trim();
-  const category  = clean(find('category'));
-  const item      = clean(find('item'));
-  const desc      = clean(find('description','name','payment_type'));
-  const notes     = clean(find('notes','detail','details'));
-  const eventType = clean(find('event_type','event'));
-  const location  = clean(find('location','device_name','device'));
-  const combined=[item,category,desc,notes,eventType,location]
-    .map(s=>s.trim()).filter(s=>s&&s.length>1).join(' | ')||'Square transaction';
-  const gross = find('gross_sales')||find('gross','amount','total_collected','total','price_point');
-  const fee   = find('service_charges')||find('fee_amount','fees_square','fees','fee','square_fees','processing_fee','card_processing_fees');
-  const net   = find('net_sales')||find('net_total','net','net_amount','net_total_collected');
-  // Square exports buyer name in "Customer Name" or "Customer ID" columns
-  // Square Transactions export has Customer Name with embedded member number
-  // Patterns: "Steven 241 Cooper", "Brad Hall 1410", "Billy Hogan (702)"
-  const rawCustomer = find('customer_name') || '';
-  let buyerClean = '', extractedMemberNum = '';
-  if (rawCustomer && !/^[$\d]/.test(rawCustomer.trim())) {
-    // Extract embedded member number (3-4 digit number in the name)
-    const numMatch = rawCustomer.match(/\b(\d{3,4})\b/);
-    if (numMatch) {
-      extractedMemberNum = numMatch[1].padStart(4,'0');
-      buyerClean = rawCustomer.replace(/\s*\(?\d{3,4}\)?\s*/g,' ').replace(/\s+/g,' ').trim();
-    } else {
-      buyerClean = rawCustomer.trim();
-    }
+  const category=clean(find('category')); const item=clean(find('item'));
+  const desc=clean(find('description','name','payment_type')); const notes=clean(find('notes','detail','details'));
+  const eventType=clean(find('event_type','event')); const location=clean(find('location','device_name','device'));
+  const combined=[item,category,desc,notes,eventType,location].map(s=>s.trim()).filter(s=>s&&s.length>1).join(' | ')||'Square transaction';
+  const gross=find('gross_sales')||find('gross','amount','total_collected','total','price_point');
+  const fee=find('service_charges')||find('fee_amount','fees_square','fees','fee','square_fees','processing_fee','card_processing_fees');
+  const net=find('net_sales')||find('net_total','net','net_amount','net_total_collected');
+  const rawCustomer=find('customer_name')||'';
+  let buyerClean='', extractedMemberNum='';
+  if(rawCustomer&&!/^[$\d]/.test(rawCustomer.trim())){
+    const numMatch=rawCustomer.match(/\b(\d{3,4})\b/);
+    if(numMatch){ extractedMemberNum=numMatch[1].padStart(4,'0'); buyerClean=rawCustomer.replace(/\s*\(?\d{3,4}\)?\s*/g,' ').replace(/\s+/g,' ').trim(); }
+    else{ buyerClean=rawCustomer.trim(); }
   }
-  return{ date:find('date'), desc:combined, gross, fee, net, buyer:buyerClean, extractedMemberNum };
+  return{date:find('date'),desc:combined,gross,fee,net,buyer:buyerClean,extractedMemberNum};
 }
-
 function extractStripe(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
-  // Stripe Payments export: Card Name = cardholder name (most reliable)
-  // Stripe Transactions export: Customer Email always present
-  const email  = find('customer_email','email') || '';
-  const stmt   = find('statement_descriptor','statement_desc') || '';
-  // Card Name is the cardholder name — present in Payments export
-  // Customer Description is the name in the payout reconciliation export
-  const _cardName = find('card_name') || '';
-  const _custDesc = find('customer_description','customer_name','billing_name') || '';
-  const _buyer = _cardName || _custDesc;
-  const buyer  = _buyer && !/^[$\d]/.test(_buyer.trim()) && _buyer.length > 2 ? _buyer.trim() : '';
-  return{
-    date:  find('created_utc','created','date','available_on_utc','charge_created_utc'),
-    desc:  find('description','charge_description','reporting_category') || stmt || find('type') || 'Stripe payment',
-    gross: find('gross','amount','charge_amount','total'),
-    fee:   find('fee','stripe_fee','fees','fee_details'),
-    net:   find('net','net_amount','payout_amount'),
-    buyer, email, stmt, extractedMemberNum:'',
-  };
+  const email=find('customer_email','email')||'';
+  const stmt=find('statement_descriptor','statement_desc')||'';
+  const _cardName=find('card_name')||'';
+  const _custDesc=find('customer_description','customer_name','billing_name')||'';
+  const _buyer=_cardName||_custDesc;
+  const buyer=_buyer&&!/^[$\d]/.test(_buyer.trim())&&_buyer.length>2?_buyer.trim():'';
+  return{date:find('created_utc','created','date','available_on_utc','charge_created_utc'),desc:find('description','charge_description','reporting_category')||stmt||find('type')||'Stripe payment',gross:find('gross','amount','charge_amount','total'),fee:find('fee','stripe_fee','fees','fee_details'),net:find('net','net_amount','payout_amount'),buyer,email,stmt,extractedMemberNum:''};
 }
-
 function extract8am(row,slugHeaders){
   const find=makeFinder(row,slugHeaders);
-  // 8am exports buyer name in Buyer Name or Attendee Name columns
-  const _buyer8 = find('buyer_name','buyer','attendee_name','attendee','customer_name','first_name') || '';
-  const buyer = _buyer8 && !/^[$\d]/.test(_buyer8.trim()) ? _buyer8.trim() : '';
-  return{
-    date:find('order_date','date','created','event_date'),
-    desc:find('event_name','event','ticket_type','description','item','name','order_type'),
-    gross:find('gross_amount','gross','amount','unit_price','price','total'),
-    fee:find('platform_fee','fee','fees','service_fee','booking_fee'),
-    net:find('net_amount','net','payout'),
-    buyer, extractedMemberNum:'',
-  };
+  const _buyer8=find('buyer_name','buyer','attendee_name','attendee','customer_name','first_name')||'';
+  const buyer=_buyer8&&!/^[$\d]/.test(_buyer8.trim())?_buyer8.trim():'';
+  return{date:find('order_date','date','created','event_date'),desc:find('event_name','event','ticket_type','description','item','name','order_type'),gross:find('gross_amount','gross','amount','unit_price','price','total'),fee:find('platform_fee','fee','fees','service_fee','booking_fee'),net:find('net_amount','net','payout'),buyer,extractedMemberNum:''};
 }
-
 function showDebugPanel(platform,rawHeaders,rows,extracted){
   let panel=document.getElementById('debug-panel');
-  if(!panel){
-    panel=document.createElement('div');
-    panel.id='debug-panel';
-    panel.style.cssText='background:#1a1814;color:#c8c2b6;font-family:var(--mono);font-size:12px;padding:16px 20px;border-radius:8px;margin:0 0 16px;line-height:1.7;';
-    const main=document.querySelector('main');
-    main.insertBefore(panel,main.children[2]);
-  }
+  if(!panel){panel=document.createElement('div');panel.id='debug-panel';panel.style.cssText='background:#1a1814;color:#c8c2b6;font-family:var(--mono);font-size:12px;padding:16px 20px;border-radius:10px;margin:0 0 14px;line-height:1.7;';const main=document.querySelector('main');main.insertBefore(panel,main.children[2]);}
   const es=extracted[0]||{};
   const withData=extracted.filter(e=>e.gross||e.net).length;
-  panel.innerHTML=`
-    <div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()} (dismiss once working)</div>
-    <div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div>
-    <div style="margin-top:4px;"><span style="color:#888;">Rows parsed:</span> <strong style="color:#fff">${rows.length}</strong> &nbsp;|&nbsp; <span style="color:#888;">Rows with amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>
-    ${rows.length>0?`<div style="margin-top:4px;color:#888;">First row → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,50)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span> mbr#:<span style="color:#ff9">"${es.extractedMemberNum||'--'}"</span> email:<span style="color:#ff9">"${es.email||'--'}"</span> gross:<span style="color:#9fb">"${es.gross||'--'}"</span></div>`:''}
-    ${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts. Reply with your column headers and I'll fix the parser.</div>`:''}
-    <button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
+  panel.innerHTML=`<div style="color:#C9A84C;font-weight:500;margin-bottom:6px;">CSV Debug — ${platform.toUpperCase()}</div><div><span style="color:#888;">Headers (${rawHeaders.length}):</span> ${rawHeaders.slice(0,12).map(h=>`<span style="color:#9fb">"${h}"</span>`).join(', ')}${rawHeaders.length>12?' …':''}</div><div style="margin-top:4px;"><span style="color:#888;">Rows:</span> <strong style="color:#fff">${rows.length}</strong> | <span style="color:#888;">With amounts:</span> <strong style="color:${withData>0?'#9f9':'#f88'}">${withData}</strong></div>${rows.length>0?`<div style="margin-top:4px;color:#888;">First → date:<span style="color:#9fb">"${es.date||'--'}"</span> desc:<span style="color:#9fb">"${(es.desc||'--').substring(0,50)}"</span> buyer:<span style="color:#ff9">"${es.buyer||'--'}"</span></div>`:''}${withData===0?`<div style="color:#f88;margin-top:6px;">⚠ No rows had recognizable amounts.</div>`:''}<button onclick="document.getElementById('debug-panel').remove()" style="margin-top:8px;font-size:11px;background:#333;color:#aaa;border:1px solid #555;padding:2px 10px;border-radius:3px;cursor:pointer;">dismiss</button>`;
 }
-
-function parseAmount(raw){
-  if(!raw) return 0;
-  return parseFloat(String(raw).replace(/[$,\s]/g,'').replace(/^\((.+)\)$/,'$1').replace(/^-/,''))||0;
-}
-
-function parseDate(raw){
-  if(!raw) return '';
-  const d=new Date(raw);
-  if(isNaN(d)) return raw.substring(0,10);
-  const m=String(d.getMonth()+1).padStart(2,'0');
-  const dd=String(d.getDate()).padStart(2,'0');
-  return `${m}/${dd}/${d.getFullYear()}`;
-}
-
-function triggerFile(id){document.getElementById(id).click();}
-
-function handleFile(platform,input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const parseResult=parseCSV(e.target.result);
-    ingestRows(platform,parseResult,file.name);
-  };
-  reader.readAsText(file);
-}
-
+function parseAmount(raw){if(!raw)return 0;return parseFloat(String(raw).replace(/[$,\s]/g,'').replace(/^\((.+)\)$/,'$1').replace(/^-/,''))||0;}
+function parseDate(raw){if(!raw)return '';const d=new Date(raw);if(isNaN(d))return raw.substring(0,10);const m=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');return`${m}/${dd}/${d.getFullYear()}`;}
+function handleFile(platform,input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const parseResult=parseCSV(e.target.result);ingestRows(platform,parseResult,file.name);};reader.readAsText(file);}
 function ingestRows(platform,parseResult,filename){
   const{rows,rawHeaders,slugHeaders}=parseResult;
   const extractor=platform==='square'?extractSquare:platform==='stripe'?extractStripe:extract8am;
   const extracted=rows.map(r=>extractor(r,slugHeaders));
   showDebugPanel(platform,rawHeaders,rows,extracted);
-
   let count=0;
   extracted.forEach(e=>{
     const{date,desc,gross:grossRaw,fee:feeRaw,net:netRaw,buyer:buyerRaw,email:emailRaw,stmt:stmtRaw,extractedMemberNum:extractedNum}=e;
-    const buyer=(buyerRaw||'').trim();
-    const email=(emailRaw||'').trim().toLowerCase();
-    const stmt=(stmtRaw||'').trim();
-    const sqMemberNum=(extractedNum||'').trim();
-    const gross=parseAmount(grossRaw);
-    const fee=Math.abs(parseAmount(feeRaw));
-    const net=parseAmount(netRaw)||(gross-fee);
-    if(gross===0&&fee===0&&net===0) return;
+    const buyer=(buyerRaw||'').trim(); const email=(emailRaw||'').trim().toLowerCase();
+    const stmt=(stmtRaw||'').trim(); const sqMemberNum=(extractedNum||'').trim();
+    const gross=parseAmount(grossRaw); const fee=Math.abs(parseAmount(feeRaw)); const net=parseAmount(netRaw)||(gross-fee);
+    if(gross===0&&fee===0&&net===0)return;
     const dl=(desc||'').toLowerCase();
-    if(!grossRaw&&!netRaw&&(dl.includes('total')||dl.includes('summary'))) return;
+    if(!grossRaw&&!netRaw&&(dl.includes('total')||dl.includes('summary')))return;
     const resolvedDesc=desc||`${platform} transaction`;
-
-    // Square: try item-level resolver first; fallback to general matchRule
-    let sqMatch=null, rule=null;
-    if(platform==='square'){
-      sqMatch=resolveSquareClass(resolvedDesc);
-    }
+    let sqMatch=null,rule=null;
+    if(platform==='square') sqMatch=resolveSquareClass(resolvedDesc);
     if(!sqMatch) rule=matchRule(resolvedDesc);
-
     const resolvedAcct=sqMatch?sqMatch.acct:(rule?rule.acct:'5991 Uncategorized Revenue');
     const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
     const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
     const def=getCustomerDefaults(resolvedAcct);
     let resolvedCustomer=sqMatch?(sqMatch.customer||def.c||''):(def.c||'');
     let resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
-
-    // ── MEMBER AUTO-MATCH ──
-    // Priority: embedded member# > email match > $500 rule
-    // Raw card/cardholder names from Square are NOT reliable QBO customer names
-    // (e.g. "Jim Beam" typed by a customer). Only trust names with a member# or email match.
-    if (sqMemberNum && buyer) {
-      // Pass 0: Square embedded member number — most reliable
-      resolvedCustomer = buyer;
-      resolvedMemberNum = sqMemberNum;
-    } else if (email && memberList.length > 0 && memberEmailMap[email]) {
-      // Pass 1: Email match
-      const m = memberEmailMap[email];
-      resolvedCustomer = m.fullName;
-      resolvedMemberNum = m.id;
-    } else if (!resolvedCustomer) {
-      // Pass 2: No verified identity — apply $500 rule, ignore raw card name
-      const gross = parseAmount(grossRaw);
-      resolvedCustomer = gross >= 500 ? buyer : 'General Public';
-      resolvedMemberNum = '999999';
+    if(sqMemberNum&&buyer){resolvedCustomer=buyer;resolvedMemberNum=sqMemberNum;}
+    else if(email&&memberList.length>0&&memberEmailMap[email]){const m=memberEmailMap[email];resolvedCustomer=m.fullName;resolvedMemberNum=m.id;}
+    else if(!resolvedCustomer){resolvedCustomer=gross>=500?buyer:'General Public';resolvedMemberNum='999999';}
+    const needsMemberLookup=!resolvedCustomer||resolvedCustomer===''||resolvedCustomer==='Allocate';
+    if(needsMemberLookup&&memberList.length>0){
+      const SKIP=new Set(['payment','rough','riders','rider','import','square','stripe','membership','renewal','registration','dues','annual','fee','ticket','deposit','entry','regular','light','the','and','for','from','via','ref','pay','sale','sales','inc','llc','ltd']);
+      const words=resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/).map(w=>w.replace(/[^a-zA-Z]/g,'')).filter(w=>w.length>2&&!SKIP.has(w.toLowerCase())&&!/^\d+$/.test(w));
+      for(let i=0;i<words.length-1;i++){const candidate=words[i]+' '+words[i+1];if(candidate.length<5)continue;const m=lookupMember(candidate);if(m){resolvedCustomer=m.fullName;resolvedMemberNum=m.id;break;}}
+      if(!resolvedCustomer){for(const w of words){if(w.length<4)continue;const lnMatches=memberMap['_ln_'+w.toLowerCase()];if(lnMatches&&lnMatches.length===1){resolvedCustomer=lnMatches[0].fullName;resolvedMemberNum=lnMatches[0].id;break;}}}
     }
-
-    const needsMemberLookup = !resolvedCustomer || resolvedCustomer === '' || resolvedCustomer === 'Allocate';
-    if (needsMemberLookup && memberList.length > 0) {
-      // Description scan — last resort for cases with no buyer and no email match
-      const SKIP = new Set(['payment','rough','riders','rider','import','square','stripe','membership',
-        'renewal','registration','dues','annual','fee','ticket','deposit','entry','regular','light',
-        'the','and','for','from','via','ref','pay','sale','sales','inc','llc','ltd']);
-      const words = resolvedDesc.replace(/[|\-_]/g,' ').split(/\s+/)
-        .map(w=>w.replace(/[^a-zA-Z]/g,''))
-        .filter(w=>w.length>2 && !SKIP.has(w.toLowerCase()) && !/^\d+$/.test(w));
-      for (let i=0; i<words.length-1; i++) {
-        const candidate = words[i]+' '+words[i+1];
-        if (candidate.length < 5) continue;
-        const m = lookupMember(candidate);
-        if (m) { resolvedCustomer = m.fullName; resolvedMemberNum = m.id; break; }
-      }
-      if (!resolvedCustomer) {
-        for (const w of words) {
-          if (w.length < 4) continue;
-          const lnMatches = memberMap['_ln_'+w.toLowerCase()];
-          if (lnMatches && lnMatches.length === 1) {
-            resolvedCustomer = lnMatches[0].fullName;
-            resolvedMemberNum = lnMatches[0].id;
-            break;
-          }
-        }
-      }
-    }
-
-    transactions.push({
-     id:nextId++, txnId:platform+'_csv_'+Date.now()+'_'+nextId, platform,
-      date:parseDate(date)||new Date().toLocaleDateString('en-US'),
-      desc:resolvedDesc,
-      acct:resolvedAcct, cls:resolvedCls,
-      gross, fee, net,
-      status:resolvedStatus,
-      selected:resolvedStatus!=='unknown',
-      memo:`${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}${email?' | '+email:''}`,
-      customerName:resolvedCustomer,
-      memberNum:resolvedMemberNum,
-      stmt:stmt||'',
-    });
+    transactions.push({id:nextId++,txnId:platform+'_csv_'+Date.now()+'_'+nextId,platform,date:parseDate(date)||new Date().toLocaleDateString('en-US'),desc:resolvedDesc,acct:resolvedAcct,cls:resolvedCls,gross,fee,net,status:resolvedStatus,selected:resolvedStatus!=='unknown',memo:`${platform.toUpperCase()} import ${new Date().toLocaleDateString('en-US')}${email?' | '+email:''}`,customerName:resolvedCustomer,memberNum:resolvedMemberNum,stmt:stmt||''});
     count++;
   });
-
   const cardId=platform==='square'?'card-sq':platform==='stripe'?'card-st':'card-am';
   const statusId=platform==='square'?'status-sq':platform==='stripe'?'status-st':'status-am';
   document.getElementById(cardId).classList.add('loaded');
   const st=document.getElementById(statusId);
-  st.textContent=`✓ ${count} rows loaded from ${filename}`;
-  st.className='upload-status ok';
-  renderAll();
-  // Enrich any Cognito Forms entries in background
-  enrichCognitoEntries();
+  st.textContent=`✓ ${count} rows loaded from ${filename}`; st.className='upload-status ok';
+  renderAll(); enrichCognitoEntries();
 }
+function matchRule(desc){const d=desc.toLowerCase();for(const r of RULES){if(r.kw.some(k=>d.includes(k)))return r;}return null;}
+function resolveSquareClass(desc){const d=desc.toLowerCase();let match=null;for(const r of SQ_ITEM_RULES){if(r.kw.some(k=>d.includes(k))){match={...r};break;}}if(!match)return null;if(!match.cls){for(const ev of SQ_EVENT_CONTEXT){if(ev.kw.some(k=>d.includes(k))){match.cls=ev.cls;break;}}if(!match.cls)match.cls='';}return match;}
 
-function matchRule(desc){
-  const d=desc.toLowerCase();
-  for(const r of RULES){ if(r.kw.some(k=>d.includes(k))) return r; }
-  return null;
+let _bulkPulling=false;
+function showTableLoading(msg){
+  const n=document.getElementById('processing-notice'); const m2=document.getElementById('processing-notice-msg');
+  if(n){n.style.display='flex';n.innerHTML=`<span style="display:inline-block;width:16px;height:16px;border:2px solid #b5d0f0;border-top-color:#1a3a7a;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;"></span>${msg||'Analyzing transactions…'}`;}
+  const o=document.getElementById('table-overlay');const om=document.getElementById('overlay-msg');
+  if(o){o.classList.add('active');if(om)om.textContent=msg||'Analyzing transactions…';}
 }
-
-function resolveSquareClass(desc) {
-  const d = desc.toLowerCase();
-  let match = null;
-  for (const r of SQ_ITEM_RULES) {
-    if (r.kw.some(k => d.includes(k))) { match = {...r}; break; }
-  }
-  if (!match) return null;
-  if (!match.cls) {
-    for (const ev of SQ_EVENT_CONTEXT) {
-      if (ev.kw.some(k => d.includes(k))) { match.cls = ev.cls; break; }
-    }
-    if (!match.cls) match.cls = '';
-  }
-  return match;
+function hideTableLoading(force=false){
+  if(_bulkPulling&&!force)return;
+  const n=document.getElementById('processing-notice');if(n)n.style.display='none';
+  const o=document.getElementById('table-overlay');if(o)o.classList.remove('active');
 }
-
-// ── RENDER ──
-let _bulkPulling = false; // suppress early overlay hide during pullAllPlatforms
-
-function showTableLoading(msg) {
-  const n = document.getElementById('processing-notice');
-  const m = document.getElementById('processing-notice-msg');
-  if (n) { n.style.display = 'flex'; if (m) m.textContent = msg || 'Analyzing transactions…'; }
-  // Also keep table overlay for when table is visible
-  const o = document.getElementById('table-overlay');
-  const om = document.getElementById('overlay-msg');
-  if (o) { o.classList.add('active'); if (om) om.textContent = msg || 'Analyzing transactions…'; }
-}
-function hideTableLoading(force=false) {
-  if (_bulkPulling && !force) return; // don't hide mid-pull
-  const n = document.getElementById('processing-notice');
-  if (n) n.style.display = 'none';
-  const o = document.getElementById('table-overlay');
-  if (o) o.classList.remove('active');
-}
-
 function renderAll(){
-  updateStats(); renderTable();
+  updateStats();renderTable();
   document.getElementById('stats-bar').style.display=transactions.length?'flex':'none';
   document.getElementById('toolbar').style.display=transactions.length?'flex':'none';
   updateExportBtn();
-  // Recalculate sticky header offset after layout settles
-  requestAnimationFrame(() => {
-    const tableWrap = document.getElementById('table-wrap');
-    if (tableWrap) {
-      const top = tableWrap.getBoundingClientRect().top + window.scrollY;
-      const scrollTop = window.scrollY;
-      const offset = tableWrap.getBoundingClientRect().top;
-      document.documentElement.style.setProperty('--thead-top', Math.max(0, offset) + 'px');
-    }
-  });
 }
-
-function filterByStatus(status) {
-  const sel = document.getElementById('filter-status');
-  if (sel) { sel.value = status; renderTable(); }
-  // Scroll to table
-  document.getElementById('table-wrap')?.scrollIntoView({behavior:'smooth', block:'start'});
-}
-
+function filterByStatus(status){const sel=document.getElementById('filter-status');if(sel){sel.value=status;renderTable();}document.getElementById('table-wrap')?.scrollIntoView({behavior:'smooth',block:'start'});}
 function updateStats(){
   const ok=transactions.filter(t=>t.status==='ok').length;
   const defer=transactions.filter(t=>t.status==='defer').length;
@@ -1068,174 +872,127 @@ function updateStats(){
   document.getElementById('s-unknown').textContent=unk;
   document.getElementById('s-gross').textContent='$'+grossIncome.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('s-fees').textContent='$'+totalFees.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('s-mbr').textContent=memberList.length>0?memberList.length:'--';
+  document.getElementById('s-mbr').textContent=memberList.length>0?memberList.length:'—';
   document.getElementById('unknown-notice').style.display=transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
 }
-
 function getFiltered(){
   const q=(document.getElementById('search-box')||{}).value?.toLowerCase()||'';
   const pf=(document.getElementById('filter-platform')||{}).value||'';
   const st=(document.getElementById('filter-status')||{}).value||'';
   return transactions.filter(t=>{
-    if(q&&!t.desc.toLowerCase().includes(q)&&!t.acct.toLowerCase().includes(q)) return false;
-    if(pf&&t.platform!==pf) return false;
-    if(st&&t.status!==st) return false;
+    if(q&&!t.desc.toLowerCase().includes(q)&&!t.acct.toLowerCase().includes(q))return false;
+    if(pf&&t.platform!==pf)return false;
+    if(st&&t.status!==st)return false;
     return true;
   });
 }
-
 function renderTable(){
   const filtered=getFiltered();
   const tbody=document.getElementById('txn-body');
   const empty=document.getElementById('empty-state');
   const tbl=document.getElementById('txn-table');
   if(!transactions.length){empty.style.display='block';tbl.style.display='none';document.getElementById('row-count').textContent='';return;}
-  empty.style.display='none'; tbl.style.display='table';
+  empty.style.display='none';tbl.style.display='table';
   document.getElementById('row-count').textContent=`${filtered.length} of ${transactions.length} rows`;
   tbody.innerHTML=filtered.map(t=>{
     const pb=t.platform==='square'?'badge-sq':t.platform==='stripe'?'badge-st':'badge-am';
-    const errs=validateTxn(t); const hasErr=errs.length>0;
+    const errs=validateTxn(t);const hasErr=errs.length>0;
     const sb=hasErr?'badge-unknown':t._isDupe?'badge-dupe':t.status==='ok'?'badge-ok':t.status==='defer'?'badge-defer':'badge-unknown';
-    const sl=hasErr?errs.join(', '):t._isDupe?'Already exported':t.status==='ok'?'Auto-matched':t.status==='defer'?'Deferred check':'Unknown';
+    const sl=hasErr?errs.join(', '):t._isDupe?'Already exported':t.status==='ok'?'✓ matched':t.status==='defer'?'Deferred':'Unknown';
     const rc=hasErr?'flag-unknown':t._isDupe?'flag-dupe':t.status==='defer'?'flag-deferred':'flag-ok';
-    const fa=(v)=>v===0?'--':(v<0?'-':'')+' $'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const cb=(!t.customerName)?'border-color:#c85a5a;':'';
-    const mb=(!t.memberNum)?'border-color:#c85a5a;':'';
+    const fa=(v)=>v===0?'—':(v<0?'- ':'')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const cb=(!t.customerName)?'border-color:var(--red-accent);':'' ;
+    const mb=(!t.memberNum)?'border-color:var(--red-accent);':'';
     const isMixed=t.acct&&(t.acct.includes('Bar')||t.acct.includes('Beverage'));
-    const splitBtn=isMixed&&!t._splitFrom?`<button class="btn btn-xs" style="margin-top:3px;font-size:10px;background:#fff3cd;color:#7a4f00;border:1px solid #e8c96c;" onclick="promptSplit(${t.id})" title="Split member% + public%">⚖ Split</button>`:'';
-    return `<tr class="${rc}${t.selected?' selected':''}" id="row-${t.id}">
+    const splitBtn=isMixed&&!t._splitFrom?`<button class="btn btn-xs" style="margin-top:3px;background:var(--amber-bg);color:var(--amber);border:0.5px solid #e8c96c;" onclick="promptSplit(${t.id})">⚖ Split</button>`:'';
+    return`<tr class="${rc}${t.selected?' selected':''}" id="row-${t.id}">
       <td><input type="checkbox" ${t.selected?'checked':''} onchange="toggleRow(${t.id},this.checked)"></td>
       <td class="mono" style="font-size:11px;">${t.date}</td>
       <td><span class="badge ${pb}">${t.platform}</span></td>
       <td>
         <div style="font-weight:500;font-size:12px;white-space:normal;min-width:180px;max-width:260px;line-height:1.4;">${t.desc}</div>
-        <input type="text" value="${(t.memo||'').replace(/"/g,'&quot;')}" style="font-size:10px;font-family:var(--mono);margin-top:2px;padding:2px 5px;border:1px solid var(--border);border-radius:3px;background:#faf9f7;color:var(--text-muted);width:100%;max-width:280px;" onchange="updateField(${t.id},'memo',this.value)" placeholder="QBO memo…">
+        <input type="text" value="${(t.memo||'').replace(/"/g,'&quot;')}" style="font-size:10px;font-family:var(--mono);margin-top:3px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text-muted);width:100%;max-width:280px;" onchange="updateField(${t.id},'memo',this.value)" placeholder="QBO memo…">
       </td>
       <td class="editable-cell">
         <select style="font-size:11px;" onchange="updateAcct(${t.id},this.value)">
-          <option value=">-- account --</option>
+          <option value="">— account —</option>
           ${ACCOUNTS.map(a=>`<option value="${a}" ${t.acct===a?'selected':''}>${a}</option>`).join('')}
         </select>
       </td>
       <td class="editable-cell">
         <select style="font-size:11px;" onchange="updateField(${t.id},'cls',this.value)">
-          <option value=">-- class --</option>
+          <option value="">— class —</option>
           ${CLASSES.map(c=>`<option value="${c}" ${t.cls===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </td>
       <td class="editable-cell">
         <input type="text" value="${(t.customerName||'').replace(/"/g,'&quot;')}" placeholder="Name *" list="member-datalist"
-          style="font-size:11px;padding:3px 6px;border:1px solid var(--border-strong);${cb}border-radius:4px;width:100%;"
-          oninput="onCustomerNameInput(${t.id},this.value)" onchange="onCustomerNameInput(${t.id},this.value)"
-          title="Type member name to auto-fill #. Or: Allocate / General Public">
-        ${memberList.length?'<span style="font-size:10px;color:#1a5c2e;">⟳ lookup</span>':''}
+          style="font-size:11px;padding:3px 7px;border:0.5px solid var(--border);${cb}border-radius:var(--radius-sm);width:100%;"
+          oninput="onCustomerNameInput(${t.id},this.value)" onchange="onCustomerNameInput(${t.id},this.value)">
+        ${memberList.length?'<span style="font-size:10px;color:var(--green);">⟳ lookup</span>':''}
         ${splitBtn}
       </td>
       <td class="editable-cell">
         <input type="text" id="mnum-${t.id}" value="${(t.memberNum||'').replace(/"/g,'&quot;')}" placeholder="# *"
-          style="font-size:11px;font-family:var(--mono);padding:3px 6px;border:1px solid var(--border-strong);${mb}border-radius:4px;width:100%;max-width:90px;"
-          onchange="updateField(${t.id},'memberNum',this.value)" title="Member #, 888888=Allocate, 999999=General Public">
+          style="font-size:11px;font-family:var(--mono);padding:3px 7px;border:0.5px solid var(--border);${mb}border-radius:var(--radius-sm);width:100%;max-width:90px;"
+          onchange="updateField(${t.id},'memberNum',this.value)">
       </td>
       <td class="amount ${t.gross>=0?'positive':''}" style="font-size:12px;">${fa(t.gross)}</td>
-      <td class="amount negative" style="font-size:12px;">${t.fee>0?'($'+t.fee.toFixed(2)+')':'--'}</td>
+      <td class="amount negative" style="font-size:12px;">${t.fee>0?'($'+t.fee.toFixed(2)+')':'—'}</td>
       <td class="amount" style="font-size:12px;">${fa(t.net)}</td>
-      <td><span class="badge ${sb}" style="font-size:10px;">${t.status==='ok'&&!hasErr?'✓ matched':sl}</span></td>
+      <td><span class="badge ${sb}" style="font-size:10px;">${sl}</span></td>
       <td><button class="btn btn-xs btn-danger" onclick="deleteRow(${t.id})">✕</button></td>
     </tr>`;
   }).join('');
 }
-
 function filterTable(){renderTable();}
-
-function toggleMemberPanel(){
-  const p=document.getElementById('member-panel');
-  const isOpen=p.style.display!=='none';
-  p.style.display=isOpen?'none':'block';
-  if(!isOpen){
-    const hint=document.getElementById('mbr-search-hint');
-    hint.textContent=memberList.length>0?`${memberList.length} members loaded - type to search`:'Load member CSV above to enable';
-    if(memberList.length) document.getElementById('mbr-search').focus();
-  }
-}
-
+function toggleMemberPanel(){const p=document.getElementById('member-panel');const isOpen=p.style.display!=='none';p.style.display=isOpen?'none':'block';if(!isOpen){const hint=document.getElementById('mbr-search-hint');hint.textContent=memberList.length>0?`${memberList.length} members — type to search`:'Load members to enable';if(memberList.length)document.getElementById('mbr-search').focus();}}
 function searchMembers(q){
   const res=document.getElementById('mbr-results');
   if(!q||q.length<2){res.innerHTML='';return;}
   const ql=q.toLowerCase();
   const matches=memberList.filter(m=>m.fullName.toLowerCase().includes(ql)||m.id.toString().includes(ql)||m.email.toLowerCase().includes(ql)).slice(0,15);
   if(!matches.length){res.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No members found</div>';return;}
-  res.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px;">
-    <thead><tr style="background:#f0ede8;">
-      <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Name</th>
-      <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Member #</th>
-      <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Level</th>
-      <th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);">Email</th>
-    </tr></thead>
-    <tbody>${matches.map((m,i)=>`
-      <tr style="background:${i%2?'#faf9f7':'#fff'};cursor:pointer;" onclick="copyMemberToClipboard('${m.fullName.replace(/'/g,"\\'")}','${m.id}')" title="Click to copy">
-        <td style="padding:5px 10px;border-bottom:1px solid var(--border);font-weight:500;">${m.fullName}</td>
-        <td style="padding:5px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);">${m.id}</td>
-        <td style="padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">${m.level.substring(0,35)}</td>
-        <td style="padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);">${m.email}</td>
-      </tr>`).join('')}
-    </tbody></table>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Click row to copy name + # to clipboard</div>`;
+  res.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--surface2);"><th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:0.5px solid var(--border);">Name</th><th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:0.5px solid var(--border);">Member #</th><th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:0.5px solid var(--border);">Level</th><th style="padding:5px 10px;text-align:left;font-weight:500;border-bottom:0.5px solid var(--border);">Email</th></tr></thead><tbody>${matches.map((m,i)=>`<tr style="background:${i%2?'#fafafa':'#fff'};cursor:pointer;border-bottom:0.5px solid var(--border);" onclick="copyMemberToClipboard('${m.fullName.replace(/'/g,"\\'")}','${m.id}')" title="Click to copy"><td style="padding:5px 10px;font-weight:500;">${m.fullName}</td><td style="padding:5px 10px;font-family:var(--mono);">${m.id}</td><td style="padding:5px 10px;color:var(--text-muted);">${m.level.substring(0,35)}</td><td style="padding:5px 10px;color:var(--text-muted);">${m.email}</td></tr>`).join('')}</tbody></table><div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Click row to copy name + # to clipboard</div>`;
 }
-
 function copyMemberToClipboard(name,id){
   navigator.clipboard.writeText(`${name}\t${id}`).then(()=>{
-    const h=document.getElementById('mbr-search-hint'); const orig=h.textContent;
-    h.textContent=`✓ Copied: ${name} / #${id}`; h.style.color='var(--green)';
+    const h=document.getElementById('mbr-search-hint');const orig=h.textContent;
+    h.textContent=`✓ Copied: ${name} / #${id}`;h.style.color='var(--green)';
     setTimeout(()=>{h.textContent=orig;h.style.color='';},2000);
   }).catch(()=>prompt('Copy (name TAB member#):',`${name}\t${id}`));
 }
-
 function toggleRow(id,checked){const t=transactions.find(x=>x.id===id);if(t){t.selected=checked;}updateExportBtn();}
 function toggleAll(cb){getFiltered().forEach(t=>t.selected=cb.checked);renderTable();updateExportBtn();}
 function selectAll(v){getFiltered().forEach(t=>t.selected=v);renderTable();updateExportBtn();}
-
 function updateAcct(id,val){
-  const t=transactions.find(x=>x.id===id); if(!t) return;
-  t.acct=val;
-  if(val&&t.status==='unknown') t.status='ok';
+  const t=transactions.find(x=>x.id===id);if(!t)return;
+  t.acct=val;if(val&&t.status==='unknown')t.status='ok';
   const def=getCustomerDefaults(val);
-  if(!t.customerName&&def.c) t.customerName=def.c;
-  if(!t.memberNum&&def.m) t.memberNum=def.m;
-  renderTable(); updateStats(); updateExportBtn();
+  if(!t.customerName&&def.c)t.customerName=def.c;
+  if(!t.memberNum&&def.m)t.memberNum=def.m;
+  renderTable();updateStats();updateExportBtn();
 }
-
 function updateField(id,field,val){const t=transactions.find(x=>x.id===id);if(t){t[field]=val;updateExportBtn();}}
-
 function promptSplit(id){
-  const t=transactions.find(x=>x.id===id); if(!t) return;
-  const pct=prompt(`Split "${t.desc.substring(0,50)}" ($${t.gross.toFixed(2)})\nEnter MEMBER % (e.g. 70 for 70% member / 30% public):`,'70');
-  if(pct===null) return;
-  const n=parseInt(pct);
+  const t=transactions.find(x=>x.id===id);if(!t)return;
+  const pct=prompt(`Split "${t.desc.substring(0,50)}" ($${t.gross.toFixed(2)})\nEnter MEMBER % (e.g. 70):`,'70');
+  if(pct===null)return;const n=parseInt(pct);
   if(isNaN(n)||n<1||n>99){alert('Enter 1–99.');return;}
   splitTransaction(id,n);
 }
-
 function deleteRow(id){transactions=transactions.filter(x=>x.id!==id);renderAll();}
-
 function updateExportBtn(){
-  const ready=transactions.filter(t=>t.selected&&validateTxn(t).length===0);
   const hasAny=transactions.filter(t=>t.selected).length>0;
-  document.getElementById('csv-btn').disabled=transactions.length===0;
-  const csvBtn=document.getElementById('csv-btn');
-  if(csvBtn) csvBtn.disabled=hasAny===false;
-  document.getElementById('unknown-notice').style.display=
-    transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
+  const csvBtn=document.getElementById('csv-btn');if(csvBtn)csvBtn.disabled=!hasAny;
+  document.getElementById('unknown-notice').style.display=transactions.filter(t=>t.selected&&validateTxn(t).length>0).length>0?'flex':'none';
 }
-
 function clearAll(){
   transactions=[];nextId=1;memberMap={};memberList=[];
-  // Reset member card
-  document.getElementById('card-mbr').style.background='var(--gold-light)';
-  document.getElementById('card-mbr').style.borderColor='var(--gold-dim)';
+  document.getElementById('card-mbr').classList.remove('loaded');
   document.getElementById('status-mbr').textContent='';
-  const btn=document.getElementById('btn-supabase');
-  if(btn){btn.textContent='⚡ Pull from Supabase';btn.disabled=false;}
-  const dl=document.getElementById('member-datalist'); if(dl) dl.innerHTML='';
+  const btn=document.getElementById('btn-supabase');if(btn){btn.textContent='⚡ Pull from Supabase';btn.disabled=false;}
+  const dl=document.getElementById('member-datalist');if(dl)dl.innerHTML='';
   ['sq','st','am'].forEach(p=>{
     document.getElementById('card-'+p).classList.remove('loaded');
     document.getElementById('status-'+p).textContent='';
@@ -1248,818 +1005,262 @@ function clearAll(){
   document.getElementById('csv-btn').disabled=true;
 }
 
-// ── CSV EXPORT ──
 function downloadCSV(){
-  // CSV always includes ALL transactions — checkboxes don't filter CSV
-  const rows=transactions.filter(t=>!t._splitFrom||t._splitFrom); // all rows
-  if(!rows.length) return;
+  const rows=transactions;if(!rows.length)return;
   const today=new Date().toISOString().slice(0,10);
-  const headers=['Date','Platform','Description','QBO Account','QBO Class',
-    'Customer Name','Member #','Gross','Fee','Net','Status','Memo','Included'];
-  const escape=v=>{
-    const s=String(v??'');
-    return s.includes(',')||s.includes('"')||s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
-  };
+  const headers=['Date','Platform','Description','QBO Account','QBO Class','Customer Name','Member #','Gross','Fee','Net','Status','Memo','Included'];
+  const escape=v=>{const s=String(v??'');return s.includes(',')||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:''+s;};
   const lines=[headers.join(',')];
-  rows.forEach(t=>{
-    lines.push([
-      t.date, t.platform, t.desc, t.acct, t.cls,
-      t.customerName, t.memberNum,
-      t.gross.toFixed(2), t.fee.toFixed(2), t.net.toFixed(2),
-      t.status, t.memo||'',
-      t.selected ? 'Yes' : 'No'
-    ].map(escape).join(','));
-  });
-  // Summary row (all transactions)
-  const totalGross = rows.reduce((s,t)=>s+t.gross,0);
-  const totalFee   = rows.reduce((s,t)=>s+t.fee,0);
-  const totalNet   = rows.reduce((s,t)=>s+t.net,0);
-  lines.push(['','','TOTAL','','','','',
-    totalGross.toFixed(2),totalFee.toFixed(2),totalNet.toFixed(2),'','',''].map(escape).join(','));
+  rows.forEach(t=>{lines.push([t.date,t.platform,t.desc,t.acct,t.cls,t.customerName,t.memberNum,t.gross.toFixed(2),t.fee.toFixed(2),t.net.toFixed(2),t.status,t.memo||'',t.selected?'Yes':'No'].map(escape).join(','));});
+  const tG=rows.reduce((s,t)=>s+t.gross,0),tF=rows.reduce((s,t)=>s+t.fee,0),tN=rows.reduce((s,t)=>s+t.net,0);
+  lines.push(['','','TOTAL','','','','',tG.toFixed(2),tF.toFixed(2),tN.toFixed(2),'','',''].map(escape).join(','));
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`RR_Transactions_${today}.csv`; a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`RR_Transactions_${today}.csv`;a.click();
 }
 
-// ── DEMO DATA ──
 function loadDemo(){
   const today=new Date().toLocaleDateString('en-US');
   const last=new Date(Date.now()-7*86400000).toLocaleDateString('en-US');
-  [
-    {platform:'square',date:today,desc:'Bud Light | Bar | Fishing Tournament',gross:847.50,fee:22.13,net:825.37},
-    {platform:'square',date:today,desc:'RR T-Shirt | Quartermaster | Store',gross:95,fee:2.57,net:92.43},
-    {platform:'square',date:today,desc:'Raffle Ticket | Raffle | Fishing Tournament',gross:250,fee:6.60,net:243.40},
-    {platform:'square',date:today,desc:'Entry Fee | Registration | Golf Tournament',gross:225,fee:6.83,net:218.18},
-    {platform:'square',date:last,desc:'Silent Auction | Auction | Fishing Tournament',gross:400,fee:10.50,net:389.50},
-    {platform:'square',date:last,desc:'Bead Sales | Gasparilla | Throws',gross:180,fee:4.78,net:175.22},
-    {platform:'stripe',date:today,desc:'Golf Tournament Sponsorship - Hole Sponsor',gross:500,fee:14.80,net:485.20},
-    {platform:'stripe',date:today,desc:'Membership Renewal - Annual Dues',gross:150,fee:4.65,net:145.35},
-    {platform:'stripe',date:last,desc:'Christmas Party Deposit - Ticket Presale',gross:65,fee:2.19,net:62.81},
-    {platform:'stripe',date:last,desc:'New Member Application',gross:250,fee:7.55,net:242.45},
-   {platform:'8am',date:today,desc:'Night at the Museum - Adult Ticket',gross:40,fee:2.50,net:37.50},
-    {platform:'8am',date:last,desc:'Summer Theme Party Ticket',gross:55,fee:3.00,net:52.00},
-    {platform:'stripe',date:today,desc:'Unknown payment ref #8821',gross:125,fee:3.93,net:121.07},
-  ].forEach(r=>{
-    let sqMatch=null, rule=null;
-    if(r.platform==='square') sqMatch=resolveSquareClass(r.desc);
-    if(!sqMatch) rule=matchRule(r.desc);
+  [{platform:'square',date:today,desc:'Bud Light | Bar | Fishing Tournament',gross:847.50,fee:22.13,net:825.37},{platform:'square',date:today,desc:'RR T-Shirt | Quartermaster | Store',gross:95,fee:2.57,net:92.43},{platform:'square',date:today,desc:'Raffle Ticket | Raffle | Fishing Tournament',gross:250,fee:6.60,net:243.40},{platform:'square',date:today,desc:'Entry Fee | Registration | Golf Tournament',gross:225,fee:6.83,net:218.18},{platform:'square',date:last,desc:'Silent Auction | Auction | Fishing Tournament',gross:400,fee:10.50,net:389.50},{platform:'stripe',date:today,desc:'Golf Tournament Sponsorship - Hole Sponsor',gross:500,fee:14.80,net:485.20},{platform:'stripe',date:today,desc:'Membership Renewal - Annual Dues',gross:150,fee:4.65,net:145.35},{platform:'stripe',date:last,desc:'New Member Application',gross:250,fee:7.55,net:242.45},{platform:'8am',date:today,desc:'Night at the Museum - Adult Ticket',gross:40,fee:2.50,net:37.50},{platform:'stripe',date:today,desc:'Unknown payment ref #8821',gross:125,fee:3.93,net:121.07}].forEach(r=>{
+    let sqMatch=null,rule=null;
+    if(r.platform==='square')sqMatch=resolveSquareClass(r.desc);
+    if(!sqMatch)rule=matchRule(r.desc);
     const resolvedAcct=(sqMatch?sqMatch.acct:(rule?rule.acct:''))||'5991 Uncategorized Revenue';
     const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
     const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
     const def=getCustomerDefaults(resolvedAcct);
-    transactions.push({
-      id:nextId++, txnId:r.platform+'_demo_'+Date.now()+'_'+nextId, platform:r.platform, date:r.date, desc:r.desc,
-      gross:r.gross, fee:r.fee, net:r.net,
-      status:resolvedStatus, selected:resolvedStatus!=='unknown',
-     memo:`${(r.platform||'import').toUpperCase()} import ${r.date}`,
-      customerName:sqMatch?(sqMatch.customer||def.c||''):(def.c||''),
-      memberNum:sqMatch?(sqMatch.memberNum||def.m||''):(def.m||''),
-    });
+    transactions.push({id:nextId++,txnId:r.platform+'_demo_'+Date.now()+'_'+nextId,platform:r.platform,date:r.date,desc:r.desc,gross:r.gross,fee:r.fee,net:r.net,status:resolvedStatus,selected:resolvedStatus!=='unknown',memo:`${(r.platform||'import').toUpperCase()} import ${r.date}`,customerName:sqMatch?(sqMatch.customer||def.c||''):(def.c||''),memberNum:sqMatch?(sqMatch.memberNum||def.m||''):(def.m||''),acct:resolvedAcct,cls:resolvedCls});
   });
   ['sq','st','am'].forEach(p=>{
-    const c=document.getElementById('card-'+p); c.classList.add('loaded');
+    const c=document.getElementById('card-'+p);c.classList.add('loaded');
     const n=transactions.filter(t=>t.platform===(p==='sq'?'square':p==='st'?'stripe':'8am')).length;
-    const s=document.getElementById('status-'+p); s.textContent=`✓ ${n} sample rows`; s.className='upload-status ok';
+    const s=document.getElementById('status-'+p);s.textContent=`✓ ${n} sample rows`;s.className='upload-status ok';
   });
   renderAll();
 }
 
-// ── AUTO-LOAD MEMBERS ON PAGE READY ──
-// Fetches key from /api/config (Netlify Function), then loads members.
-(async function autoLoadMembers() {
-  try {
-    const res = await fetch('/.netlify/functions/config');
-    if (res.ok) {
-      const cfg = await res.json();
-      if (cfg.supabaseAnonKey) {
-        SUPABASE_ANON_KEY = cfg.supabaseAnonKey;
-        sessionStorage.setItem('rr_sb_key', SUPABASE_ANON_KEY);
-      }
-    }
-  } catch(e) {
-    console.log('Config fetch failed (expected if running locally):', e.message);
-  }
-  // Load members if key is now available
-  if (SUPABASE_ANON_KEY || sessionStorage.getItem('rr_sb_key')) {
-    loadMembersFromSupabase();
-  }
+(async function autoLoadMembers(){
+  try{const res=await fetch('/.netlify/functions/config');if(res.ok){const cfg=await res.json();if(cfg.supabaseAnonKey){SUPABASE_ANON_KEY=cfg.supabaseAnonKey;sessionStorage.setItem('rr_sb_key',SUPABASE_ANON_KEY);}}}catch(e){console.log('Config fetch failed:',e.message);}
+  if(SUPABASE_ANON_KEY||sessionStorage.getItem('rr_sb_key'))loadMembersFromSupabase();
 })();
 
-// ── SQUARE DATE DEFAULTS ──
-// Set date pickers to prior Mon-Sun on page load
-(function setDateDefaults() {
-  const today = new Date();
-  const day = today.getDay();
-  const priorMon = new Date(today);
-  priorMon.setDate(today.getDate() - ((day + 6) % 7) - 7);
-  const priorSun = new Date(priorMon);
-  priorSun.setDate(priorMon.getDate() + 6);
-  const fmt = d => d.toISOString().substring(0, 10);
-  // Set both Square and Stripe date pickers
-  ['sq','st','am'].forEach(p => {
-    const s = document.getElementById(`${p}-start`);
-    const e = document.getElementById(`${p}-end`);
-    if (s) s.value = fmt(priorMon);
-    if (e) e.value = fmt(priorSun);
-  });
-  // Set global pickers too
-  const gs = document.getElementById('global-start');
-  const ge = document.getElementById('global-end');
-  if (gs) gs.value = fmt(priorMon);
-  if (ge) ge.value = fmt(priorSun);
+(function setDateDefaults(){
+  const today=new Date();const day=today.getDay();
+  const priorMon=new Date(today);priorMon.setDate(today.getDate()-((day+6)%7)-7);
+  const priorSun=new Date(priorMon);priorSun.setDate(priorMon.getDate()+6);
+  const fmt=d=>d.toISOString().substring(0,10);
+  ['sq','st','am'].forEach(p=>{const s=document.getElementById(`${p}-start`);const e=document.getElementById(`${p}-end`);if(s)s.value=fmt(priorMon);if(e)e.value=fmt(priorSun);});
+  const gs=document.getElementById('global-start');const ge=document.getElementById('global-end');
+  if(gs)gs.value=fmt(priorMon);if(ge)ge.value=fmt(priorSun);
 })();
 
-// ── SQUARE API PULL ──
-async function loadSquareTransactions() {
-  const btn      = document.getElementById('btn-square');
-  const statusEl = document.getElementById('status-sq');
-  const start    = document.getElementById('sq-start')?.value;
-  const end      = document.getElementById('sq-end')?.value;
-
-  if (!start || !end) {
-    statusEl.textContent = 'Set start and end dates first.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-if (start > end) {
-    statusEl.textContent = 'Start date must be before end date.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-  const _todaySq = new Date().toISOString().substring(0, 10);
-  if (end >= _todaySq) {
-    statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-
-  btn.textContent = 'Loading...';
-  btn.disabled = true;
-  statusEl.textContent = 'Connecting to Square...';
-  statusEl.style.color = 'var(--text-mid)';
-
-  let allPayments = [];
-  let cursor = null;
-  let page = 0;
-
-  try {
-    do {
-      page++;
-      let url = `/.netlify/functions/square-transactions?start=${start}&end=${end}`;
-      if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
-      statusEl.textContent = `Fetching page ${page}...`;
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || `Square API error ${res.status}`);
-      }
-
-      allPayments = allPayments.concat(data.payments || []);
-      cursor = data.cursor || null;
-    } while (cursor);
-
-    // Filter to completed payments only
-    const completed = allPayments.filter(p => p.status === 'COMPLETED' || !p.status);
-
-    if (!completed.length) {
-      statusEl.textContent = `No completed transactions found for ${start} to ${end}.`;
-      statusEl.style.color = 'var(--amber)';
-      btn.textContent = 'Pull from Square';
-      btn.disabled = false;
-      return;
-    }
-
-    // Ingest using the same pipeline as CSV — build fake extracted objects
-    let count = 0;
-    completed.forEach(p => {
-      const gross = parseFloat(p.gross_sales) || 0;
-      if (gross === 0) return;
-      // AffiniPay fee not in API — estimate at 2.9% + $0.30 per transaction
-      const fee   = Math.round((gross * 0.029 + 0.30) * 100) / 100;
-      const net   = Math.round((gross - fee) * 100) / 100;
-
-      const rawCustomer = (p.customer_name || '').trim();
-      let buyerClean = '', sqMemberNum = '';
-      if (rawCustomer && !/^[$\d]/.test(rawCustomer)) {
-        const numMatch = rawCustomer.match(/\b(\d{3,4})\b/);
-        if (numMatch) {
-          sqMemberNum = numMatch[1].padStart(4, '0');
-          buyerClean = rawCustomer.replace(/\s*\(?\d{3,4}\)?\s*/g, ' ').replace(/\s+/g, ' ').trim();
-        } else {
-          buyerClean = rawCustomer;
-        }
-      }
-
-      // Use order line items if available, otherwise note, otherwise generic
-      const desc = p.description || 'Square payment';
-      const e = { date: p.date, desc, gross: p.gross_sales, fee: p.fees, net: p.net_total,
-                  buyer: buyerClean, extractedMemberNum: sqMemberNum, email: p.customer_email || '', stmt: '' };
-
-      let sqMatch = resolveSquareClass(desc);
-      let rule = null;
-      if (!sqMatch) rule = matchRule(desc);
-
-      const resolvedAcct   = sqMatch ? sqMatch.acct  : (rule ? rule.acct  : '5991 Uncategorized Revenue');
-      const resolvedCls    = sqMatch ? sqMatch.cls   : (rule ? rule.cls   : '');
-      const resolvedStatus = (resolvedAcct.includes('Uncategorized') || (!sqMatch && !rule)) ? 'unknown' : (rule ? rule.status : 'ok');
-      const def = getCustomerDefaults(resolvedAcct);
-
-      let resolvedCustomer  = sqMatch ? (sqMatch.customer || def.c || '') : (def.c || '');
-      let resolvedMemberNum = sqMatch ? (sqMatch.memberNum || def.m || '') : (def.m || '');
-
-      const buyer = buyerClean;
-      const email = (p.customer_email || '').toLowerCase();
-      // Only treat a Square name as meaningful if it has an extracted member# or matches by email.
-      // Raw card/cardholder names (e.g. "Jim Beam") are NOT reliable QBO customer names.
-      const hasMemberNum = !!sqMemberNum;
-      const hasEmail = email && memberList.length > 0;
-
-      if (hasMemberNum && buyer) {
-        // Name came with an embedded member number — trust it
-        resolvedCustomer = buyer; resolvedMemberNum = sqMemberNum;
-      } else if (hasEmail && memberEmailMap[email]) {
-        // Matched by email to a known member
-        const m = memberEmailMap[email];
-        resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
-      } else {
-        // Unknown or unverifiable buyer — apply $500 rule
-        // Do NOT use raw card name; it could be anything
-        if (!resolvedCustomer) {
-          resolvedCustomer = gross >= 500 ? buyer : 'General Public';
-          resolvedMemberNum = '999999';
-        }
-      }
-
-      transactions.push({
-       id: nextId++, txnId: p.payment_id||p.id||('sq_'+nextId), platform: 'square',
-        date: p.date || new Date().toLocaleDateString('en-US'),
-        desc, acct: resolvedAcct, cls: resolvedCls,
-        gross, fee, net,
-        status: resolvedStatus, selected: resolvedStatus !== 'unknown',
-        memo: `SQUARE import ${new Date().toLocaleDateString('en-US')}`,
-        customerName: resolvedCustomer, memberNum: resolvedMemberNum,
-      });
+async function loadSquareTransactions(){
+  const btn=document.getElementById('btn-square');const statusEl=document.getElementById('status-sq');
+  const start=document.getElementById('sq-start')?.value;const end=document.getElementById('sq-end')?.value;
+  if(!start||!end){statusEl.textContent='Set start and end dates first.';statusEl.style.color='var(--red-accent)';return;}
+  if(start>end){statusEl.textContent='Start date must be before end date.';statusEl.style.color='var(--red-accent)';return;}
+  const _today=new Date().toISOString().substring(0,10);
+  if(end>=_today){statusEl.textContent="End date must be yesterday or earlier.";statusEl.style.color='var(--red-accent)';return;}
+  btn.textContent='Loading...';btn.disabled=true;statusEl.textContent='Connecting to Square...';statusEl.style.color='var(--text-mid)';
+  let allPayments=[],cursor=null,page=0;
+  try{
+    do{page++;let url=`/.netlify/functions/square-transactions?start=${start}&end=${end}`;if(cursor)url+=`&cursor=${encodeURIComponent(cursor)}`;statusEl.textContent=`Fetching page ${page}...`;
+    const res=await fetch(url);const data=await res.json();if(!res.ok)throw new Error(data.error||`Square API error ${res.status}`);
+    allPayments=allPayments.concat(data.payments||[]);cursor=data.cursor||null;}while(cursor);
+    const completed=allPayments.filter(p=>p.status==='COMPLETED'||!p.status);
+    if(!completed.length){statusEl.textContent=`No completed transactions found for ${start} to ${end}.`;statusEl.style.color='var(--amber)';btn.textContent='Pull from Square';btn.disabled=false;return;}
+    let count=0;
+    completed.forEach(p=>{
+      const gross=parseFloat(p.gross_sales)||0;if(gross===0)return;
+      const fee=Math.round((gross*0.029+0.30)*100)/100;const net=Math.round((gross-fee)*100)/100;
+      const rawCustomer=(p.customer_name||'').trim();let buyerClean='',sqMemberNum='';
+      if(rawCustomer&&!/^[$\d]/.test(rawCustomer)){const numMatch=rawCustomer.match(/\b(\d{3,4})\b/);if(numMatch){sqMemberNum=numMatch[1].padStart(4,'0');buyerClean=rawCustomer.replace(/\s*\(?\d{3,4}\)?\s*/g,' ').replace(/\s+/g,' ').trim();}else{buyerClean=rawCustomer;}}
+      const desc=p.description||'Square payment';
+      let sqMatch=resolveSquareClass(desc);let rule=null;if(!sqMatch)rule=matchRule(desc);
+      const resolvedAcct=sqMatch?sqMatch.acct:(rule?rule.acct:'5991 Uncategorized Revenue');
+      const resolvedCls=sqMatch?sqMatch.cls:(rule?rule.cls:'');
+      const resolvedStatus=(resolvedAcct.includes('Uncategorized')||(!sqMatch&&!rule))?'unknown':(rule?rule.status:'ok');
+      const def=getCustomerDefaults(resolvedAcct);
+      let resolvedCustomer=sqMatch?(sqMatch.customer||def.c||''):(def.c||'');
+      let resolvedMemberNum=sqMatch?(sqMatch.memberNum||def.m||''):(def.m||'');
+      const buyer=buyerClean;const email=(p.customer_email||'').toLowerCase();
+      if(sqMemberNum&&buyer){resolvedCustomer=buyer;resolvedMemberNum=sqMemberNum;}
+      else if(email&&memberList.length>0&&memberEmailMap[email]){const m=memberEmailMap[email];resolvedCustomer=m.fullName;resolvedMemberNum=m.id;}
+      else if(!resolvedCustomer){resolvedCustomer=gross>=500?buyer:'General Public';resolvedMemberNum='999999';}
+      transactions.push({id:nextId++,txnId:p.payment_id||p.id||('sq_'+nextId),platform:'square',date:p.date||new Date().toLocaleDateString('en-US'),desc,acct:resolvedAcct,cls:resolvedCls,gross,fee,net,status:resolvedStatus,selected:resolvedStatus!=='unknown',memo:`SQUARE import ${new Date().toLocaleDateString('en-US')}`,customerName:resolvedCustomer,memberNum:resolvedMemberNum});
       count++;
     });
-
-    document.getElementById('card-sq').style.background = '#e8f5ec';
-    document.getElementById('card-sq').style.borderColor = '#1a5c2e';
-    statusEl.textContent = `✓ ${count} transactions loaded (${start} to ${end})`;
-    statusEl.style.color = 'var(--green)';
-    btn.textContent = '✓ Loaded from Square';
-    renderAll();
-    // Enrich Cognito Forms entries with member names (runs async in background)
-    enrichCognitoEntries();
-
-  } catch (err) {
-    statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Check console (F12) for details. Verify SQUARE_ACCESS_TOKEN in Netlify env vars.</span>`;
-    statusEl.style.color = 'var(--red)';
-    btn.textContent = '⚡ Retry';
-    btn.disabled = false;
-    console.error('Square load error:', err);
-  }
+    document.getElementById('card-sq').classList.add('loaded');
+    statusEl.textContent=`✓ ${count} transactions loaded (${start} to ${end})`;statusEl.style.color='var(--green)';
+    btn.textContent='✓ Loaded from Square';renderAll();enrichCognitoEntries();
+  }catch(err){statusEl.innerHTML=`✗ ${err.message}`;statusEl.style.color='var(--red-accent)';btn.textContent='⚡ Retry';btn.disabled=false;console.error('Square error:',err);}
 }
 
-// ── STRIPE API PULL ──
-async function loadStripeTransactions() {
-  const btn      = document.getElementById('btn-stripe');
-  const statusEl = document.getElementById('status-st');
-  const start    = document.getElementById('st-start')?.value;
-  const end      = document.getElementById('st-end')?.value;
-
-  if (!start || !end) { statusEl.textContent = 'Set start and end dates first.'; statusEl.style.color = 'var(--red)'; return; }
-  if (start > end) {
-    statusEl.textContent = 'Start must be before end.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-  const _todayAll = new Date().toISOString().substring(0, 10);
-  if (end >= _todayAll) {
-    statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-  btn.textContent = 'Loading...';
-  btn.disabled = true;
-  statusEl.textContent = 'Connecting to Stripe...';
-  statusEl.style.color = 'var(--text-mid)';
-
-  let allPayments = [];
-  let startingAfter = null;
-  let page = 0;
-
-  try {
-    do {
-      page++;
-      let url = `/.netlify/functions/stripe-transactions?start=${start}&end=${end}`;
-      if (startingAfter) url += `&starting_after=${encodeURIComponent(startingAfter)}`;
-      statusEl.textContent = `Fetching page ${page}...`;
-
-      const res  = await fetch(url);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Stripe API error ${res.status}`);
-
-      allPayments    = allPayments.concat(data.payments || []);
-      startingAfter  = data.has_more ? data.starting_after : null;
-    } while (startingAfter);
-
-    if (!allPayments.length) {
-      statusEl.textContent = `No transactions found for ${start} to ${end}.`;
-      statusEl.style.color = 'var(--amber)';
-      btn.textContent = '⚡ Pull from Stripe';
-      btn.disabled = false;
-      return;
-    }
-
-    let count = 0;
-    allPayments.forEach(p => {
-      const gross = parseFloat(p.gross_sales) || 0;
-      if (gross === 0) return;
-      // AffiniPay fee not in API — estimate at 2.9% + $0.30 per transaction
-      const fee   = Math.round((gross * 0.029 + 0.30) * 100) / 100;
-      const net   = Math.round((gross - fee) * 100) / 100;
-
-      const buyer = (p.customer_name || '').trim();
-      const email = (p.customer_email || '').trim().toLowerCase();
-      const stmt  = (p.stmt || '').trim();
-      const desc  = p.description || stmt || 'Stripe payment';
-
-      // Match rule from description (e.g. "Annual Renewal..." → 4101)
-      let rule = matchRule(desc) || matchRule(stmt);
-      const resolvedAcct   = rule ? rule.acct : '5991 Uncategorized Revenue';
-      const resolvedCls    = rule ? rule.cls  : '';
-      const resolvedStatus = (!rule) ? 'unknown' : (rule.status || 'ok');
-      const def = getCustomerDefaults(resolvedAcct);
-
-      // Member matching — same priority order as ingestRows
-      let resolvedCustomer  = def.c || '';
-      let resolvedMemberNum = def.m || '';
-      const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
-
-      if (email && memberEmailMap[email]) {
-        const m = memberEmailMap[email];
-        resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
-      } else if (hasBuyer) {
-        resolvedCustomer  = gross >= 500 ? buyer : 'General Public';
-        resolvedMemberNum = '999999';
-      } else if (!resolvedCustomer && gross >= 500 && buyer) {
-        resolvedCustomer  = buyer;
-        resolvedMemberNum = '999999';
-      }
-
-      transactions.push({
-       id: nextId++, txnId: p.charge_id||p.id||('st_'+nextId), platform: 'stripe',
-        date:  p.date || new Date().toLocaleDateString('en-US'),
-        desc, acct: resolvedAcct, cls: resolvedCls,
-        gross, fee, net,
-        status:       resolvedStatus,
-        selected:     resolvedStatus !== 'unknown',
-        memo:         `STRIPE import ${new Date().toLocaleDateString('en-US')}${email ? ' | '+email : ''}`,
-        customerName: resolvedCustomer,
-        memberNum:    resolvedMemberNum,
-        stmt,
-      });
+async function loadStripeTransactions(){
+  const btn=document.getElementById('btn-stripe');const statusEl=document.getElementById('status-st');
+  const start=document.getElementById('st-start')?.value;const end=document.getElementById('st-end')?.value;
+  if(!start||!end){statusEl.textContent='Set start and end dates first.';statusEl.style.color='var(--red-accent)';return;}
+  if(start>end){statusEl.textContent='Start must be before end.';statusEl.style.color='var(--red-accent)';return;}
+  const _today=new Date().toISOString().substring(0,10);
+  if(end>=_today){statusEl.textContent="End date must be yesterday or earlier.";statusEl.style.color='var(--red-accent)';return;}
+  btn.textContent='Loading...';btn.disabled=true;statusEl.textContent='Connecting to Stripe...';statusEl.style.color='var(--text-mid)';
+  let allPayments=[],startingAfter=null,page=0;
+  try{
+    do{page++;let url=`/.netlify/functions/stripe-transactions?start=${start}&end=${end}`;if(startingAfter)url+=`&starting_after=${encodeURIComponent(startingAfter)}`;statusEl.textContent=`Fetching page ${page}...`;
+    const res=await fetch(url);const data=await res.json();if(!res.ok)throw new Error(data.error||`Stripe API error ${res.status}`);
+    allPayments=allPayments.concat(data.payments||[]);startingAfter=data.has_more?data.starting_after:null;}while(startingAfter);
+    if(!allPayments.length){statusEl.textContent=`No transactions found for ${start} to ${end}.`;statusEl.style.color='var(--amber)';btn.textContent='⚡ Pull from Stripe';btn.disabled=false;return;}
+    let count=0;
+    allPayments.forEach(p=>{
+      const gross=parseFloat(p.gross_sales)||0;if(gross===0)return;
+      const fee=Math.round((gross*0.029+0.30)*100)/100;const net=Math.round((gross-fee)*100)/100;
+      const buyer=(p.customer_name||'').trim();const email=(p.customer_email||'').trim().toLowerCase();
+      const stmt=(p.stmt||'').trim();const desc=p.description||stmt||'Stripe payment';
+      let rule=matchRule(desc)||matchRule(stmt);
+      const resolvedAcct=rule?rule.acct:'5991 Uncategorized Revenue';const resolvedCls=rule?rule.cls:'';
+      const resolvedStatus=!rule?'unknown':(rule.status||'ok');const def=getCustomerDefaults(resolvedAcct);
+      let resolvedCustomer=def.c||'';let resolvedMemberNum=def.m||'';
+      const hasBuyer=buyer&&buyer.length>2&&!['allocate','general public'].includes(buyer.toLowerCase());
+      if(email&&memberEmailMap[email]){const m=memberEmailMap[email];resolvedCustomer=m.fullName;resolvedMemberNum=m.id;}
+      else if(hasBuyer){resolvedCustomer=gross>=500?buyer:'General Public';resolvedMemberNum='999999';}
+      transactions.push({id:nextId++,txnId:p.charge_id||p.id||('st_'+nextId),platform:'stripe',date:p.date||new Date().toLocaleDateString('en-US'),desc,acct:resolvedAcct,cls:resolvedCls,gross,fee,net,status:resolvedStatus,selected:resolvedStatus!=='unknown',memo:`STRIPE import ${new Date().toLocaleDateString('en-US')}${email?' | '+email:''}`,customerName:resolvedCustomer,memberNum:resolvedMemberNum,stmt});
       count++;
     });
-
-    document.getElementById('card-st').style.background = '#e8ecf8';
-    document.getElementById('card-st').style.borderColor = '#1a3a7a';
-    statusEl.textContent = `✓ ${count} transactions loaded (${start} to ${end})`;
-    statusEl.style.color = '#1a3a7a';
-    btn.textContent = '✓ Loaded from Stripe';
-    renderAll();
-    enrichCognitoEntries();
-
-  } catch (err) {
-    statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Verify STRIPE_SECRET_KEY in Netlify env vars.</span>`;
-    statusEl.style.color = 'var(--red)';
-    btn.textContent = '⚡ Retry';
-    btn.disabled = false;
-    console.error('Stripe load error:', err);
-  }
+    document.getElementById('card-st').classList.add('loaded');
+    statusEl.textContent=`✓ ${count} transactions loaded (${start} to ${end})`;statusEl.style.color='var(--green)';
+    btn.textContent='✓ Loaded from Stripe';renderAll();enrichCognitoEntries();
+  }catch(err){statusEl.innerHTML=`✗ ${err.message}`;statusEl.style.color='var(--red-accent)';btn.textContent='⚡ Retry';btn.disabled=false;console.error('Stripe error:',err);}
 }
 
-// ── PULL ALL PLATFORMS ──
-async function pullAllPlatforms() {
-  const btn      = document.getElementById('btn-pull-all');
-  const statusEl = document.getElementById('pull-all-status');
-  const start    = document.getElementById('global-start')?.value;
-  const end      = document.getElementById('global-end')?.value;
-
-  if (!start || !end) {
-    statusEl.textContent = 'Set a date range first.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-  if (start > end) {
-    statusEl.textContent = 'Start must be before end.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-  const _todayAll = new Date().toISOString().substring(0, 10);
-  if (end >= _todayAll) {
-    statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.';
-    statusEl.style.color = 'var(--red)';
-    return;
-  }
-
-  // Sync dates to all platform pickers
-  ['sq','st','am'].forEach(p => {
-    const ps = document.getElementById(`${p}-start`);
-    const pe = document.getElementById(`${p}-end`);
-    if (ps) ps.value = start;
-    if (pe) pe.value = end;
-  });
-
-  btn.textContent = '⟳ Pulling...';
-  btn.disabled = true;
-  statusEl.textContent = 'Pulling Square, Stripe, and 8am...';
-  statusEl.style.color = 'var(--text-mid)';
-  _bulkPulling = true;
-  showTableLoading('Fetching transactions…');
-
-  // Fire all three simultaneously
-  const results = await Promise.allSettled([
-    loadSquareTransactions(),
-    loadStripeTransactions(),
-    load8amTransactions(),
-  ]);
-
-  const succeeded = results.filter(r => r.status === 'fulfilled').length;
-  const failed    = results.filter(r => r.status === 'rejected').length;
-
-  showTableLoading('Analyzing transactions…');
-  await new Promise(r => setTimeout(r, 50)); // let overlay render
-  btn.textContent = '⚡ Pull All Platforms';
-  btn.disabled = false;
-
-  if (failed === 0) {
-    statusEl.textContent = `✓ All 3 platforms loaded`;
-    statusEl.style.color = 'var(--green)';
-  } else {
-    statusEl.textContent = `${succeeded} of 3 succeeded — check cards for errors`;
-    statusEl.style.color = 'var(--amber)';
-  }
-
-  // renderAll does name/status resolution — hide overlay only after DOM fully paints
-  _bulkPulling = false;
-  renderAll();
-  requestAnimationFrame(() => requestAnimationFrame(() => hideTableLoading(true)));
-
-  // Run Cognito enrichment after all three complete
+async function pullAllPlatforms(){
+  const btn=document.getElementById('btn-pull-all');const statusEl=document.getElementById('pull-all-status');
+  const start=document.getElementById('global-start')?.value;const end=document.getElementById('global-end')?.value;
+  if(!start||!end){statusEl.textContent='Set a date range first.';statusEl.className='pull-status err';return;}
+  if(start>end){statusEl.textContent='Start must be before end.';statusEl.className='pull-status err';return;}
+  const _today=new Date().toISOString().substring(0,10);
+  if(end>=_today){statusEl.textContent="End date must be yesterday or earlier.";statusEl.className='pull-status err';return;}
+  ['sq','st','am'].forEach(p=>{const ps=document.getElementById(`${p}-start`);const pe=document.getElementById(`${p}-end`);if(ps)ps.value=start;if(pe)pe.value=end;});
+  btn.textContent='⟳ Pulling...';btn.disabled=true;statusEl.textContent='Pulling all 3 platforms…';statusEl.className='';statusEl.style.color='var(--text-muted)';
+  _bulkPulling=true;showTableLoading('Fetching transactions…');
+  const results=await Promise.allSettled([loadSquareTransactions(),loadStripeTransactions(),load8amTransactions()]);
+  const succeeded=results.filter(r=>r.status==='fulfilled').length;const failed=results.filter(r=>r.status==='rejected').length;
+  showTableLoading('Analyzing transactions…');await new Promise(r=>setTimeout(r,50));
+  btn.textContent='⚡ Pull All Platforms';btn.disabled=false;
+  if(failed===0){statusEl.textContent=`✓ All 3 platforms loaded`;statusEl.className='pull-status ok';}
+  else{statusEl.textContent=`${succeeded} of 3 succeeded — check cards for errors`;statusEl.className='pull-status';statusEl.style.color='#ff9500';}
+  _bulkPulling=false;renderAll();requestAnimationFrame(()=>requestAnimationFrame(()=>hideTableLoading(true)));
   await enrichCognitoEntries();
 }
 
-// ── 8AM / AFFINIPAY (Wild Apricot) ──
-// Maps WA event name keywords → QBO account + class
-// The event name comes from the transaction description field in 8am
-let WA_EVENT_MAP = [];
-
-// ── CONFIG LOADER ──
-async function loadConfig() {
-  try {
-    const res = await fetch('/.netlify/functions/qbo-config');
-    if (!res.ok) throw new Error('Config fetch failed: ' + res.status);
-    const cfg = await res.json();
-
-    ACCOUNTS         = cfg.accounts || [];
-    CLASSES          = cfg.classes  || [];
-    CUSTOMER_DEFAULTS = cfg.customerDefaults || {};
-
-    // Convert Supabase rule rows back to the format the app expects
-    function toRule(r) {
-      return { kw: r.keywords, acct: r.qbo_account, cls: r.qbo_class,
-               customer: r.customer_default || '', memberNum: r.member_num_default || '',
-               status: r.status || 'ok' };
-    }
-    function toEvt(r) {
-      return { kw: r.keywords, cls: r.qbo_class };
-    }
-
-    RULES           = (cfg.rules.general  || []).map(toRule);
-    SQ_ITEM_RULES   = (cfg.rules.sq_item  || []).map(toRule);
-    SQ_EVENT_CONTEXT = (cfg.rules.sq_event || []).map(toEvt);
-    WA_EVENT_MAP    = (cfg.rules.wa_event || []).map(r => ({
-      kw: r.keywords, acct: r.qbo_account, cls: r.qbo_class
-    }));
-
-    console.log(`Config loaded: ${ACCOUNTS.length} accounts, ${CLASSES.length} classes, ${RULES.length + SQ_ITEM_RULES.length + WA_EVENT_MAP.length} rules`);
-  } catch (err) {
-    console.error('loadConfig error:', err);
-    // Show non-blocking warning in UI
-    const warn = document.createElement('div');
-    warn.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);background:#c85a5a;color:#fff;padding:8px 18px;border-radius:6px;z-index:9999;font-size:13px;';
-    warn.textContent = '⚠ Could not load QBO config from server. Account/class lists may be incomplete.';
-    document.body.appendChild(warn);
-    setTimeout(() => warn.remove(), 8000);
+let WA_EVENT_MAP=[];
+async function loadConfig(){
+  try{
+    const res=await fetch('/.netlify/functions/qbo-config');if(!res.ok)throw new Error('Config fetch failed: '+res.status);
+    const cfg=await res.json();ACCOUNTS=cfg.accounts||[];CLASSES=cfg.classes||[];CUSTOMER_DEFAULTS=cfg.customerDefaults||{};
+    function toRule(r){return{kw:r.keywords,acct:r.qbo_account,cls:r.qbo_class,customer:r.customer_default||'',memberNum:r.member_num_default||'',status:r.status||'ok'};}
+    function toEvt(r){return{kw:r.keywords,cls:r.qbo_class};}
+    RULES=(cfg.rules.general||[]).map(toRule);SQ_ITEM_RULES=(cfg.rules.sq_item||[]).map(toRule);SQ_EVENT_CONTEXT=(cfg.rules.sq_event||[]).map(toEvt);WA_EVENT_MAP=(cfg.rules.wa_event||[]).map(r=>({kw:r.keywords,acct:r.qbo_account,cls:r.qbo_class}));
+    console.log(`Config loaded: ${ACCOUNTS.length} accounts, ${CLASSES.length} classes`);
+  }catch(err){
+    console.error('loadConfig error:',err);
+    const warn=document.createElement('div');
+    warn.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);background:var(--red-accent);color:#fff;padding:8px 18px;border-radius:var(--radius-pill);z-index:9999;font-size:13px;font-family:var(--sys);';
+    warn.textContent='⚠ Could not load QBO config. Account/class lists may be incomplete.';
+    document.body.appendChild(warn);setTimeout(()=>warn.remove(),8000);
   }
 }
+function resolveWAEvent(desc){const d=(desc||'').toLowerCase();for(const r of WA_EVENT_MAP){if(r.kw.some(k=>d.includes(k)))return r;}return null;}
 
-
-function resolveWAEvent(desc) {
-  const d = (desc || '').toLowerCase();
-  for (const r of WA_EVENT_MAP) {
-    if (r.kw.some(k => d.includes(k))) return r;
-  }
-  return null;
-}
-
-async function load8amTransactions() {
-  const btn      = document.getElementById('btn-8am');
-  const statusEl = document.getElementById('status-am');
-  const start    = document.getElementById('am-start')?.value;
-  const end      = document.getElementById('am-end')?.value;
-
-  if (!start || !end) { statusEl.textContent = 'Set start and end dates first.'; statusEl.style.color = 'var(--red)'; return; }
- if (start > end)    { statusEl.textContent = 'Start must be before end.'; statusEl.style.color = 'var(--red)'; return; }
-  const _today8am = new Date().toISOString().substring(0, 10);
-  if (end >= _today8am) { statusEl.textContent = 'End date must be yesterday or earlier — today\'s transactions are not yet complete.'; statusEl.style.color = 'var(--red)'; return; }
-  btn.textContent = 'Loading...';
-  btn.disabled = true;
-  statusEl.textContent = 'Connecting to 8am...';
-  statusEl.style.color = 'var(--text-mid)';
-
-  let allPayments = [];
-  let currentPage = 1;
-  const MAX_PAGES = 20;
-
-  try {
-    do {
-      if (currentPage > MAX_PAGES) { console.warn('8am: hit page limit'); break; }
-      let url = `/.netlify/functions/8am-transactions?start=${start}&end=${end}&page=${currentPage}`;
-      statusEl.textContent = `Fetching page ${currentPage}...`;
-
-      const res  = await fetch(url);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `8am API error ${res.status}`);
-
-      if (currentPage === 1 && data._debug) {
-        console.log('8am API debug:', data._debug);
-        console.log('Sample data keys:', data._debug.sample_data_keys);
-        console.log('Sample data:', data._debug.sample_data);
-        console.log('Sample method:', data._debug.sample_method);
-      }
-
-      allPayments = allPayments.concat(data.payments || []);
-      // Smart stop: if all transactions on this page are older than the range, stop
-      if (!data.has_more || data.count === 0 || data.all_older) break;
-      currentPage = data.next_page;
-    } while (true);
-
-    if (!allPayments.length) {
-      statusEl.textContent = `No transactions found for ${start} to ${end}.`;
-      statusEl.style.color = 'var(--amber)';
-      btn.textContent = '⚡ Pull from 8am';
-      btn.disabled = false;
-      return;
-    }
-
-    let count = 0;
-    allPayments.forEach(p => {
-      const gross = parseFloat(p.gross_sales) || 0;
-      if (gross === 0) return;
-      // AffiniPay fee not in API — estimate at 2.9% + $0.30 per transaction
-      const fee   = Math.round((gross * 0.029 + 0.30) * 100) / 100;
-      const net   = Math.round((gross - fee) * 100) / 100;
-
-      const buyer = (p.customer_name || '').trim();
-      const email = (p.customer_email || '').trim().toLowerCase();
-      const desc  = p.description || 'WA/8am payment';
-
-      // Resolve QBO account from event name
-      const waRule = resolveWAEvent(desc);
-      const rule   = waRule || matchRule(desc);
-      const resolvedAcct   = rule ? rule.acct  : '5991 Uncategorized Revenue';
-      const resolvedCls    = rule ? rule.cls   : '';
-      const resolvedStatus = !rule ? 'unknown' : 'ok';
-      const def = getCustomerDefaults(resolvedAcct);
-
-      // Member matching
-      let resolvedCustomer  = def.c || '';
-      let resolvedMemberNum = def.m || '';
-      const hasBuyer = buyer && buyer.length > 2 && !['allocate','general public'].includes(buyer.toLowerCase());
-
-      if (email && memberEmailMap[email]) {
-        const m = memberEmailMap[email];
-        resolvedCustomer = m.fullName; resolvedMemberNum = m.id;
-      } else if (hasBuyer) {
-        resolvedCustomer  = gross >= 500 ? buyer : 'General Public';
-        resolvedMemberNum = '999999';
-      }
-
-      transactions.push({
-        id: nextId++, txnId: p.id||p.transaction_id||('am_'+nextId), platform: '8am',
-        date:  p.date || new Date().toLocaleDateString('en-US'),
-        desc, acct: resolvedAcct, cls: resolvedCls,
-        gross, fee, net,
-        status:       resolvedStatus,
-        selected:     resolvedStatus !== 'unknown',
-        memo:         `8AM import ${new Date().toLocaleDateString('en-US')}${email ? ' | '+email : ''}${p.invoice ? ' | INV:'+p.invoice : ''}`,
-        customerName: resolvedCustomer,
-        memberNum:    resolvedMemberNum,
-        stmt: '',
-      });
+async function load8amTransactions(){
+  const btn=document.getElementById('btn-8am');const statusEl=document.getElementById('status-am');
+  const start=document.getElementById('am-start')?.value;const end=document.getElementById('am-end')?.value;
+  if(!start||!end){statusEl.textContent='Set start and end dates first.';statusEl.style.color='var(--red-accent)';return;}
+  if(start>end){statusEl.textContent='Start must be before end.';statusEl.style.color='var(--red-accent)';return;}
+  const _today=new Date().toISOString().substring(0,10);
+  if(end>=_today){statusEl.textContent="End date must be yesterday or earlier.";statusEl.style.color='var(--red-accent)';return;}
+  btn.textContent='Loading...';btn.disabled=true;statusEl.textContent='Connecting to 8am...';statusEl.style.color='var(--text-mid)';
+  let allPayments=[],currentPage=1,MAX_PAGES=20;
+  try{
+    do{if(currentPage>MAX_PAGES){console.warn('8am: hit page limit');break;}
+    let url=`/.netlify/functions/8am-transactions?start=${start}&end=${end}&page=${currentPage}`;statusEl.textContent=`Fetching page ${currentPage}...`;
+    const res=await fetch(url);const data=await res.json();if(!res.ok)throw new Error(data.error||`8am API error ${res.status}`);
+    allPayments=allPayments.concat(data.payments||[]);if(!data.has_more||data.count===0||data.all_older)break;currentPage=data.next_page;}while(true);
+    if(!allPayments.length){statusEl.textContent=`No transactions found for ${start} to ${end}.`;statusEl.style.color='var(--amber)';btn.textContent='⚡ Pull from 8am';btn.disabled=false;return;}
+    let count=0;
+    allPayments.forEach(p=>{
+      const gross=parseFloat(p.gross_sales)||0;if(gross===0)return;
+      const fee=Math.round((gross*0.029+0.30)*100)/100;const net=Math.round((gross-fee)*100)/100;
+      const buyer=(p.customer_name||'').trim();const email=(p.customer_email||'').trim().toLowerCase();
+      const desc=p.description||'WA/8am payment';
+      const waRule=resolveWAEvent(desc);const rule=waRule||matchRule(desc);
+      const resolvedAcct=rule?rule.acct:'5991 Uncategorized Revenue';const resolvedCls=rule?rule.cls:'';
+      const resolvedStatus=!rule?'unknown':'ok';const def=getCustomerDefaults(resolvedAcct);
+      let resolvedCustomer=def.c||'';let resolvedMemberNum=def.m||'';
+      const hasBuyer=buyer&&buyer.length>2&&!['allocate','general public'].includes(buyer.toLowerCase());
+      if(email&&memberEmailMap[email]){const m=memberEmailMap[email];resolvedCustomer=m.fullName;resolvedMemberNum=m.id;}
+      else if(hasBuyer){resolvedCustomer=gross>=500?buyer:'General Public';resolvedMemberNum='999999';}
+      transactions.push({id:nextId++,txnId:p.id||p.transaction_id||('am_'+nextId),platform:'8am',date:p.date||new Date().toLocaleDateString('en-US'),desc,acct:resolvedAcct,cls:resolvedCls,gross,fee,net,status:resolvedStatus,selected:resolvedStatus!=='unknown',memo:`8AM import ${new Date().toLocaleDateString('en-US')}${email?' | '+email:''}${p.invoice?' | INV:'+p.invoice:''}`,customerName:resolvedCustomer,memberNum:resolvedMemberNum,stmt:''});
       count++;
     });
-
-    document.getElementById('card-am').style.background = '#f5edd5';
-    document.getElementById('card-am').style.borderColor = '#7a4f00';
-    statusEl.textContent = `✓ ${count} transactions loaded (${start} to ${end})`;
-    statusEl.style.color = '#7a4f00';
-    btn.textContent = '✓ Loaded from 8am';
-    renderAll();
-
-  } catch (err) {
-    statusEl.innerHTML = `✗ ${err.message}<br><span style="font-size:10px;">Verify EAM_SECRET_KEY in Netlify env vars.</span>`;
-    statusEl.style.color = 'var(--red)';
-    btn.textContent = '⚡ Retry';
-    btn.disabled = false;
-    console.error('8am load error:', err);
-  }
+    document.getElementById('card-am').classList.add('loaded');
+    statusEl.textContent=`✓ ${count} transactions loaded (${start} to ${end})`;statusEl.style.color='var(--amber)';
+    btn.textContent='✓ Loaded from 8am';renderAll();
+  }catch(err){statusEl.innerHTML=`✗ ${err.message}`;statusEl.style.color='var(--red-accent)';btn.textContent='⚡ Retry';btn.disabled=false;console.error('8am error:',err);}
 }
 
-// ── COGNITO FORMS LOOKUP ──
-// Maps Cognito form ID or form name keywords → QBO account + class
-// Update this when new forms are created. FormId takes priority over name match.
-const COGNITO_FORM_MAP = [
-  // Membership renewals
-  { ids:['177'],       kw:['renewal','reinstatement','regular member','full member'],
-    acct:'4101 Dues, Full Members (Renewal and Reinstatements)', cls:'Management & General:Member Services', status:'ok' },
-  { ids:['204'],       kw:['non-resident','out of town','absentee'],
-    acct:'4103 Dues (Absentee Members)', cls:'Management & General:Member Services', status:'ok' },
-  // New member applications
-  { ids:[],            kw:['new member','application','prospect','applicant','join'],
-    acct:'4102 Dues, New Members', cls:'Management & General:Member Services', status:'ok' },
-  // Fishing tournament
-  { ids:['187'],       kw:['fishing','charity fishing','fishing tournament'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Fishing Tournament', status:'ok' },
-  // Golf tournament
-  { ids:[],            kw:['golf tournament','hunters green','golf registration'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Golf Tournament', status:'ok' },
-  // Gasparilla events
-  { ids:[],            kw:['gasparilla after party','gasparilla breakfast','pre-invasion','gasparilla pre'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Gasparilla Events', status:'defer' },
-  // St. Pats
-  { ids:[],            kw:["st. pat","st pat","patrick","pub crawl"],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:St. Patricks Week', status:'defer' },
-  // Christmas
-  { ids:[],            kw:['christmas','holiday party','carrollwood'],
-    acct:'4401 Member Event - Registration', cls:'Management & General:Small Membership Events:Christmas Party', status:'defer' },
-  // Sporting Clays
-  { ids:[],            kw:['sporting clay','clay shoot','clay tournament'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Sporting Clay Tournament', status:'defer' },
-  // Military Ball
-  { ids:[],            kw:['military ball','mil ball'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Program Other:Military Ball', status:'defer' },
-  // Summer/Social events
-  { ids:[],            kw:['summer theme','summer party','summer social'],
-    acct:'4401 Member Event - Registration', cls:'Fundraising:Summer Theme Party', status:'ok' },
-  // Night at the Museum
-  { ids:[],            kw:['museum','night at the museum','natm'],
-    acct:'4401 Member Event - Registration', cls:'Program Services:Historical Related Committees:Night At The Museum', status:'ok' },
-  // Halloween
-  { ids:[],            kw:['halloween','costume'],
-    acct:'4301 Fundraising Registration Revenue', cls:'Fundraising:Halloween Party', status:'defer' },
-  // Valentine's
-  { ids:[],            kw:["valentine","vday"],
-    acct:'4301 Fundraising Registration Revenue', cls:"Fundraising:Valentine's Day Party", status:'defer' },
-  // Parade entry
-  { ids:[],            kw:['parade','desoto','springtime','chasco'],
-    acct:'4201 Program Registration Revenue', cls:'Program Services:Parades', status:'ok' },
-  // Donations
-  { ids:[],            kw:['donation','charitable','teddy bear','honor flight'],
-    acct:'4001 Contribution Revenue: Individual Donations', cls:'Program Services:Charitable Events/Activities', status:'ok' },
-];
+const COGNITO_FORM_MAP=[{ids:['177'],kw:['renewal','reinstatement','regular member','full member'],acct:'4101 Dues, Full Members (Renewal and Reinstatements)',cls:'Management & General:Member Services',status:'ok'},{ids:['204'],kw:['non-resident','out of town','absentee'],acct:'4103 Dues (Absentee Members)',cls:'Management & General:Member Services',status:'ok'},{ids:[],kw:['new member','application','prospect','applicant','join'],acct:'4102 Dues, New Members',cls:'Management & General:Member Services',status:'ok'},{ids:['187'],kw:['fishing','charity fishing','fishing tournament'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Fishing Tournament',status:'ok'},{ids:[],kw:['golf tournament','hunters green','golf registration'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Golf Tournament',status:'ok'},{ids:[],kw:['gasparilla after party','gasparilla breakfast','pre-invasion','gasparilla pre'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Gasparilla Events',status:'defer'},{ids:[],kw:["st. pat","st pat","patrick","pub crawl"],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:St. Patricks Week',status:'defer'},{ids:[],kw:['christmas','holiday party','carrollwood'],acct:'4401 Member Event - Registration',cls:'Management & General:Small Membership Events:Christmas Party',status:'defer'},{ids:[],kw:['sporting clay','clay shoot','clay tournament'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Sporting Clay Tournament',status:'defer'},{ids:[],kw:['military ball','mil ball'],acct:'4401 Member Event - Registration',cls:'Program Services:Program Other:Military Ball',status:'defer'},{ids:[],kw:['summer theme','summer party','summer social'],acct:'4401 Member Event - Registration',cls:'Fundraising:Summer Theme Party',status:'ok'},{ids:[],kw:['museum','night at the museum','natm'],acct:'4401 Member Event - Registration',cls:'Program Services:Historical Related Committees:Night At The Museum',status:'ok'},{ids:[],kw:['halloween','costume'],acct:'4301 Fundraising Registration Revenue',cls:'Fundraising:Halloween Party',status:'defer'},{ids:[],kw:["valentine","vday"],acct:'4301 Fundraising Registration Revenue',cls:"Fundraising:Valentine's Day Party",status:'defer'},{ids:[],kw:['parade','desoto','springtime','chasco'],acct:'4201 Program Registration Revenue',cls:'Program Services:Parades',status:'ok'},{ids:[],kw:['donation','charitable','teddy bear','honor flight'],acct:'4001 Contribution Revenue: Individual Donations',cls:'Program Services:Charitable Events/Activities',status:'ok'}];
+function resolveByFormName(formId,formName){const fl=(formName||'').toLowerCase();for(const r of COGNITO_FORM_MAP){if(r.ids.length&&r.ids.includes(String(formId)))return r;}for(const r of COGNITO_FORM_MAP){if(r.kw.some(k=>fl.includes(k)))return r;}return null;}
 
-function resolveByFormName(formId, formName) {
-  const fl = (formName || '').toLowerCase();
-  // Try form ID match first
-  for (const r of COGNITO_FORM_MAP) {
-    if (r.ids.length && r.ids.includes(String(formId))) return r;
-  }
-  // Then keyword match against form name
-  for (const r of COGNITO_FORM_MAP) {
-    if (r.kw.some(k => fl.includes(k))) return r;
-  }
-  return null;
-}
-
-
-// Called after Square/CSV ingest to enrich "Cognito Forms (Order FXXXEXXXT1)" rows
-// Parses form+entry number from description, calls /.netlify/functions/cognito-lookup
-async function enrichCognitoEntries() {
-  // Find transactions with Cognito Forms descriptions that have no member name yet
-  const cognitoRows = transactions.filter(t => {
-    // Square: desc contains "Cognito Forms (Order FXXXEXXXT1)"
-    // Stripe: stmt contains "ROUGHRIDERS-F177E216T1", desc has form name
-    const hasOrderId = /F\d+E\d+T/i.test(t.desc || '') || /F\d+E\d+T/i.test(t.stmt || '');
- const needsName  = !t.customerName || t.customerName === '' || t.customerName === 'Allocate' || t.customerName === 'General Public';
-    return hasOrderId && needsName;
-  });
- console.log('Cognito enrich: found', cognitoRows.length, 'rows to enrich');
-  cognitoRows.forEach(t => console.log('  →', t.desc, '| stmt:', t.stmt));
-  console.log('=== Cognito enrich called, total transactions:', transactions.length);   transactions.filter(t => t.platform === 'stripe').forEach(t => {     console.log('stripe txn:', t.desc?.substring(0,50), '| stmt:', t.stmt, '| customer:', t.customerName);   });   if (!cognitoRows.length) { console.log('No cognito rows found to enrich'); return; }   console.log('Cognito rows to enrich:', cognitoRows.length);
-
-  // Parse order ID pattern: F204E7T1 or ROUGHRIDERS-F177E216T1 → formId, entryId
-  const parseOrderId = (desc, stmt) => {
-    // Check both description and statement descriptor
-    for (const s of [stmt||'', desc||'']) {
-      const m = s.match(/F(\d+)E(\d+)T/i);
-      if (m) return { formId: m[1], entryId: m[2] };
-    }
-    return null;
-  };
-
-  let enriched = 0;
-  for (const t of cognitoRows) {
-    const parsed = parseOrderId(t.desc, t.stmt);
-    if (!parsed) continue;
-    try {
-   const res = await fetch(`/.netlify/functions/cognito-lookup?formId=${parsed.formId}&entryId=${parsed.entryId}`);
-      const data = await res.json();
-      console.log(`Cognito lookup F${parsed.formId}E${parsed.entryId}:`, res.status, data);
-      if (!res.ok) continue;
-     if (data.fullName) {
-        t.customerName = data.fullName;
-        // Try member number from Cognito first, then email lookup, then name lookup
-        let resolvedMbr = '';
-        if (data.memberNo) {
-          resolvedMbr = data.memberNo.toString().padStart(4,'0');
-        } else if (data.email && memberEmailMap[data.email.toLowerCase()]) {
-          resolvedMbr = memberEmailMap[data.email.toLowerCase()].id;
-        } else if (data.fullName) {
-          // Try name lookup against loaded members
-          const m = lookupMember(data.fullName);
-          if (m) resolvedMbr = m.id;
-        }
-        t.memberNum = resolvedMbr;
-        // If member number found, set status to matched
-        if (t.customerName && t.memberNum) { t.status = 'ok'; t.selected = true; }
-        // Resolve QBO account from form name/ID (works even for uncategorized AND already categorized)
-        // The Cognito API returns the form name in data.formName (we add this to the lookup response)
-        const formRule = resolveByFormName(parsed.formId, data.formName || '');
-        if (formRule) {
-          t.acct   = formRule.acct;
-          t.cls    = formRule.cls;
-          t.status = (t.customerName && t.memberNum) ? 'ok' : formRule.status;
-          // Re-evaluate selection after enrichment
-          t.selected = validateTxn(t).length === 0;
-        } else if (t.acct.includes('Uncategorized') || t.acct.includes('5991')) {
-          // Fallback: try matchRule on form name then desc
-          const rule = matchRule(data.formName || '') || matchRule(t.desc || '');
-          if (rule) { t.acct = rule.acct; t.cls = rule.cls; t.status = rule.status || 'ok'; }
-        }
-        // Always update desc to show the actual form name if we got one
-        if (data.formName && (t.desc.toLowerCase().includes('cognito') || !t.desc || t.desc === 'Square payment')) {
-          t.desc = `${data.formName} (Entry ${parsed.entryId})`;
-        }
+async function enrichCognitoEntries(){
+  const cognitoRows=transactions.filter(t=>{const hasOrderId=/F\d+E\d+T/i.test(t.desc||'')||/F\d+E\d+T/i.test(t.stmt||'');const needsName=!t.customerName||t.customerName===''||t.customerName==='Allocate'||t.customerName==='General Public';return hasOrderId&&needsName;});
+  if(!cognitoRows.length)return;
+  const parseOrderId=(desc,stmt)=>{for(const s of[stmt||'',desc||'']){const m=s.match(/F(\d+)E(\d+)T/i);if(m)return{formId:m[1],entryId:m[2]};}return null;};
+  let enriched=0;
+  for(const t of cognitoRows){
+    const parsed=parseOrderId(t.desc,t.stmt);if(!parsed)continue;
+    try{
+      const res=await fetch(`/.netlify/functions/cognito-lookup?formId=${parsed.formId}&entryId=${parsed.entryId}`);
+      const data=await res.json();if(!res.ok)continue;
+      if(data.fullName){
+        t.customerName=data.fullName;
+        let resolvedMbr='';
+        if(data.memberNo)resolvedMbr=data.memberNo.toString().padStart(4,'0');
+        else if(data.email&&memberEmailMap[data.email.toLowerCase()])resolvedMbr=memberEmailMap[data.email.toLowerCase()].id;
+        else if(data.fullName){const m=lookupMember(data.fullName);if(m)resolvedMbr=m.id;}
+        t.memberNum=resolvedMbr;
+        if(t.customerName&&t.memberNum){t.status='ok';t.selected=true;}
+        const formRule=resolveByFormName(parsed.formId,data.formName||'');
+        if(formRule){t.acct=formRule.acct;t.cls=formRule.cls;t.status=(t.customerName&&t.memberNum)?'ok':formRule.status;t.selected=validateTxn(t).length===0;}
+        else if(t.acct.includes('Uncategorized')||t.acct.includes('5991')){const rule=matchRule(data.formName||'')||matchRule(t.desc||'');if(rule){t.acct=rule.acct;t.cls=rule.cls;t.status=rule.status||'ok';}}
+        if(data.formName&&(t.desc.toLowerCase().includes('cognito')||!t.desc||t.desc==='Square payment'))t.desc=`${data.formName} (Entry ${parsed.entryId})`;
         enriched++;
       }
-    } catch (e) {
-      console.warn('Cognito lookup failed for', t.desc, e.message);
-    }
+    }catch(e){console.warn('Cognito lookup failed:',t.desc,e.message);}
   }
-
-  if (enriched > 0) {
-    console.log(`Enriched ${enriched} Cognito Forms entries with member names`);
-    // Re-evaluate selected state for ALL transactions after enrichment
-    transactions.forEach(t => {
-      if (t.status !== 'unknown') {
-        t.selected = validateTxn(t).length === 0;
-      }
-    });
-    renderAll();
-    updateExportBtn();
-  }
+  if(enriched>0){transactions.forEach(t=>{if(t.status!=='unknown')t.selected=validateTxn(t).length===0;});renderAll();updateExportBtn();}
 }
 
-// Cognito enrichment is called directly after ingest — see enrichCognitoEntries()
-
-async function loadImportHistory() {
+async function loadImportHistory(){
   const body=document.getElementById('import-log-body');
   body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">Loading…</div>';
   const key=SUPABASE_ANON_KEY||sessionStorage.getItem('rr_sb_key')||'';
-  if(!key){body.innerHTML='<div style="font-size:12px;color:var(--red);">Pull members from Supabase first.</div>';return;}
-  try {
+  if(!key){body.innerHTML='<div style="font-size:12px;color:var(--red-accent);">Pull members from Supabase first.</div>';return;}
+  try{
     const res=await fetch(`${SUPABASE_URL}/rest/v1/qbo_import_log?select=*&order=exported_at.desc&limit=100`,{headers:{'apikey':key,'Authorization':`Bearer ${key}`}});
     if(!res.ok)throw new Error('Supabase error '+res.status);
     const rows=await res.json();
-    if(!rows.length){body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No exports logged yet. Download a CSV file to create the first log entry.</div>';return;}
+    if(!rows.length){body.innerHTML='<div style="font-size:12px;color:var(--text-muted);">No exports logged yet.</div>';return;}
     const runs={};
     rows.forEach(r=>{const k=r.exported_at?r.exported_at.substring(0,16):'unknown';if(!runs[k])runs[k]={at:r.exported_at,by:r.exported_by,rows:[]};runs[k].rows.push(r);});
-   body.innerHTML=Object.entries(runs).map(([k,run])=>{
+    body.innerHTML=Object.entries(runs).map(([k,run])=>{
       const when=run.at?new Date(run.at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';
       const total=run.rows.reduce((s,r)=>s+parseFloat(r.amount||0),0);
       const byPlat={};run.rows.forEach(r=>{byPlat[r.platform]=(byPlat[r.platform]||0)+1;});
       const platformCounts=Object.entries(byPlat).map(([p,n])=>`${p}: ${n}`).join(' · ');
-      return `<div style="border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:500;font-size:13px;">${when}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${platformCounts} · Exported by: ${run.by||'unknown'}</div></div><div style="text-align:right;"><div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--green);">$${total.toFixed(2)}</div><div style="font-size:11px;color:var(--text-muted);">${run.rows.length} transactions</div></div></div>`;
+      return`<div style="border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:500;font-size:13px;">${when}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${platformCounts} · Exported by: ${run.by||'unknown'}</div></div><div style="text-align:right;"><div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--green);">$${total.toFixed(2)}</div><div style="font-size:11px;color:var(--text-muted);">${run.rows.length} transactions</div></div></div>`;
     }).join('');
-  } catch(e){body.innerHTML=`<div style="font-size:12px;color:var(--red);">Error: ${e.message}</div>`;}
+  }catch(e){body.innerHTML=`<div style="font-size:12px;color:var(--red-accent);">Error: ${e.message}</div>`;}
 }
-
-
 </script>
 </body>
 </html>

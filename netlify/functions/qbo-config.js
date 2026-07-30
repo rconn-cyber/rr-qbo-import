@@ -1,3 +1,59 @@
+// netlify/functions/_auth-guard.js
+// Shared token verification for all QBO import functions.
+// Underscore prefix means Netlify won't expose this as an endpoint.
+//
+// USAGE — add to the top of each function that should require auth:
+//
+//   const { guardAuth } = require('./_auth-guard');
+//
+//   exports.handler = async (event) => {
+//     const authError = guardAuth(event);
+//     if (authError) return authError;
+//     // ... rest of function
+//   };
+
+const crypto = require('crypto');
+
+const CORS = {
+  'Access-Control-Allow-Origin': 'https://qbo-import-trans.netlify.app',
+  'Access-Control-Allow-Headers': 'Content-Type, x-admin-token',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+function verifyToken(token, secret) {
+  if (!token || !secret) return false;
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+  const [expires, sig] = parts;
+  if (Date.now() > Number(expires)) return false;
+  const expected = crypto.createHmac('sha256', secret).update(expires).digest('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Call at the top of any function handler.
+ * Returns null if auth passes, or a 401/405 response object if it fails.
+ */
+exports.guardAuth = function guardAuth(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS, body: '' };
+  }
+  const token = event.headers['x-admin-token'] || '';
+  if (!verifyToken(token, process.env.ADMIN_PASSWORD)) {
+    return {
+      statusCode: 401,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Unauthorized' }),
+    };
+  }
+  return null; // auth passed
+};
+
+exports.CORS = CORS;
 // netlify/functions/qbo-config.js
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
